@@ -1,0 +1,74 @@
+[gd_scene load_steps=9 format=3 uid="uid://bsohxm1t2erqj"]
+
+[ext_resource type="Texture2D" uid="uid://dn12uq5dxtlng" path="res://sprites/castle.png" id="1_bdoet"]
+[ext_resource type="Script" path="res://gamemap_tile.gd" id="1_hsfm8"]
+[ext_resource type="Texture2D" uid="uid://c7sa7w6ohv0eh" path="res://sprites/plain.jpg" id="1_vlott"]
+[ext_resource type="Texture2D" uid="uid://bndlf38150ljx" path="res://sprites/pond.jpg" id="3_7qxnx"]
+[ext_resource type="Texture2D" uid="uid://3iyem73p358n" path="res://sprites/wall.jpeg" id="5_g3t1e"]
+[ext_resource type="Texture2D" uid="uid://2rw5t6ird3ob" path="res://sprites/craftman.png" id="6_drohf"]
+[ext_resource type="Texture2D" uid="uid://dvrbshhacpe3g" path="res://sprites/tile_indicator.png" id="7_mr1db"]
+[ext_resource type="Script" path="res://tile_select.gd" id="8_d5w47"]
+
+[node name="AspectRatioContainer" type="AspectRatioContainer"]
+offset_right = 200.0
+offset_bottom = 200.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_hsfm8")
+
+[node name="Castle" type="TextureRect" parent="."]
+visible = false
+layout_mode = 2
+texture = ExtResource("1_vlott")
+expand_mode = 1
+
+[node name="TextureRect" type="TextureRect" parent="Castle"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_bdoet")
+expand_mode = 1
+
+[node name="Plain" type="TextureRect" parent="."]
+layout_mode = 2
+texture = ExtResource("1_vlott")
+expand_mode = 1
+
+[node name="Pond" type="TextureRect" parent="."]
+visible = false
+layout_mode = 2
+texture = ExtResource("3_7qxnx")
+expand_mode = 1
+
+[node name="Wall" type="AspectRatioContainer" parent="."]
+visible = false
+layout_mode = 2
+ratio = 3.0
+alignment_vertical = 2
+
+[node name="Walltexture" type="TextureRect" parent="Wall"]
+self_modulate = Color(0.3, 0.3, 1, 1)
+layout_mode = 2
+texture = ExtResource("5_g3t1e")
+expand_mode = 1
+
+[node name="Craftman" type="TextureRect" parent="."]
+visible = false
+self_modulate = Color(0.3, 0.3, 1, 1)
+layout_mode = 2
+texture = ExtResource("6_drohf")
+expand_mode = 1
+
+[node name="TileSelect" type="TextureRect" parent="."]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+texture = ExtResource("7_mr1db")
+expand_mode = 1
+script = ExtResource("8_d5w47")
+
+[connection signal="gui_input" from="." to="." method="_on_gui_input"]
+[connection signal="mouse_entered" from="." to="TileSelect" method="_on_aspect_ratio_container_mouse_entered"]
+[connection signal="mouse_exited" from="." to="TileSelect" method="_on_aspect_ratio_container_mouse_exited"]

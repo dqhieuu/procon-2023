@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://cosqo65u6o226"]
+
+[ext_resource type="Script" path="res://map_display.gd" id="1_xvw2f"]
+
+[node name="MapDisplay" type="AspectRatioContainer"]
+size_flags_horizontal = 3
+ratio = 0.5714
+script = ExtResource("1_xvw2f")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 2
+columns = 4
