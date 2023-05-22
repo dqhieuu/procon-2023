@@ -1,0 +1,342 @@
+[gd_scene load_steps=5 format=3 uid="uid://caf7gi8giigrr"]
+
+[ext_resource type="Texture2D" uid="uid://dn12uq5dxtlng" path="res://sprites/castle.png" id="1_ot14u"]
+[ext_resource type="Texture2D" uid="uid://c7sa7w6ohv0eh" path="res://sprites/plain.jpg" id="2_rk0wn"]
+
+[sub_resource type="Gradient" id="Gradient_eh6qg"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_juaqq"]
+gradient = SubResource("Gradient_eh6qg")
+width = 32
+height = 32
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+ratio = 0.5714
+
+[node name="GridContainer" type="GridContainer" parent="HBoxContainer/AspectRatioContainer"]
+layout_mode = 2
+columns = 4
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer"]
+layout_mode = 2
+texture = ExtResource("1_ot14u")
+expand_mode = 3
+
+[node name="AspectRatioContainer2" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer2"]
+layout_mode = 2
+texture = ExtResource("2_rk0wn")
+expand_mode = 3
+
+[node name="AspectRatioContainer3" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer3"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer4" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer4"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer5" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer5"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer6" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer6"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer7" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer7"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer8" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer8"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer9" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer9"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer10" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer10"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer11" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer11"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer12" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer12"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer13" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer13"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer14" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer14"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer15" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer15"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer16" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer16"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer17" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer17"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer18" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer18"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer19" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer19"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer20" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer20"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer21" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer21"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer22" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer22"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer23" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer23"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer24" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer24"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer25" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer25"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer26" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer26"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer27" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer27"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="AspectRatioContainer28" type="AspectRatioContainer" parent="HBoxContainer/AspectRatioContainer/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/AspectRatioContainer/GridContainer/AspectRatioContainer28"]
+layout_mode = 2
+texture = SubResource("GradientTexture2D_juaqq")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="HBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Turn"
+
+[node name="TabContainer" type="TabContainer" parent="HBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+tab_alignment = 1
+
+[node name="Move" type="VBoxContainer" parent="HBoxContainer/ScrollContainer/VBoxContainer/TabContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="HBoxContainer/ScrollContainer/VBoxContainer/TabContainer/Move"]
+visible = false
+layout_mode = 2
+
+[node name="Build" type="Control" parent="HBoxContainer/ScrollContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Destroy" type="Control" parent="HBoxContainer/ScrollContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="HBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Send actions"
+
+[node name="Button2" type="Button" parent="HBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Reset actions"
