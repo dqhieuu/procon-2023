@@ -53,6 +53,8 @@ class Game:
                     pos = list(map(int, line.split(" ")))
                     self.current_state.craftmen.append(
                         Craftman(Team.TEAM1 if mode == "team1" else Team.TEAM2, (pos[0], pos[1])))
+            # flips map so that (0,0) means bottom left corner
+            self.current_state.map.map = list(reversed(self.current_state.map.map))
 
     def add_command(self, command: CraftmanCommand):
         self.command_buffer.append(command)

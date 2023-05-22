@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Globals="*res://globals.gd"
+HTTP="*res://http_client.gd"
 
 [input]
 
@@ -27,7 +28,10 @@ click={
 ]
 }
 
+[network]
+
+limits/debugger/max_chars_per_second=1000000
+
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

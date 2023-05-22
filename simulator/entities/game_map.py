@@ -21,6 +21,3 @@ class GameMap:
 
     def set_tile(self, x, y, tile):
         self.map[y][x] = tile
-
-        # flips map so that (0,0) means bottom left corner
-        self.map = list(reversed(self.map))

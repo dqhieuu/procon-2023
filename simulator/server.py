@@ -7,11 +7,8 @@ game = Game("assets/map1.txt")
 app = FastAPI()
 
 
-# PPO vs SAC (on vs off policy)
-
-
 @app.post("/command")
-async def command(command: CraftmanCommand):
+async def do_command(command: CraftmanCommand):
     game.add_command(command)
     return "OK"
 
@@ -19,3 +16,8 @@ async def command(command: CraftmanCommand):
 @app.post("/end_turn")
 async def end_turn():
     return game.process_turn()
+
+
+@app.get("/current_state")
+async def current_state():
+    return game.current_state

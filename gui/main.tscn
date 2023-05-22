@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://caf7gi8giigrr"]
+[gd_scene load_steps=5 format=3 uid="uid://caf7gi8giigrr"]
 
 [ext_resource type="PackedScene" uid="uid://cosqo65u6o226" path="res://map_display.tscn" id="1_iqkw6"]
+[ext_resource type="Script" path="res://action_button.gd" id="2_gnspr"]
+[ext_resource type="Script" path="res://end_turn_button.gd" id="3_dtxrd"]
+[ext_resource type="Script" path="res://reset_actions_button.gd" id="4_7b4vo"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -26,7 +29,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MapDisplay" parent="HBoxContainer" instance=ExtResource("1_iqkw6")]
+[node name="MapDisplay" parent="HBoxContainer" groups=["map"] instance=ExtResource("1_iqkw6")]
 layout_mode = 2
 
 [node name="Background" type="ColorRect" parent="HBoxContainer"]
@@ -56,7 +59,7 @@ theme_override_constants/margin_bottom = 8
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="TurnInfo" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer" groups=["turn_info"]]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Turn"
@@ -70,8 +73,10 @@ layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move"]
 layout_mode = 2
+theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 14
 
 [node name="GridContainer" type="GridContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer"]
 layout_mode = 2
@@ -82,21 +87,33 @@ columns = 3
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "↖"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "up_left"
 
 [node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "↑"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "up"
 
 [node name="UpRight" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "↗"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "up_right"
 
 [node name="Left" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "←"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "left"
 
 [node name="Empty" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
@@ -125,43 +142,249 @@ vertical_alignment = 1
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "→"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "right"
 
 [node name="DownLeft" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "↙"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "down_left"
 
 [node name="Down" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "↓"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "down"
 
 [node name="DownRight" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
 text = "↘"
+script = ExtResource("2_gnspr")
+action_type = "move"
+direction = "down_right"
 
-[node name="Build" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer"]
+[node name="Build" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 
-[node name="Destroy" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 14
+
+[node name="GridContainer" type="GridContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 3
+
+[node name="Empty2" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "↑"
+script = ExtResource("2_gnspr")
+action_type = "build"
+direction = "up"
+
+[node name="Empty3" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Left" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "←"
+script = ExtResource("2_gnspr")
+action_type = "build"
+direction = "left"
+
+[node name="Empty" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer/Empty"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -21.5
+offset_top = -13.0
+offset_right = 21.5
+offset_bottom = 13.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Build"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Right" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "→"
+script = ExtResource("2_gnspr")
+action_type = "build"
+direction = "right"
+
+[node name="Empty4" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Down" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "↓"
+script = ExtResource("2_gnspr")
+action_type = "build"
+direction = "down"
+
+[node name="Destroy" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 14
+
+[node name="GridContainer" type="GridContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 3
+
+[node name="Empty2" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "↑"
+script = ExtResource("2_gnspr")
+action_type = "destroy"
+direction = "up"
+
+[node name="Empty3" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Left" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "←"
+script = ExtResource("2_gnspr")
+action_type = "destroy"
+direction = "left"
+
+[node name="Empty" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer/Empty"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -21.5
+offset_top = -13.0
+offset_right = 21.5
+offset_bottom = 13.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 14
+text = "Destroy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Right" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "→"
+script = ExtResource("2_gnspr")
+action_type = "destroy"
+direction = "right"
+
+[node name="Empty4" type="Control" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Down" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "↓"
+script = ExtResource("2_gnspr")
+action_type = "destroy"
+direction = "down"
 
 [node name="Stay" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer"]
 visible = false
 layout_mode = 2
 
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Stay"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 14
+
+[node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Stay/MarginContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "Stay"
+script = ExtResource("2_gnspr")
+action_type = "stay"
+
 [node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="EndTurn" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "End turn"
+script = ExtResource("3_dtxrd")
 
-[node name="Button2" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="ResetActions" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Reset actions"
+script = ExtResource("4_7b4vo")
+
+[node name="Empty2" type="Control" parent="."]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 4
+size_flags_vertical = 4

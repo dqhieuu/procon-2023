@@ -23,6 +23,9 @@ class Craftman:
         self.phase_start_game_state: GameState | None = None
         self.latest_action_game_state: GameState | None = None
 
+    def __eq__(self, other):
+        return self.team == other.team and self.pos == other.pos
+
     def stay(self) -> ActionResult:
         self.__check_prerequisites()
         return ActionResult.from_success(
@@ -92,7 +95,7 @@ class Craftman:
                                      message="{} to {} is opponent's team wall".format(self.pos, next_pos)),
             )
 
-        craftman_after_move = deepcopy(self)
+        craftman_after_move = self.without_game_state()
         craftman_after_move.pos = next_pos
 
         game_state_after_move = deepcopy(self.latest_action_game_state)
@@ -208,6 +211,12 @@ class Craftman:
         clone = deepcopy(self)
         clone.phase_start_game_state = phase_start_game_state
         clone.latest_action_game_state = latest_action_game_state
+        return clone
+
+    def without_game_state(self):
+        clone = deepcopy(self)
+        clone.phase_start_game_state = None
+        clone.latest_action_game_state = None
         return clone
 
     def __check_prerequisites(self):

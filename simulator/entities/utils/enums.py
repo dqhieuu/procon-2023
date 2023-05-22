@@ -8,9 +8,9 @@ class Team(Enum):
 
 
 class TileType(Enum):
-    CASTLE = 0
-    POND = 1
-    PLAIN = 2
+    PLAIN = 0
+    CASTLE = 1
+    POND = 2
 
 
 class TerritoryType(Enum):

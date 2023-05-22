@@ -8,16 +8,16 @@ class Tile:
         # lazily updated
         self.is_team_territory = [TerritoryType.NEUTRAL, TerritoryType.NEUTRAL]
 
-    def set_wall(self, wall_team: Team) -> bool:
-        if type == TileType.CASTLE or type == TileType.POND:
-            return False
-
-        if (self.type == TileType.PLAIN and (wall_team == Team.TEAM1 or wall_team == Team.TEAM2)) or \
-                ((self.wall == Team.TEAM1 or self.wall == Team.TEAM2) and wall_team == Team.NEUTRAL):
-            self.wall = wall_team
-            return True
-
-        return False
+    # def set_wall(self, wall_team: Team) -> bool:
+    #     if type == TileType.CASTLE or type == TileType.POND:
+    #         return False
+    #
+    #     if (self.type == TileType.PLAIN and (wall_team == Team.TEAM1 or wall_team == Team.TEAM2)) or \
+    #             ((self.wall == Team.TEAM1 or self.wall == Team.TEAM2) and wall_team == Team.NEUTRAL):
+    #         self.wall = wall_team
+    #         return True
+    #
+    #     return False
 
     def __repr__(self):
         return "{}:{}:({})".format(self.type.name, self.wall.name,
@@ -29,4 +29,4 @@ class Tile:
 
     @classmethod
     def from_file_string(cls, tile_type: str):
-        return Tile(TileType(int(tile_type)))
+        return cls(TileType(int(tile_type)))

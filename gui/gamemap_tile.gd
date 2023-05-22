@@ -1,7 +1,4 @@
-@tool
 extends AspectRatioContainer
-
-
 
 @export var wall_team: Enums.TeamType = Enums.TeamType.NEUTRAL
 @export var type: Enums.TileType = Enums.TileType.PLAIN

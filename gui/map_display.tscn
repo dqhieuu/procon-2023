@@ -9,4 +9,3 @@ script = ExtResource("1_xvw2f")
 
 [node name="GridContainer" type="GridContainer" parent="."]
 layout_mode = 2
-columns = 4

@@ -3,7 +3,7 @@ extends TextureRect
 @export var is_hovered = false
 @export var is_selected = false
 
-func _process(delta):
+func _process(_delta):
 	if is_selected:
 		self.self_modulate.a = 1.0
 	elif is_hovered:
