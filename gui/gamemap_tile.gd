@@ -1,7 +1,8 @@
 extends AspectRatioContainer
 
 @export var wall_team: Enums.TeamType = Enums.TeamType.NEUTRAL
-@export var type: Enums.TileType = Enums.TileType.PLAIN
+@export var has_pond = false
+@export var has_castle = false
 @export var craftman_occupied: Enums.TeamType = Enums.TeamType.NEUTRAL
 
 # Called when the node enters the scene tree for the first time.
@@ -14,9 +15,9 @@ func _process(_delta):
 	update_visible_sprite()
 	
 func update_visible_sprite():
-	$Castle.visible = type == Enums.TileType.CASTLE
-	$Plain.visible = type == Enums.TileType.PLAIN
-	$Pond.visible = type == Enums.TileType.POND
+	$Castle.visible = has_pond
+	$Plain.visible = !has_pond
+	$Pond.visible = has_pond
 	$Wall.visible = wall_team != Enums.TeamType.NEUTRAL
 	$Wall/Walltexture.self_modulate = Color(1, 0.3 ,0.3) if wall_team == Enums.TeamType.TEAM1 else Color(0.3,0.3,1)
 	$Craftman.visible =  craftman_occupied != Enums.TeamType.NEUTRAL

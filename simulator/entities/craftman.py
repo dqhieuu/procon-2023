@@ -76,7 +76,7 @@ class Craftman:
             )
 
         next_pos_tile = self.latest_action_game_state.map.get_tile(*next_pos)
-        if next_pos_tile.type == TileType.POND:
+        if next_pos_tile.has_pond:
             return ActionResult.from_fail(
                 action_type=ActionType.MOVE,
                 actor=self,
@@ -130,7 +130,7 @@ class Craftman:
             )
 
         next_pos_tile = self.latest_action_game_state.map.get_tile(*next_pos)
-        if next_pos_tile.type != TileType.PLAIN:
+        if next_pos_tile.has_pond or next_pos_tile.has_wall:
             return ActionResult.from_fail(
                 action_type=ActionType.BUILD,
                 actor=self,

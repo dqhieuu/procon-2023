@@ -51,7 +51,8 @@ func load_map(game_state):
 			var json_tile = map[height-i-1][j]
 			var tile = MapTile.instantiate()
 			tile.wall_team = string_to_team_type[json_tile.wall]
-			tile.type = int_to_tile_type[int(json_tile.type)]
+			tile.has_pond = json_tile.has_pond
+			tile.has_castle = json_tile.has_castle
 			$GridContainer.add_child(tile)
 
 	for man in craftmen:

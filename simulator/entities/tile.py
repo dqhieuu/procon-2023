@@ -2,8 +2,9 @@ from entities.utils.enums import TileType, TerritoryType, Team
 
 
 class Tile:
-    def __init__(self, tile_type: TileType):
-        self.type = tile_type
+    def __init__(self):
+        self.has_castle = False
+        self.has_pond = False
         self.wall = Team.NEUTRAL
         # lazily updated
         self.is_team_territory = [TerritoryType.NEUTRAL, TerritoryType.NEUTRAL]
@@ -20,13 +21,21 @@ class Tile:
     #     return False
 
     def __repr__(self):
-        return "{}:{}:({})".format(self.type.name, self.wall.name,
-                                   ','.join(
-                                       list(map(lambda
-                                                    val: 'N' if val == TerritoryType.NEUTRAL else 'C' if val == TerritoryType.CLOSED else 'O',
-                                                self.is_team_territory))
-                                   ))
+        return "{}{}:{}:({})".format(self.has_pond, self.has_castle, self.wall.name,
+                                     ','.join(
+                                         list(map(lambda
+                                                      val: 'N' if val == TerritoryType.NEUTRAL else 'C' if val == TerritoryType.CLOSED else 'O',
+                                                  self.is_team_territory))
+                                     ))
 
     @classmethod
     def from_file_string(cls, tile_type: str):
-        return cls(TileType(int(tile_type)))
+        tile = cls()
+        if tile_type == "1":
+            tile.has_pond = True
+        elif tile_type == "2":
+            tile.has_castle = True
+        elif tile_type == "3":
+            tile.has_pond = True
+            tile.has_castle = True
+        return tile
