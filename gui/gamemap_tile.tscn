@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://bsohxm1t2erqj"]
+[gd_scene load_steps=14 format=3 uid="uid://bsohxm1t2erqj"]
 
 [ext_resource type="Texture2D" uid="uid://dn12uq5dxtlng" path="res://sprites/castle.png" id="1_bdoet"]
 [ext_resource type="Script" path="res://gamemap_tile.gd" id="1_hsfm8"]
@@ -8,6 +8,11 @@
 [ext_resource type="Texture2D" uid="uid://2rw5t6ird3ob" path="res://sprites/craftman.png" id="6_drohf"]
 [ext_resource type="Texture2D" uid="uid://dvrbshhacpe3g" path="res://sprites/tile_indicator.png" id="7_mr1db"]
 [ext_resource type="Script" path="res://tile_select.gd" id="8_d5w47"]
+[ext_resource type="Texture2D" uid="uid://cy8vejpx6xs0q" path="res://sprites/hammer.png" id="9_0u1d1"]
+[ext_resource type="Texture2D" uid="uid://72rclo5tytog" path="res://sprites/territory/O1.png" id="9_6ww2q"]
+[ext_resource type="Texture2D" uid="uid://dx7dyrh225n0m" path="res://sprites/territory/C2.png" id="10_w6rjf"]
+[ext_resource type="Texture2D" uid="uid://kqmfmec5pye8" path="res://sprites/territory/C1.png" id="11_iq403"]
+[ext_resource type="Texture2D" uid="uid://g2n5dpgcj7jk" path="res://sprites/territory/O2.png" id="12_i7tj0"]
 
 [node name="AspectRatioContainer" type="AspectRatioContainer"]
 offset_right = 200.0
@@ -16,8 +21,17 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_hsfm8")
 
+[node name="Plain" type="TextureRect" parent="."]
+layout_mode = 2
+texture = ExtResource("1_vlott")
+expand_mode = 1
+
+[node name="Pond" type="TextureRect" parent="."]
+layout_mode = 2
+texture = ExtResource("3_7qxnx")
+expand_mode = 1
+
 [node name="Castle" type="TextureRect" parent="."]
-visible = false
 layout_mode = 2
 texture = ExtResource("1_vlott")
 expand_mode = 1
@@ -32,19 +46,7 @@ grow_vertical = 2
 texture = ExtResource("1_bdoet")
 expand_mode = 1
 
-[node name="Plain" type="TextureRect" parent="."]
-layout_mode = 2
-texture = ExtResource("1_vlott")
-expand_mode = 1
-
-[node name="Pond" type="TextureRect" parent="."]
-visible = false
-layout_mode = 2
-texture = ExtResource("3_7qxnx")
-expand_mode = 1
-
 [node name="Wall" type="AspectRatioContainer" parent="."]
-visible = false
 layout_mode = 2
 ratio = 3.0
 alignment_vertical = 2
@@ -55,8 +57,7 @@ layout_mode = 2
 texture = ExtResource("5_g3t1e")
 expand_mode = 1
 
-[node name="Craftman" type="TextureRect" parent="."]
-visible = false
+[node name="Craftsman" type="TextureRect" parent="."]
 self_modulate = Color(0.3, 0.3, 1, 1)
 layout_mode = 2
 texture = ExtResource("6_drohf")
@@ -68,6 +69,36 @@ layout_mode = 2
 texture = ExtResource("7_mr1db")
 expand_mode = 1
 script = ExtResource("8_d5w47")
+
+[node name="Team1OpenTerritory" type="TextureRect" parent="."]
+self_modulate = Color(0, 0.980392, 0.929412, 1)
+layout_mode = 2
+texture = ExtResource("9_6ww2q")
+expand_mode = 1
+
+[node name="Team2ClosedTerritory" type="TextureRect" parent="."]
+self_modulate = Color(1, 0, 0.533333, 1)
+layout_mode = 2
+texture = ExtResource("10_w6rjf")
+expand_mode = 1
+
+[node name="Team1ClosedTerritory" type="TextureRect" parent="."]
+self_modulate = Color(0, 0.980392, 0.929412, 1)
+layout_mode = 2
+texture = ExtResource("11_iq403")
+expand_mode = 1
+
+[node name="Team2OpenTerritory" type="TextureRect" parent="."]
+self_modulate = Color(1, 0, 0.533333, 1)
+layout_mode = 2
+texture = ExtResource("12_i7tj0")
+expand_mode = 1
+
+[node name="Hammer" type="TextureRect" parent="."]
+visible = false
+layout_mode = 2
+texture = ExtResource("9_0u1d1")
+expand_mode = 1
 
 [connection signal="gui_input" from="." to="." method="_on_gui_input"]
 [connection signal="mouse_entered" from="." to="TileSelect" method="_on_aspect_ratio_container_mouse_entered"]

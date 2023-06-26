@@ -12,6 +12,6 @@ func _pressed():
 
 func send_command():
 	if action_type == 'stay':
-		HTTP.send_command({"action_type": action_type, "craftman_pos": Globals.selected_position()})
+		HTTP.send_command({"action_type": action_type, "craftsman_pos": Globals.selected_position()})
 	else: 
-		HTTP.send_command({"action_type": action_type, "direction": direction, "craftman_pos": Globals.selected_position()})
+		HTTP.send_command({"action_type": action_type, "direction": direction, "craftsman_pos": Globals.selected_position()})

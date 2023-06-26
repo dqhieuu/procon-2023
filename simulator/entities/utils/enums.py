@@ -39,21 +39,21 @@ class Direction(str, Enum):
 
 def get_direction_vector(direction: Direction) -> (int, int):
     if direction == Direction.UP:
-        return 0, 1
-    elif direction == Direction.DOWN:
         return 0, -1
+    elif direction == Direction.DOWN:
+        return 0, 1
     elif direction == Direction.LEFT:
         return -1, 0
     elif direction == Direction.RIGHT:
         return 1, 0
     elif direction == Direction.UP_LEFT:
-        return -1, 1
-    elif direction == Direction.UP_RIGHT:
-        return 1, 1
-    elif direction == Direction.DOWN_LEFT:
         return -1, -1
-    elif direction == Direction.DOWN_RIGHT:
+    elif direction == Direction.UP_RIGHT:
         return 1, -1
+    elif direction == Direction.DOWN_LEFT:
+        return -1, 1
+    elif direction == Direction.DOWN_RIGHT:
+        return 1, 1
 
 
 class ActionType(Enum):

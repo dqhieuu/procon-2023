@@ -1,6 +1,6 @@
 extends Node
 
-const SERVER_PATH = "http://127.0.0.1:8000"
+const SERVER_PATH = "http://127.0.0.1:3010"
 
 func get_current_state():
 	return await _get_request("%s/current_state" % SERVER_PATH)
@@ -8,8 +8,8 @@ func get_current_state():
 func end_turn():
 	return await _post_request_no_body("%s/end_turn" % SERVER_PATH)
 
-#class CraftmanCommand(BaseModel):
-#    craftman_pos: tuple[int, int]
+#class CraftsmanCommand(BaseModel):
+#    craftsman_pos: tuple[int, int]
 #    action_type: ActionType
 #    direction: Direction | None = None
 func send_command(command):

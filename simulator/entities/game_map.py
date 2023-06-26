@@ -16,8 +16,15 @@ class GameMap:
     def is_valid_pos(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height
 
-    def get_tile(self, x, y):
+    def get_tile(self, x, y) -> Tile:
         return self.map[y][x]
 
     def set_tile(self, x, y, tile):
         self.map[y][x] = tile
+
+
+class ScoreCoefficients:
+    def __init__(self, territory: int, wall: int, castle: int):
+        self.territory = territory
+        self.wall = wall
+        self.castle = castle

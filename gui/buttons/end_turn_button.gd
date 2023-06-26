@@ -1,5 +1,9 @@
 extends Button
 
+func _input(event):
+	if event.is_action_pressed("end_turn"):
+		_pressed()
+
 
 func _pressed():
 	Globals.selected_tile = null

@@ -1,9 +1,35 @@
-[gd_scene load_steps=5 format=3 uid="uid://caf7gi8giigrr"]
+[gd_scene load_steps=8 format=3 uid="uid://dinq831rjae20"]
 
 [ext_resource type="PackedScene" uid="uid://cosqo65u6o226" path="res://map_display.tscn" id="1_iqkw6"]
-[ext_resource type="Script" path="res://action_button.gd" id="2_gnspr"]
-[ext_resource type="Script" path="res://end_turn_button.gd" id="3_dtxrd"]
-[ext_resource type="Script" path="res://reset_actions_button.gd" id="4_7b4vo"]
+[ext_resource type="Script" path="res://buttons/action_button.gd" id="2_gex1p"]
+[ext_resource type="Script" path="res://buttons/end_turn_button.gd" id="3_4r1gk"]
+[ext_resource type="Script" path="res://buttons/reset_actions_button.gd" id="4_so8eh"]
+
+[sub_resource type="Animation" id="Animation_25xbi"]
+resource_name = "flash_green"
+length = 0.4
+step = 0.05
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Flash:self_modulate")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0.196078), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_vodis"]
+length = 0.4
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_0sxpd"]
+_data = {
+"RESET": SubResource("Animation_vodis"),
+"flash_green": SubResource("Animation_25xbi")
+}
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -13,7 +39,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." groups=["bg"]]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,7 +59,7 @@ grow_vertical = 2
 layout_mode = 2
 
 [node name="Background" type="ColorRect" parent="HBoxContainer"]
-custom_minimum_size = Vector2(300, 2.08165e-12)
+custom_minimum_size = Vector2(320, 2.08165e-12)
 layout_mode = 2
 size_flags_vertical = 3
 color = Color(0.933333, 0.933333, 0.933333, 1)
@@ -64,6 +90,111 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Turn"
 
+[node name="Team1Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Team 1"
+
+[node name="Team1Info" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Count" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Count" groups=["t1_terr_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr count: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Count" groups=["t1_wall_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall count: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Count" groups=["t1_castle_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle count: 0"
+
+[node name="Point" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Point" groups=["t1_terr_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr pts: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Point" groups=["t1_wall_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall pts: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Point" groups=["t1_castle_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle pts: 0"
+
+[node name="Total" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team1Info/Point" groups=["t1_total_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Total pts: 0"
+horizontal_alignment = 2
+
+[node name="Team2Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Team 2
+"
+
+[node name="Team2Info" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Count" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Count" groups=["t2_terr_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr count: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Count" groups=["t2_wall_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall count: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Count" groups=["t2_castle_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle count: 0"
+
+[node name="Point" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Point" groups=["t2_terr_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr pts: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Point" groups=["t2_wall_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall pts: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Point" groups=["t2_castle_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle pts: 0"
+
+[node name="Total" type="Label" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/Team2Info/Point" groups=["t2_total_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Total pts: 0"
+horizontal_alignment = 2
+
 [node name="TabContainer" type="TabContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 tab_alignment = 1
@@ -86,32 +217,36 @@ columns = 3
 [node name="UpLeft" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↖"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "up_left"
 
 [node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↑"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "up"
 
 [node name="UpRight" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↗"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "up_right"
 
 [node name="Left" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "←"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "left"
 
@@ -141,32 +276,36 @@ vertical_alignment = 1
 [node name="Right" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "→"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "right"
 
 [node name="DownLeft" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↙"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "down_left"
 
 [node name="Down" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↓"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "down"
 
 [node name="DownRight" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Move/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↘"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "move"
 direction = "down_right"
 
@@ -195,8 +334,9 @@ size_flags_vertical = 4
 [node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↑"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "build"
 direction = "up"
 
@@ -209,8 +349,9 @@ size_flags_vertical = 4
 [node name="Left" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "←"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "build"
 direction = "left"
 
@@ -240,8 +381,9 @@ vertical_alignment = 1
 [node name="Right" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "→"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "build"
 direction = "right"
 
@@ -254,8 +396,9 @@ size_flags_vertical = 4
 [node name="Down" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Build/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↓"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "build"
 direction = "down"
 
@@ -284,8 +427,9 @@ size_flags_vertical = 4
 [node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↑"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "destroy"
 direction = "up"
 
@@ -298,8 +442,9 @@ size_flags_vertical = 4
 [node name="Left" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "←"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "destroy"
 direction = "left"
 
@@ -330,8 +475,9 @@ vertical_alignment = 1
 [node name="Right" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "→"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "destroy"
 direction = "right"
 
@@ -344,8 +490,9 @@ size_flags_vertical = 4
 [node name="Down" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Destroy/MarginContainer/GridContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "↓"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "destroy"
 direction = "down"
 
@@ -363,8 +510,9 @@ theme_override_constants/margin_bottom = 14
 [node name="Up" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/TabContainer/Stay/MarginContainer"]
 custom_minimum_size = Vector2(50, 50)
 layout_mode = 2
+focus_mode = 0
 text = "Stay"
-script = ExtResource("2_gnspr")
+script = ExtResource("2_gex1p")
 action_type = "stay"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer"]
@@ -373,18 +521,29 @@ layout_mode = 2
 [node name="EndTurn" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 0
 text = "End turn"
-script = ExtResource("3_dtxrd")
+script = ExtResource("3_4r1gk")
 
 [node name="ResetActions" type="Button" parent="HBoxContainer/Background/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 0
 text = "Reset actions"
-script = ExtResource("4_7b4vo")
+script = ExtResource("4_so8eh")
 
-[node name="Empty2" type="Control" parent="."]
-custom_minimum_size = Vector2(50, 50)
-layout_mode = 3
-anchors_preset = 0
-size_flags_horizontal = 4
-size_flags_vertical = 4
+[node name="Flash" type="ColorRect" parent="." groups=["flash"]]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.235294, 1, 0, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." groups=["animation"]]
+libraries = {
+"": SubResource("AnimationLibrary_0sxpd")
+}

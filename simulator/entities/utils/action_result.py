@@ -9,7 +9,7 @@ from entities.utils.enums import ActionType
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from entities.craftman import Craftman
+    from entities.craftsman import Craftsman
 
 
 class FailCode(Enum):
@@ -17,11 +17,11 @@ class FailCode(Enum):
     MOVE_OUT_OF_MAP = 2
     MOVE_TO_POND = 3
     MOVE_TO_OPPONENT_WALL = 4
-    MOVE_TO_CRAFTMAN_PREVIOUS_TURN_POS = 5
-    MOVE_TO_CRAFTMAN_CURRENT_TURN_POS = 6
+    MOVE_TO_CRAFTSMAN_PREVIOUS_TURN_POS = 5
+    MOVE_TO_CRAFTSMAN_CURRENT_TURN_POS = 6
     BUILD_OUT_OF_MAP = 7
     BUILD_ON_NOT_PLAIN = 8
-    BUILD_ON_CRAFTMAN = 9
+    BUILD_ON_CRAFTSMAN = 9
     DESTROY_OUT_OF_MAP = 10
     DESTROY_NOT_WALL = 11
 
@@ -36,7 +36,7 @@ class ActionResult:
     def __init__(self,
                  action_type: ActionType,
                  success: bool,
-                 actor_before: Craftman, actor_after: Craftman,
+                 actor_before: Craftsman, actor_after: Craftsman,
                  game_state_before: GameState, game_state_after: GameState,
                  action_detail=None,
                  fail_error: FailError | None = None
@@ -53,17 +53,18 @@ class ActionResult:
     @classmethod
     def from_success(cls,
                      action_type: ActionType,
-                     actor_before: Craftman, actor_after: Craftman,
+                     actor_before: Craftsman, actor_after: Craftsman,
                      game_state_before: GameState, game_state_after: GameState,
                      action_detail=None,
                      ):
-        return cls(action_type, True, actor_before, actor_after, game_state_before, game_state_after, action_detail)
+        return cls(action_type, success=True, actor_before=actor_before, actor_after=actor_after,
+                   game_state_before=game_state_before, game_state_after=game_state_after, action_detail=action_detail)
 
     @classmethod
     def from_fail(cls,
                   action_type: ActionType,
                   fail_error: FailError,
-                  actor: Craftman,
+                  actor: Craftsman,
                   game_state: GameState,
                   ):
         return cls(action_type,
