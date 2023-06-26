@@ -56,4 +56,3 @@ limits/debugger/max_chars_per_second=1000000
 [rendering]
 
 renderer/rendering_method.mobile="gl_compatibility"
-textures/vram_compression/import_s3tc_bptc=true

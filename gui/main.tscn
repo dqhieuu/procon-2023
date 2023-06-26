@@ -5,6 +5,9 @@
 [ext_resource type="Script" path="res://buttons/end_turn_button.gd" id="3_4r1gk"]
 [ext_resource type="Script" path="res://buttons/reset_actions_button.gd" id="4_so8eh"]
 
+[sub_resource type="Animation" id="Animation_vodis"]
+length = 0.4
+
 [sub_resource type="Animation" id="Animation_25xbi"]
 resource_name = "flash_green"
 length = 0.4
@@ -21,9 +24,6 @@ tracks/0/keys = {
 "update": 0,
 "values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0.196078), Color(1, 1, 1, 0)]
 }
-
-[sub_resource type="Animation" id="Animation_vodis"]
-length = 0.4
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_0sxpd"]
 _data = {
