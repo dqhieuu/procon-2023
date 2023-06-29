@@ -116,10 +116,11 @@ def compute_score(map: GameMap, coeff: ScoreCoefficients):
                 score["team1"]["count"]["territory"] += 1
             if map.get_tile(x, y).is_team2_closed_territory or map.get_tile(x, y).is_team2_open_territory:
                 score["team2"]["count"]["territory"] += 1
-            if map.get_tile(x, y).has_castle == Team.TEAM1 and (map.get_tile(x, y).is_team1_open_territory or map.get_tile(x, y).is_team1_closed_territory):
-                score["team1"]["count"]["castle"] += 1
-            elif map.get_tile(x, y).has_castle == Team.TEAM2 and (map.get_tile(x, y).is_team2_open_territory or map.get_tile(x, y).is_team2_closed_territory):
-                score["team2"]["count"]["castle"] += 1
+            if map.get_tile(x, y).has_castle:
+                if map.get_tile(x, y).is_team1_open_territory or map.get_tile(x, y).is_team1_closed_territory:
+                    score["team1"]["count"]["castle"] += 1
+                elif map.get_tile(x, y).is_team2_open_territory or map.get_tile(x, y).is_team2_closed_territory:
+                    score["team2"]["count"]["castle"] += 1
 
     score["team1"]["points"]["territory"] = score["team1"]["count"]["territory"] * coeff.territory
     score["team1"]["points"]["wall"] = score["team1"]["count"]["wall"] * coeff.wall

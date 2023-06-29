@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dn12uq5dxtlng" path="res://sprites/castle.png" id="1_bdoet"]
 [ext_resource type="Script" path="res://gamemap_tile.gd" id="1_hsfm8"]
-[ext_resource type="Texture2D" uid="uid://be3fb6y72kyjs" path="res://sprites/plain.jpeg" id="2_0lplf"]
+[ext_resource type="Texture2D" uid="uid://c7sa7w6ohv0eh" path="res://sprites/plain.jpg" id="1_vlott"]
 [ext_resource type="Texture2D" uid="uid://bndlf38150ljx" path="res://sprites/pond.jpg" id="3_7qxnx"]
 [ext_resource type="Texture2D" uid="uid://3iyem73p358n" path="res://sprites/wall.jpeg" id="5_g3t1e"]
 [ext_resource type="Texture2D" uid="uid://2rw5t6ird3ob" path="res://sprites/craftman.png" id="6_drohf"]
@@ -23,7 +23,7 @@ script = ExtResource("1_hsfm8")
 
 [node name="Plain" type="TextureRect" parent="."]
 layout_mode = 2
-texture = ExtResource("2_0lplf")
+texture = ExtResource("1_vlott")
 expand_mode = 1
 
 [node name="Pond" type="TextureRect" parent="."]
@@ -33,6 +33,7 @@ expand_mode = 1
 
 [node name="Castle" type="TextureRect" parent="."]
 layout_mode = 2
+texture = ExtResource("1_vlott")
 expand_mode = 1
 
 [node name="TextureRect" type="TextureRect" parent="Castle"]

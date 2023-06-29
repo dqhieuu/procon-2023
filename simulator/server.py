@@ -4,7 +4,7 @@ from entities.craftsman import CraftsmanCommand
 from game import Game
 import requests
 
-game = Game("assets/map1.txt")
+game = Game("assets/map2.txt")
 app = FastAPI()
 
 online_room = 0
