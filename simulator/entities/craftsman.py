@@ -5,12 +5,13 @@ from pydantic import BaseModel
 from entities.game_state import GameState
 from entities.utils.action_result import ActionResult, FailError, FailCode
 from entities.utils.enums import Team, ActionType, Direction
+from typing import Union
 
 
 class CraftsmanCommand(BaseModel):
     craftsman_pos: tuple[int, int]
     action_type: ActionType
-    direction: Direction | None = None
+    direction: Union[Direction,None] = None
 
 
 # Different actions per craftsmans turn: 1 + 8 + 4 + 4 = 17
@@ -20,8 +21,8 @@ class Craftsman:
         self.team = team
         self.pos = pos
         # dependencies
-        self.phase_start_game_state: GameState | None = None
-        self.latest_action_game_state: GameState | None = None
+        self.phase_start_game_state: Union[GameState, None] = None
+        self.latest_action_game_state: Union[GameState, None] = None
 
     def __eq__(self, other):
         return self.team == other.team and self.pos == other.pos
@@ -233,7 +234,7 @@ def has_craftsman_at(list_of_craftsmen: list[Craftsman], pos: tuple[int, int]) -
     return False
 
 
-def get_craftsman_at(list_of_craftsmen: list[Craftsman], pos: tuple[int, int]) -> Craftsman | None:
+def get_craftsman_at(list_of_craftsmen: list[Craftsman], pos: tuple[int, int]) -> Union[Craftsman, None]:
     for craftsman in list_of_craftsmen:
         if craftsman.pos == pos:
             return craftsman

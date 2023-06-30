@@ -6,7 +6,7 @@ from enum import Enum
 from entities.game_state import GameState
 from entities.utils.enums import ActionType
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from entities.craftsman import Craftsman
@@ -39,7 +39,7 @@ class ActionResult:
                  actor_before: Craftsman, actor_after: Craftsman,
                  game_state_before: GameState, game_state_after: GameState,
                  action_detail=None,
-                 fail_error: FailError | None = None
+                 fail_error: Union[FailError, None] = None
                  ):
         self.action_type = action_type
         self.action_detail = action_detail
