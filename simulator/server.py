@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from fastapi import FastAPI
 
 from entities.craftsman import CraftsmanCommand
@@ -24,7 +26,7 @@ async def do_command(command: CraftsmanCommand):
 
 @app.post("/end_turn")
 async def end_turn():
-    return game.process_turn()
+    game.process_turn()
 
 
 @app.get("/current_state")
@@ -33,7 +35,10 @@ async def current_state():
         r = requests.get('https://procon2023.duckdns.org/api/', headers={"Authorization": team_1_token})
         return r.json()
 
+    state_jsonable = deepcopy(game.current_state)
+    state_jsonable.map.map = state_jsonable.map.map.tolist()
+
     return {
         "score": game.score,
-        "state": game.current_state
+        "state": state_jsonable
     }

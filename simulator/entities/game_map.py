@@ -1,17 +1,19 @@
+import numpy as np
+
 from entities.tile import Tile
 
 
 class GameMap:
     def __init__(self):
-        self.map: list[list[Tile]] = []
+        self.map: np.ndarray = None
 
     @property
     def width(self):
-        return len(self.map[0])
+        return self.map.shape[1]
 
     @property
     def height(self):
-        return len(self.map)
+        return self.map.shape[0]
 
     def is_valid_pos(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height

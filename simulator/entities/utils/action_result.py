@@ -44,10 +44,14 @@ class ActionResult:
         self.action_type = action_type
         self.action_detail = action_detail
         self.success = success
-        self.actor_before = deepcopy(actor_before)
-        self.actor_after = deepcopy(actor_after)
-        self.game_state_before = deepcopy(game_state_before)
-        self.game_state_after = deepcopy(game_state_after)
+        # self.actor_before = deepcopy(actor_before)
+        # self.actor_after = deepcopy(actor_after)
+        # self.game_state_before = deepcopy(game_state_before)
+        # self.game_state_after = deepcopy(game_state_after)
+        self.actor_before = actor_before
+        self.actor_after = actor_after
+        self.game_state_before = game_state_before
+        self.game_state_after = game_state_after
         self.fail_error = fail_error
 
     @classmethod

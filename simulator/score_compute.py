@@ -2,6 +2,8 @@ from copy import deepcopy
 
 from entities.game_map import GameMap, ScoreCoefficients
 from entities.utils.enums import Team
+from utils import timeit
+
 
 
 def get_territory_computed_map(prev_turn_map: GameMap, cur_turn_map: GameMap) -> GameMap:

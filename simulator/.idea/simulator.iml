@@ -2,9 +2,15 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/pettingzoo-environment" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/pettingzoo-environment/MARLlib/marllib" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
+      <excludeFolder url="file://$MODULE_DIR$/pettingzoo-environment/MARLlib/exp_results" />
     </content>
-    <orderEntry type="jdk" jdkName="procon" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="marllib" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="renderExternalDocumentation" value="true" />
   </component>
 </module>

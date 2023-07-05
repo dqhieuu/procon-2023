@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 
 from pydantic import BaseModel
 
@@ -23,6 +23,7 @@ class Craftsman:
         # dependencies
         self.phase_start_game_state: Union[GameState, None] = None
         self.latest_action_game_state: Union[GameState, None] = None
+        self.has_committed_action = False
 
     def __eq__(self, other):
         return self.team == other.team and self.pos == other.pos
@@ -99,7 +100,9 @@ class Craftsman:
         craftsman_after_move = self.without_game_state()
         craftsman_after_move.pos = next_pos
 
-        game_state_after_move = deepcopy(self.latest_action_game_state)
+        # logic will be wrong, but it's for the sake of performance
+        # game_state_after_move = deepcopy(self.latest_action_game_state)
+        game_state_after_move = self.latest_action_game_state
         game_state_after_move.craftsmen.remove(self)
         game_state_after_move.craftsmen.append(craftsman_after_move)
 
@@ -150,10 +153,12 @@ class Craftsman:
                                          next_pos)),
             )
 
-        selected_tile_with_wall_built = deepcopy(next_pos_tile)
+        selected_tile_with_wall_built = copy(next_pos_tile)
         selected_tile_with_wall_built.wall = Team.TEAM1 if self.team == Team.TEAM1 else Team.TEAM2
 
-        cloned_game_state = deepcopy(self.latest_action_game_state)
+        # logic will be wrong, but it's for the sake of performance
+        # cloned_game_state = deepcopy(self.latest_action_game_state)
+        cloned_game_state = self.latest_action_game_state
         cloned_game_state.map.set_tile(*next_pos, selected_tile_with_wall_built)
 
         return ActionResult.from_success(
@@ -194,10 +199,12 @@ class Craftsman:
                                      message="Destroy at {} is not wall type tile".format(next_pos)),
             )
 
-        selected_tile_with_wall_destroyed = deepcopy(next_pos_tile)
+        selected_tile_with_wall_destroyed = copy(next_pos_tile)
         selected_tile_with_wall_destroyed.wall = Team.NEUTRAL
 
-        cloned_game_state = deepcopy(self.latest_action_game_state)
+        # logic will be wrong, but it's for the sake of performance
+        # cloned_game_state = deepcopy(self.latest_action_game_state)
+        cloned_game_state = self.latest_action_game_state
         cloned_game_state.map.set_tile(*next_pos, selected_tile_with_wall_destroyed)
 
         return ActionResult.from_success(
@@ -209,13 +216,13 @@ class Craftsman:
         )
 
     def with_game_state(self, phase_start_game_state: GameState, latest_action_game_state: GameState):
-        clone = deepcopy(self)
+        clone = copy(self)
         clone.phase_start_game_state = phase_start_game_state
         clone.latest_action_game_state = latest_action_game_state
         return clone
 
     def without_game_state(self):
-        clone = deepcopy(self)
+        clone = copy(self)
         clone.phase_start_game_state = None
         clone.latest_action_game_state = None
         return clone
