@@ -1,0 +1,70 @@
+Failure # 1 (occurred at 2023-07-03_15-31-16)
+Traceback (most recent call last):
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/tune/trial_runner.py", line 890, in _process_trial
+    results = self.trial_executor.fetch_result(trial)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/tune/ray_trial_executor.py", line 788, in fetch_result
+    result = ray.get(trial_future[0], timeout=DEFAULT_GET_TIMEOUT)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/_private/client_mode_hook.py", line 105, in wrapper
+    return func(*args, **kwargs)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/worker.py", line 1625, in get
+    raise value.as_instanceof_cause()
+ray.exceptions.RayTaskError(RayOutOfMemoryError): [36mray::IPPOTrainer.train_buffered()[39m (pid=13722, ip=172.18.170.77, repr=IPPOTrainer)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/tune/trainable.py", line 224, in train_buffered
+    result = self.train()
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/rllib/agents/trainer.py", line 679, in train
+    raise e
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/rllib/agents/trainer.py", line 668, in train
+    result = Trainable.train(self)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/tune/trainable.py", line 283, in train
+    result = self.step()
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/rllib/agents/trainer_template.py", line 206, in step
+    step_results = next(self.train_exec_impl)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 756, in __next__
+    return next(self.built_iterator)
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 843, in apply_filter
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 843, in apply_filter
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  [Previous line repeated 1 more time]
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 876, in apply_flatten
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 783, in apply_foreach
+    for item in it:
+  [Previous line repeated 1 more time]
+  File "/home/hieu/mambaforge/envs/marllib/lib/python3.9/site-packages/ray/util/iter.py", line 471, in base_iterator
+    yield ray.get(futures, timeout=timeout)
+ray.exceptions.RayTaskError(RayOutOfMemoryError): [36mray::RolloutWorker.par_iter_next()[39m (pid=13722, ip=172.18.170.77, repr=<ray.rllib.evaluation.rollout_worker.modify_class.<locals>.Class object at 0x7fa43ca94850>)
+ray._private.memory_monitor.RayOutOfMemoryError: More than 95% of the memory on node Hieu-Desktop is used (14.81 / 15.59 GB). The top 10 memory consumers are:
+
+PID	MEM	COMMAND
+13722	13.87GiB	python /mnt/c/Program Files (x86)/JetBrains/PyCharm 2021.3.3/plugins/python/helpers/pycharm/_jb_unit
+13839	0.05GiB	ray::IDLE
+13841	0.05GiB	ray::IDLE
+13838	0.05GiB	ray::IDLE
+13833	0.05GiB	ray::IDLE
+13835	0.05GiB	ray::IDLE
+13831	0.05GiB	ray::IDLE
+13843	0.05GiB	ray::IDLE
+13842	0.05GiB	ray::IDLE
+13837	0.05GiB	ray::IDLE
+
+In addition, up to 0.0 GiB of shared memory is currently being used by the Ray object store.
+---
+--- Tip: Use the `ray memory` command to list active objects in the cluster.
+--- To disable OOM exceptions, set RAY_DISABLE_MEMORY_MONITOR=1.
+---
+

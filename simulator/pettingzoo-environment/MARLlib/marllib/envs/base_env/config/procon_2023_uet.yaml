@@ -1,0 +1,9 @@
+env: procon_2023_uet
+
+env_args:
+  map_name: "OneVsOne-v0"
+
+mask_flag: False
+global_state_flag: True
+opp_action_in_cc: True
+agent_level_batch_update: False
