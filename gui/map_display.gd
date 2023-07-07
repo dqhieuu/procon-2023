@@ -21,28 +21,45 @@ func _turn_state_to_string(str):
 func get_node_by_group(group):
 	return get_tree().get_first_node_in_group(group)
 
-func update_score(score):
+func get_nodes_by_group(group):
+	return get_tree().get_nodes_in_group(group)
 
-	get_node_by_group("t1_terr_count").text = "Terr count: %d" % score.team1.count.territory
-	get_node_by_group("t1_castle_count").text = "Castle count: %d" % score.team1.count.castle
-	get_node_by_group("t1_wall_count").text = "Wall count: %d" % score.team1.count.wall
-	get_node_by_group("t1_terr_pts").text = "Terr pts: %d" % score.team1.points.territory
-	get_node_by_group("t1_castle_pts").text = "Castle pts: %d" % score.team1.points.castle
-	get_node_by_group("t1_wall_pts").text = "Wall pts: %d" % score.team1.points.wall
-	get_node_by_group("t1_total_pts").text = "Total pts: %d" % score.team1.points.total
+func update_score(score):
+	for e in get_nodes_by_group("t1_terr_count"):
+		e.text = "Terr count: %d" % score.team1.count.territory
+	for e in get_nodes_by_group("t1_castle_count"):
+		e.text =  "Castle count: %d" % score.team1.count.castle
+	for e in get_nodes_by_group("t1_wall_count"):
+		e.text =  "Wall count: %d" % score.team1.count.wall
+	for e in get_nodes_by_group("t1_terr_pts"):
+		e.text =  "Terr pts: %d" % score.team1.points.territory
+	for e in get_nodes_by_group("t1_castle_pts"):
+		e.text =  "Castle pts: %d" % score.team1.points.castle
+	for e in get_nodes_by_group("t1_wall_pts"):
+		e.text =  "Wall pts: %d" % score.team1.points.wall
+	for e in get_nodes_by_group("t1_total_pts"):
+		e.text =  "Total pts: %d" % score.team1.points.total
 	
-	get_node_by_group("t2_terr_count").text = "Terr count: %d" % score.team2.count.territory
-	get_node_by_group("t2_castle_count").text = "Castle count: %d" % score.team2.count.castle
-	get_node_by_group("t2_wall_count").text = "Wall count: %d" % score.team2.count.wall
-	get_node_by_group("t2_terr_pts").text = "Terr pts: %d" % score.team2.points.territory
-	get_node_by_group("t2_castle_pts").text = "Castle pts: %d" % score.team2.points.castle
-	get_node_by_group("t2_wall_pts").text = "Wall pts: %d" % score.team2.points.wall
-	get_node_by_group("t2_total_pts").text = "Total pts: %d" % score.team2.points.total
+	for e in get_nodes_by_group("t2_terr_count"):
+		e.text =  "Terr count: %d" % score.team2.count.territory
+	for e in get_nodes_by_group("t2_castle_count"):
+		e.text =  "Castle count: %d" % score.team2.count.castle
+	for e in get_nodes_by_group("t2_wall_count"):
+		e.text =  "Wall count: %d" % score.team2.count.wall
+	for e in get_nodes_by_group("t2_terr_pts"):
+		e.text =  "Terr pts: %d" % score.team2.points.territory
+	for e in get_nodes_by_group("t2_castle_pts"):
+		e.text =  "Castle pts: %d" % score.team2.points.castle
+	for e in get_nodes_by_group("t2_wall_pts"):
+		e.text =  "Wall pts: %d" % score.team2.points.wall
+	for e in get_nodes_by_group("t2_total_pts"):
+		e.text =  "Total pts: %d" % score.team2.points.total
 
 
 func load_map(state):
-	var score = state.score
-	update_score(score)
+	if state.has('score'):
+		var score = state.score
+		update_score(score)
 	var game_state = state.state
 	for child in $GridContainer.get_children():
 		child.free()
@@ -78,10 +95,10 @@ func load_map(state):
 			tile.wall_team = string_to_team_type[json_tile.wall]
 			tile.has_pond = json_tile.has_pond
 			tile.has_castle = json_tile.has_castle
-			tile.is_team1_closed_territory = json_tile.is_team1_closed_territory
-			tile.is_team2_closed_territory = json_tile.is_team2_closed_territory
-			tile.is_team1_open_territory = json_tile.is_team1_open_territory
-			tile.is_team2_open_territory = json_tile.is_team2_open_territory
+			tile.is_team1_closed_territory = json_tile.t1c
+			tile.is_team2_closed_territory = json_tile.t2c
+			tile.is_team1_open_territory = json_tile.t1o
+			tile.is_team2_open_territory = json_tile.t2o
 			
 			$GridContainer.add_child(tile)
 
@@ -89,7 +106,12 @@ func load_map(state):
 		var tile = $GridContainer.get_child(man.pos[1]*width+man.pos[0])
 		tile.craftsman_occupied = string_to_team_type[man.team]
 	
-	get_tree().get_first_node_in_group("turn_info").text = "Turn %s: %s" % [game_state.turn_number, _turn_state_to_string(game_state.turn_state)]
+	for e in get_nodes_by_group("turn_info"):
+		e.text = "Turn %s: %s" % [game_state.turn_number, _turn_state_to_string(game_state.turn_state)]
+	
+	var replay_node = get_tree().get_first_node_in_group('replay_feature')
+	if state.has("winner") && replay_node.replay_turns == null:
+		replay_node.load_replay_data(await HTTP.get_match_history())
 
 
 func load_mock_map(width:int, height:int):

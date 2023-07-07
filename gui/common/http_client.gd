@@ -14,6 +14,9 @@ func end_turn():
 #    direction: Direction | None = None
 func send_command(command):
 	return await _post_request("%s/command" % SERVER_PATH, command)
+	
+func get_match_history():
+	return await _get_request("%s/history" % SERVER_PATH)
 
 func _get_request(url: String):
 	var HTTP = HTTPRequest.new()
