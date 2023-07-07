@@ -34,5 +34,5 @@ territory 5
 wall 2
 castle 30
 
-turns 100
+turns 80
 time 10

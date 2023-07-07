@@ -24,6 +24,9 @@ class GameMap:
     def set_tile(self, x, y, tile):
         self.map[y][x] = tile
 
+    def get_castle_positions(self):
+        return [(x, y) for y in range(self.height) for x in range(self.width) if self.map[y][x].has_castle]
+
 
 class ScoreCoefficients:
     def __init__(self, territory: int, wall: int, castle: int):

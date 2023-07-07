@@ -7,10 +7,10 @@ class Tile:
         self.has_pond = False
         self.wall = Team.NEUTRAL
         # lazily updated
-        self.is_team1_closed_territory = False
-        self.is_team2_closed_territory = False
-        self.is_team1_open_territory = False
-        self.is_team2_open_territory = False
+        self.t1c = False
+        self.t2c = False
+        self.t1o = False
+        self.t2o = False
 
     @classmethod
     def from_file_string(cls, tile_type: str):

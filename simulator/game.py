@@ -1,9 +1,12 @@
+from datetime import datetime
 import functools
 import os
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, List
+from fastapi.encoders import jsonable_encoder
 
 import numpy as np
+import json
 
 from entities.craftsman import CraftsmanCommand, get_craftsman_at, Craftsman
 from entities.game_map import ScoreCoefficients
@@ -11,13 +14,14 @@ from entities.game_state import GameState
 from entities.tile import Tile
 from entities.utils.enums import ActionType, get_direction_vector, Team, TurnState, Direction
 from score_compute import get_territory_computed_map, compute_score
+from utils import numpy_game_map_to_list_from_history
 
 
 class Game:
     def __init__(self, map_path: str):
         self.current_state = GameState()
-        self.history: list[GameState] = [self.current_state]
-        self.command_buffer: list[CraftsmanCommand] = []
+        self.history: List = []
+        self.command_buffer: List[CraftsmanCommand] = []
 
         self.score_coefficients = ScoreCoefficients(territory=1, wall=1, castle=1)
         self.max_turn = 0
@@ -27,7 +31,7 @@ class Game:
 
     def categorize_and_deduplicate_commands_from_buffer(self):
         craftsman_pos_dict = {}
-        result: dict[str, list[CraftsmanCommand]] = {
+        result: dict[str, List[CraftsmanCommand]] = {
             "move": [],
             "build": [],
             "destroy": []
@@ -47,8 +51,8 @@ class Game:
 
     def load_map(self, file_path):
         # print("Current working directory: " + os.getcwd())
-        with open('/mnt/f/procon-2023/simulator/pettingzoo-environment/MARLlib/{}'.format(file_path), "r") as f:
-        # with open('F:/procon-2023/simulator/assets/map2.txt'.format(file_path), "r") as f:
+        # with open('/mnt/f/procon-2023/simulator/pettingzoo-environment/MARLlib/{}'.format(file_path), "r") as f:
+        with open('F:/procon-2023/simulator/assets/map2.txt'.format(file_path), "r") as f:
             self._reset_game_state()
             mode = ""
             for line in f:
@@ -189,10 +193,10 @@ class Game:
                 arr[y][x][3] = tile.wall == Team.TEAM2
                 arr[y][x][4] = tile.has_castle
                 arr[y][x][5] = tile.has_pond
-                arr[y][x][6] = tile.is_team1_closed_territory
-                arr[y][x][7] = tile.is_team2_closed_territory
-                arr[y][x][8] = tile.is_team1_open_territory
-                arr[y][x][9] = tile.is_team2_open_territory
+                arr[y][x][6] = tile.t1c
+                arr[y][x][7] = tile.t2c
+                arr[y][x][8] = tile.t1o
+                arr[y][x][9] = tile.t2o
                 arr[y][x][10] = self.current_state.turn_state == TurnState.TEAM2_TURN
                 arr[y][x][11] = (x, y) in craftman_tcur_action_committed
 
@@ -206,9 +210,12 @@ class Game:
 
         command_res = []
 
+        prev_turn_state = deepcopy(self.current_state)
         phase_start_state = deepcopy(self.current_state)
-        prev_turn_state = phase_start_state
-        self.history.append(phase_start_state)
+        self.history.append({
+            "score": self.score,
+            "state": prev_turn_state
+        })
 
         for command in commands["destroy"]:
             selected = get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
@@ -259,14 +266,27 @@ class Game:
         for craftsman in self.current_state.craftsmen:
             craftsman.has_committed_action = False
 
+        if self.is_game_over:
+            self.current_state.turn_state = TurnState.GAME_OVER
+            self.history.append({
+                "score": self.score,
+                "winner": self.winning_team,
+                "state": self.current_state
+            })
+
+            print("Writing history to file...")
+            json_compatible_history = jsonable_encoder(numpy_game_map_to_list_from_history(self.history))
+            with open("history/game_{}.json".format(datetime.now().strftime("%Y-%m-%d_%H.%M.%S")), "w") as file:
+                json.dump(json_compatible_history, file, separators=(',', ':'))
+
         return command_res
 
     @property
-    def score(self):
+    def score(self) -> dict:
         return compute_score(self.current_state.map, self.score_coefficients)
 
     @property
-    def winning_team(self):
+    def winning_team(self) -> Team:
         score = self.score
         print(score)
         t1_score = score['team1']
@@ -305,7 +325,7 @@ class Game:
 
     def _reset_game_state(self):
         self.current_state = GameState()
-        self.history = [self.current_state]
+        self.history = []
         self.command_buffer.clear()
 
 

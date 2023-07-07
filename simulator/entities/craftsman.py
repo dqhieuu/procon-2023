@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from entities.game_state import GameState
 from entities.utils.action_result import ActionResult, FailError, FailCode
 from entities.utils.enums import Team, ActionType, Direction
-from typing import Union
+from typing import Union, List
 
 
 class CraftsmanCommand(BaseModel):
@@ -234,14 +234,14 @@ class Craftsman:
             raise Exception("latest_action_game_state is not set")
 
 
-def has_craftsman_at(list_of_craftsmen: list[Craftsman], pos: tuple[int, int]) -> bool:
+def has_craftsman_at(list_of_craftsmen: List[Craftsman], pos: tuple[int, int]) -> bool:
     for craftsman in list_of_craftsmen:
         if craftsman.pos == pos:
             return True
     return False
 
 
-def get_craftsman_at(list_of_craftsmen: list[Craftsman], pos: tuple[int, int]) -> Union[Craftsman, None]:
+def get_craftsman_at(list_of_craftsmen: List[Craftsman], pos: tuple[int, int]) -> Union[Craftsman, None]:
     for craftsman in list_of_craftsmen:
         if craftsman.pos == pos:
             return craftsman

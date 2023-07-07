@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, List
 
 import numpy as np
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class GameState:
     def __init__(self):
         self.map: Union[GameMap, None] = GameMap()
-        self.craftsmen: list[Craftsman] = []
+        self.craftsmen: List[Craftsman] = []
         self.turn_state = TurnState.TEAM1_TURN
         self.turn_number = 1
 

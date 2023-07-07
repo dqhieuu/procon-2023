@@ -12,26 +12,26 @@ def get_territory_computed_map(prev_turn_map: GameMap, cur_turn_map: GameMap) ->
     # Reset territory
     for y in range(new_map.height):
         for x in range(new_map.width):
-            new_map.get_tile(x, y).is_team1_closed_territory = False
-            new_map.get_tile(x, y).is_team2_closed_territory = False
-            new_map.get_tile(x, y).is_team1_open_territory = False
-            new_map.get_tile(x, y).is_team2_open_territory = False
+            new_map.get_tile(x, y).t1c = False
+            new_map.get_tile(x, y).t2c = False
+            new_map.get_tile(x, y).t1o = False
+            new_map.get_tile(x, y).t2o = False
 
     # Make prev turn map's territory open territory
     for y in range(new_map.height):
         for x in range(new_map.width):
             prev_tile_ref = prev_turn_map.get_tile(x, y)
-            if prev_tile_ref.is_team1_closed_territory or prev_tile_ref.is_team1_open_territory:
-                new_map.get_tile(x, y).is_team1_open_territory = True
-            if prev_tile_ref.is_team2_closed_territory or prev_tile_ref.is_team2_open_territory:
-                new_map.get_tile(x, y).is_team2_open_territory = True
+            if prev_tile_ref.t1c or prev_tile_ref.t1o:
+                new_map.get_tile(x, y).t1o = True
+            if prev_tile_ref.t2c or prev_tile_ref.t2o:
+                new_map.get_tile(x, y).t2o = True
 
     # Delete open territory if there is wall on it
     for y in range(new_map.height):
         for x in range(new_map.width):
             if cur_turn_map.get_tile(x, y).wall != Team.NEUTRAL:
-                new_map.get_tile(x, y).is_team1_open_territory = False
-                new_map.get_tile(x, y).is_team2_open_territory = False
+                new_map.get_tile(x, y).t1o = False
+                new_map.get_tile(x, y).t2o = False
 
     # 4 way flood fill to find closed territory
     teams = [Team.TEAM1, Team.TEAM2]
@@ -70,12 +70,12 @@ def _flood_fill(pos: tuple[int, int], team: Team, map: GameMap, visited: set[tup
         return
 
     for x, y in to_be_filled:
-        map.get_tile(x, y).is_team1_open_territory = False
-        map.get_tile(x, y).is_team2_open_territory = False
+        map.get_tile(x, y).t1o = False
+        map.get_tile(x, y).t2o = False
         if team == Team.TEAM1:
-            map.get_tile(x, y).is_team1_closed_territory = True
+            map.get_tile(x, y).t1c = True
         else:
-            map.get_tile(x, y).is_team2_closed_territory = True
+            map.get_tile(x, y).t2c = True
 
 
 def compute_score(map: GameMap, coeff: ScoreCoefficients):
@@ -114,14 +114,14 @@ def compute_score(map: GameMap, coeff: ScoreCoefficients):
                 score["team1"]["count"]["wall"] += 1
             elif map.get_tile(x, y).wall == Team.TEAM2:
                 score["team2"]["count"]["wall"] += 1
-            if map.get_tile(x, y).is_team1_closed_territory or map.get_tile(x, y).is_team1_open_territory:
+            if map.get_tile(x, y).t1c or map.get_tile(x, y).t1o:
                 score["team1"]["count"]["territory"] += 1
-            if map.get_tile(x, y).is_team2_closed_territory or map.get_tile(x, y).is_team2_open_territory:
+            if map.get_tile(x, y).t2c or map.get_tile(x, y).t2o:
                 score["team2"]["count"]["territory"] += 1
             if map.get_tile(x, y).has_castle:
-                if map.get_tile(x, y).is_team1_open_territory or map.get_tile(x, y).is_team1_closed_territory:
+                if map.get_tile(x, y).t1o or map.get_tile(x, y).t1c:
                     score["team1"]["count"]["castle"] += 1
-                elif map.get_tile(x, y).is_team2_open_territory or map.get_tile(x, y).is_team2_closed_territory:
+                elif map.get_tile(x, y).t2o or map.get_tile(x, y).t2c:
                     score["team2"]["count"]["castle"] += 1
 
     score["team1"]["points"]["territory"] = score["team1"]["count"]["territory"] * coeff.territory

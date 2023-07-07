@@ -55,6 +55,25 @@ def get_direction_vector(direction: Direction) -> (int, int):
     elif direction == Direction.DOWN_RIGHT:
         return 1, 1
 
+def get_direction_from_vector(vector: (int, int)) -> Direction:
+    x, y = vector
+    if x == 0 and y == -1:
+        return Direction.UP
+    elif x == 0 and y == 1:
+        return Direction.DOWN
+    elif x == -1 and y == 0:
+        return Direction.LEFT
+    elif x == 1 and y == 0:
+        return Direction.RIGHT
+    elif x == -1 and y == -1:
+        return Direction.UP_LEFT
+    elif x == 1 and y == -1:
+        return Direction.UP_RIGHT
+    elif x == -1 and y == 1:
+        return Direction.DOWN_LEFT
+    elif x == 1 and y == 1:
+        return Direction.DOWN_RIGHT
+
 
 class ActionType(Enum):
     STAY = "stay"
