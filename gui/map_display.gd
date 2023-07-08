@@ -109,6 +109,7 @@ func load_map(state):
 	for e in get_nodes_by_group("turn_info"):
 		e.text = "Turn %s: %s" % [game_state.turn_number, _turn_state_to_string(game_state.turn_state)]
 	
+
 	var replay_node = get_tree().get_first_node_in_group('replay_feature')
 	if state.has("winner") && replay_node.replay_turns == null:
 		replay_node.load_replay_data(await HTTP.get_match_history())

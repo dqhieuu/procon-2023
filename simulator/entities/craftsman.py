@@ -1,3 +1,4 @@
+import secrets
 from copy import deepcopy, copy
 
 from pydantic import BaseModel
@@ -24,9 +25,10 @@ class Craftsman:
         self.phase_start_game_state: Union[GameState, None] = None
         self.latest_action_game_state: Union[GameState, None] = None
         self.has_committed_action = False
+        self.id = secrets.token_hex(8)
 
     def __eq__(self, other):
-        return self.team == other.team and self.pos == other.pos
+        return self.team == other.team and self.pos == other.pos and self.id == other.id
 
     def stay(self) -> ActionResult:
         self.__check_prerequisites()

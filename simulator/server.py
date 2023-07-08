@@ -43,33 +43,40 @@ async def current_state():
     state_jsonable = deepcopy(game.current_state)
     state_jsonable.map.map = state_jsonable.map.map.tolist()
 
-    return {
+    res = {
         "score": game.score,
         "state": state_jsonable
     }
+
+    if game.is_game_over:
+        res["winner"] = game.winning_team
+
+    return res
 
 
 @app.get("/history")
 async def current_state():
     return numpy_game_map_to_list_from_history(game.history)
 
+
 @app.get("/path")
 async def path(x: int, y: int, simple: bool = False):
     c = get_craftsman_at(game.current_state.craftsmen, (x, y))
     if c is None:
         return []
-    return dijkstra(c, game.current_state.map, pathOnlyNextMove=simple).tolist()
+    return dijkstra(c, game.current_state.map, save_only_one_next_move_in_path=simple).tolist()
+
 
 @app.get("/auto")
 async def auto():
     team1_critic = CentralizedCritic(Team.TEAM1, game)
     team1_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM1]
-    team1_craftsman_agents = [CraftsmanAgent(c, game,team1_critic) for c in team1_craftsmen]
+    team1_craftsman_agents = [CraftsmanAgent(c.id, game, team1_critic) for c in team1_craftsmen]
     team1_critic.team_agents = team1_craftsman_agents
 
     team2_critic = CentralizedCritic(Team.TEAM2, game)
     team2_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM2]
-    team2_craftsman_agents = [CraftsmanAgent(c, game,team2_critic) for c in team2_craftsmen]
+    team2_craftsman_agents = [CraftsmanAgent(c.id, game, team2_critic) for c in team2_craftsmen]
     team2_critic.team_agents = team2_craftsman_agents
 
     while not game.is_game_over:
@@ -79,8 +86,5 @@ async def auto():
             team2_critic.act()
 
         game.process_turn()
-
-
-asyncio.run(auto())
 
 

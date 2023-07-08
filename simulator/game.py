@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime
 import functools
 import os
@@ -15,6 +16,12 @@ from entities.tile import Tile
 from entities.utils.enums import ActionType, get_direction_vector, Team, TurnState, Direction
 from score_compute import get_territory_computed_map, compute_score
 from utils import numpy_game_map_to_list_from_history
+
+
+def save_game_history(game_history):
+    json_compatible_history = jsonable_encoder(numpy_game_map_to_list_from_history(game_history))
+    with open("history/game_{}.json".format(datetime.now().strftime("%Y-%m-%d_%H.%M.%S")), "w") as file:
+        json.dump(json_compatible_history, file, separators=(',', ':'))
 
 
 class Game:
@@ -96,6 +103,12 @@ class Game:
             craftsman.has_committed_action = True
 
         self.command_buffer.append(command)
+
+    def find_craftsman_by_id(self, craftsman_id: str) -> Optional[Craftsman]:
+        for craftsman in self.current_state.craftsmen:
+            if craftsman.id == craftsman_id:
+                return craftsman
+        return None
 
     def _agent_name_to_craftsman(self, agent: str) -> Optional[Craftsman]:
         team = Team.TEAM1 if agent.startswith("team1") else Team.TEAM2
@@ -275,9 +288,9 @@ class Game:
             })
 
             print("Writing history to file...")
-            json_compatible_history = jsonable_encoder(numpy_game_map_to_list_from_history(self.history))
-            with open("history/game_{}.json".format(datetime.now().strftime("%Y-%m-%d_%H.%M.%S")), "w") as file:
-                json.dump(json_compatible_history, file, separators=(',', ':'))
+            thread = threading.Thread(target=save_game_history, args=(self.history,))
+            thread.start()
+
 
         return command_res
 
@@ -288,7 +301,6 @@ class Game:
     @property
     def winning_team(self) -> Team:
         score = self.score
-        print(score)
         t1_score = score['team1']
         t2_score = score['team2']
         # Team with the highest total score wins

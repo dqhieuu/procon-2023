@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 
@@ -21,24 +21,34 @@ class CurrentStrategy(Enum):
 
 
 class CraftsmanAgent:
-    def __init__(self, craftsman: Craftsman, game: Game, critic: CentralizedCritic):
-        self.craftsman = craftsman
+    def __init__(self, craftsman_id: str, game: Game, critic: CentralizedCritic):
+        self.craftsman_id = craftsman_id
         self.game = game
         self.current_strategy = CurrentStrategy.CAPTURE_CASTLE
         self.critic = critic
 
-    def get_move(self) -> List[tuple[int, int]]:
-        if self.current_strategy == CurrentStrategy.CAPTURE_CASTLE:
-            return self.get_capture_castle_move()
+        self.selected_castle_pos = None
 
-    def get_capture_castle_move(self) -> List[tuple[int, int]]:
+    def get_move(self, other_agents_moved_mask: np.ndarray) -> List[tuple[int, int]]:
+        if self.current_strategy == CurrentStrategy.CAPTURE_CASTLE:
+            return self.get_capture_castle_move(other_agents_moved_mask)
+
+    @property
+    def craftsman(self):
+        return self.game.find_craftsman_by_id(self.craftsman_id)
+
+    def get_capture_castle_move(self, other_agent_moved_mask: np.ndarray) -> List[tuple[int, int]]:
+        craftsman = self.game.find_craftsman_by_id(self.craftsman_id)
         map = self.game.current_state.map
 
         castle_positions = map.get_castle_positions()
         if len(castle_positions) == 0:
             return []
 
-        move_costs = dijkstra(self.craftsman, map, pathOnlyNextMove=True)
+        move_costs = dijkstra(craftsman, map,
+                              save_only_one_next_move_in_path=True,
+                              all_craftsmen=self.game.current_state.craftsmen,
+                              moved_craftsmen_mask=other_agent_moved_mask)
         castle_costs = [(move_costs[y][x]['move_cost'], (x, y)) for x, y in castle_positions]
         castle_costs.sort(key=lambda x: x[0])
         if castle_costs[0][0] > 1e10:
@@ -50,21 +60,32 @@ class CraftsmanAgent:
 class CentralizedCritic:
     def __init__(self, team: Team, game: Game):
         self.team = team
-        self.team_agents = []
+        self.team_agents: List[CraftsmanAgent] = []
         self.game = game
 
     def act(self):
+        moved_mask = np.zeros((self.game.current_state.map.height, self.game.current_state.map.width), dtype=bool)
         for agent in self.team_agents:
-            move = agent.get_move()
-            if len(move) > 0:
+            moves = agent.get_move(other_agents_moved_mask=moved_mask)
+            best_move = moves[0] if len(moves) > 0 else None
+            # print(self.team,self.game.current_state.turn_number, agent.craftsman.pos, moves, get_direction_from_vector(
+            #             (best_move[0] - agent.craftsman.pos[0], best_move[1] - agent.craftsman.pos[1])))
+            if best_move is not None:
                 self.game.add_command(CraftsmanCommand(craftsman_pos=agent.craftsman.pos, action_type=ActionType.MOVE
-                                              , direction=get_direction_from_vector((move[0][0] - agent.craftsman.pos[0], move[0][1] - agent.craftsman.pos[1]))))
+                                                       , direction=get_direction_from_vector(
+                        (best_move[0] - agent.craftsman.pos[0], best_move[1] - agent.craftsman.pos[1]))))
+                moved_mask[best_move[1]][best_move[0]] = True
 
 
-def dijkstra(craftsman: Craftsman, map: GameMap, pathOnlyNextMove=False) -> np.ndarray:
-    res = np.empty_like(map.map, dtype=object)
-    for y in range(map.height):
-        for x in range(map.width):
+def dijkstra(craftsman: Craftsman,
+             game_map: GameMap,
+             save_only_one_next_move_in_path=False,
+             all_craftsmen: Optional[List[Craftsman]] = None,
+             moved_craftsmen_mask: Optional[np.ndarray] = None
+             ) -> np.ndarray:
+    res = np.empty_like(game_map.map, dtype=object)
+    for y in range(game_map.height):
+        for x in range(game_map.width):
             res[y][x] = {'move_cost': 1e20, 'move_path': []}
 
     team = craftsman.team
@@ -73,6 +94,10 @@ def dijkstra(craftsman: Craftsman, map: GameMap, pathOnlyNextMove=False) -> np.n
     q = PriorityQueue()
     q.put((0, craftsman.pos, []))
     visited = set()
+
+    craftsman_pos_dict = None
+    if all_craftsmen is not None:
+        craftsman_pos_dict = {craftsman.pos: craftsman for craftsman in all_craftsmen}
 
     while not q.empty():
         cost, pos, path = q.get()
@@ -88,10 +113,19 @@ def dijkstra(craftsman: Craftsman, map: GameMap, pathOnlyNextMove=False) -> np.n
 
         for dx, dy in [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (0, 1), (-1, 0), (0, -1)]:
             nx, ny = x + dx, y + dy
-            if not map.is_valid_pos(nx, ny):
+            if not game_map.is_valid_pos(nx, ny):
                 continue
-            tile = map.get_tile(nx, ny)
+
+            tile = game_map.get_tile(nx, ny)
             if tile.has_pond:
+                res[ny][nx]['move_cost'] = 1e20
+                continue
+
+            if moved_craftsmen_mask is not None and moved_craftsmen_mask[ny][nx]:
+                res[ny][nx]['move_cost'] = 1e20
+                continue
+
+            if craftsman_pos_dict is not None and (nx, ny) in craftsman_pos_dict:
                 res[ny][nx]['move_cost'] = 1e20
                 continue
 
@@ -101,7 +135,7 @@ def dijkstra(craftsman: Craftsman, map: GameMap, pathOnlyNextMove=False) -> np.n
                     local_cost += 1
                 else:
                     local_cost += 2.5
-            if len(path) >= 1 and pathOnlyNextMove:
+            if len(path) >= 1 and save_only_one_next_move_in_path:
                 q.put((cost + local_cost, (nx, ny), path))
             else:
                 q.put((cost + local_cost, (nx, ny), [*path, (nx, ny)]))
