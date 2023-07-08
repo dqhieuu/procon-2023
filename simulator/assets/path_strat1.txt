@@ -1,0 +1,13 @@
+.. .. .. .. .. aa xxaa. .. .. .. .. ..
+.. .. .. .. aa xx 09 xx aa .. .. .. ..
+.. .. .. aa xx 10 .. 08 xx aa .. .. ..
+.. .. aa xx 11 xx .. xx 07 xx aa .. ..
+.. aa xx 12 .. .. xx 04 .. 06 xx aa ..
+aa xx 15 xx 13 xx 03 xx 05 xx .. xx aa
+xx 16 .. 14 xx 00 pi 02 xx .. .. 28 xx
+aa xx 17 xx 19 xx 01 xx .. xx 27 xx aa
+.. aa xx 18 .. 20 xx .. .. 26 xx aa ..
+.. .. aa xx 21 xx .. xx 25 xx aa .. ..
+.. .. .. aa xx 22 .. 24 xx aa .. .. ..
+.. .. .. .. aa xx 23 xx aa .. .. .. ..
+.. .. .. .. .. aa xx aa .. .. .. .. ..
