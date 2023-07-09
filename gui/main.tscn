@@ -1,6 +1,7 @@
-[gd_scene load_steps=10 format=3 uid="uid://dinq831rjae20"]
+[gd_scene load_steps=11 format=3 uid="uid://dinq831rjae20"]
 
 [ext_resource type="PackedScene" uid="uid://cosqo65u6o226" path="res://map_display.tscn" id="1_iqkw6"]
+[ext_resource type="Script" path="res://scheduler.gd" id="1_mpu3w"]
 [ext_resource type="Script" path="res://buttons/action_button.gd" id="2_gex1p"]
 [ext_resource type="Script" path="res://buttons/end_turn_button.gd" id="3_4r1gk"]
 [ext_resource type="Script" path="res://buttons/refresh_state_button.gd" id="4_sl0ey"]
@@ -33,13 +34,14 @@ _data = {
 "flash_green": SubResource("Animation_25xbi")
 }
 
-[node name="Control" type="Control"]
+[node name="Control" type="Control" groups=["root"]]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_mpu3w")
 
 [node name="Background" type="ColorRect" parent="." groups=["bg"]]
 layout_mode = 1
@@ -95,6 +97,11 @@ size_flags_horizontal = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Turn"
+
+[node name="TimeLeft" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/Interact/VBoxContainer" groups=["time_left"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Time left: Infinite"
 
 [node name="Team1Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/Interact/VBoxContainer"]
 layout_mode = 2
@@ -531,7 +538,7 @@ focus_mode = 0
 text = "End turn"
 script = ExtResource("3_4r1gk")
 
-[node name="RefreshState" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/Interact/VBoxContainer/HBoxContainer"]
+[node name="RefreshState" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/Interact/VBoxContainer/HBoxContainer" groups=["refresh_button"]]
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0

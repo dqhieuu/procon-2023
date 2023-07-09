@@ -39,9 +39,6 @@ func update_visible_sprite():
 	$Hammer.self_modulate = team_modulate
 
 func _get_drag_data(pos):
-	if craftsman_occupied == Enums.TeamType.NEUTRAL or Globals.team_turn != craftsman_occupied:
-		return null
-	
 	var is_build_destroy_wall = Input.is_action_pressed("build_destroy_wall")
 	
 	var preview
