@@ -1,28 +1,28 @@
 import json
+import re
 from copy import deepcopy
+from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi_restful.tasks import repeat_every
 
 from ai.ai import dijkstra, CentralizedCritic, CraftsmanAgent
 from entities.craftsman import CraftsmanCommand, get_craftsman_at
-from entities.utils.enums import Team, TurnState
+from entities.utils.enums import Team, TurnState, ActionType, Direction
 from game import Game
 import requests
 
 from online import OnlineFieldRequestList, online_field_decoder, OnlineActionResponseList, OnlineGameStatus
 from utils import numpy_game_map_to_list_from_history
 
-
+BASE_URL = "https://procon2023.duckdns.org/api"
 
 online_room = 57
 
-global_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODcxODY3NDl9.U2IQh3PhWTcmLuws0oEmfp-Oo8GES6Yfg8pAIUcIkfE"
+global_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
 
-team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4NzE2NTU4MH0.Uf5GgnVVNxKq2N-63xt7myYbvz_nakg90ANtrCrxIAA"
-team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODcxODY3NDl9.U2IQh3PhWTcmLuws0oEmfp-Oo8GES6Yfg8pAIUcIkfE"
-
-BASE_URL = "https://procon2023.duckdns.org/api"
+team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
+team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODg4OTIyNjMsImV4cCI6MTY4OTA2NTA2M30.phqhY5a8ox0ObRa-vXn5T6JHIO5Cl3BEJUo2-a6BK4E"
 
 
 def get_online_map_data(room_id):
@@ -37,26 +37,100 @@ def get_online_map_data(room_id):
     return selected_room
 
 
+is_negative_turn = re.compile(r'turn: -')
+
+
+def get_game_status(room_id):
+    game_status_json = requests.get('{}/player/games/{}/status'.format(BASE_URL, room_id),
+                     headers={"Authorization": global_token}).json()
+
+    if game_status_json.get('detail'):
+        if is_negative_turn.search(game_status_json['detail']):
+            # game has not started yet
+            print("Game has not started yet")
+            return OnlineGameStatus(cur_turn=0, max_turn=999, remaining=999)
+        else:
+            return None
+    return OnlineGameStatus.parse_obj(game_status_json)
+
 def get_online_actions(room_id):
     actions_json = requests.get('{}/player/games/{}/actions'.format(BASE_URL, online_room),
                                 headers={"Authorization": global_token}).json()
+
     return OnlineActionResponseList.parse_obj(actions_json)
 
 
+game_status: Optional[OnlineGameStatus] = None
 game = Game("assets/map2.txt") if online_room <= 0 else Game()
 if online_room > 0:
     game.load_online_map(get_online_map_data(online_room))
-    game.load_online_action_list(get_online_actions(online_room))
-
+    game_status = get_game_status(online_room)
+    game.load_online_action_list(get_online_actions(online_room), game_status)
 
 app = FastAPI()
+
+online_command_dict_per_craftsman_team1 = {}
+online_command_dict_per_craftsman_team2 = {}
+
 
 @app.post("/command")
 async def do_command(command: CraftsmanCommand):
     if online_room > 0:
-        r = requests.post('https://procon2023.duckdns.org/api/player/games/{}/actions'.format(online_room),
-                          headers={"Authorization": team_1_token})
-        return r.json()
+        craftsman = get_craftsman_at(game.current_state.craftsmen, command.craftsman_pos)
+        craftsman_id = craftsman.id
+        if craftsman_id is None:
+            raise HTTPException(400, "Craftsman not found")
+
+        online_command = {
+            'craftsman_id': craftsman_id,
+            'action': 'STAY'
+        }
+
+        if command.action_type is ActionType.MOVE and command.direction in [Direction.UP, Direction.DOWN,
+                                                                            Direction.LEFT, Direction.RIGHT,
+                                                                            Direction.UP_LEFT, Direction.UP_RIGHT,
+                                                                            Direction.DOWN_LEFT, Direction.DOWN_RIGHT]:
+            online_command['action'] = 'MOVE'
+            if command.direction == Direction.UP:
+                online_command['action_param'] = 'UP'
+            elif command.direction == Direction.DOWN:
+                online_command['action_param'] = 'DOWN'
+            elif command.direction == Direction.LEFT:
+                online_command['action_param'] = 'LEFT'
+            elif command.direction == Direction.RIGHT:
+                online_command['action_param'] = 'RIGHT'
+            elif command.direction == Direction.UP_LEFT:
+                online_command['action_param'] = 'UPPER_LEFT'
+            elif command.direction == Direction.UP_RIGHT:
+                online_command['action_param'] = 'UPPER_RIGHT'
+            elif command.direction == Direction.DOWN_LEFT:
+                online_command['action_param'] = 'LOWER_LEFT'
+            elif command.direction == Direction.DOWN_RIGHT:
+                online_command['action_param'] = 'LOWER_RIGHT'
+        elif command.action_type in [ActionType.BUILD, ActionType.DESTROY] and command.direction in [Direction.UP,
+                                                                                                     Direction.DOWN,
+                                                                                                     Direction.LEFT,
+                                                                                                     Direction.RIGHT]:
+            if command.action_type is ActionType.BUILD:
+                online_command['action'] = 'BUILD'
+            elif command.action_type is ActionType.DESTROY:
+                online_command['action'] = 'DESTROY'
+
+            if command.direction == Direction.UP:
+                online_command['action_param'] = 'ABOVE'
+            elif command.direction == Direction.DOWN:
+                online_command['action_param'] = 'BELOW'
+            elif command.direction == Direction.LEFT:
+                online_command['action_param'] = 'LEFT'
+            elif command.direction == Direction.RIGHT:
+                online_command['action_param'] = 'RIGHT'
+
+        if craftsman.team == Team.TEAM1:
+            online_command_dict_per_craftsman_team1[craftsman_id] = online_command
+        elif craftsman.team == Team.TEAM2:
+            online_command_dict_per_craftsman_team2[craftsman_id] = online_command
+
+        return "OK"
 
     game.add_command(command)
     return "OK"
@@ -64,21 +138,13 @@ async def do_command(command: CraftsmanCommand):
 
 @app.post("/end_turn")
 async def end_turn():
+    if online_room > 0:
+        return "OK"
     game.process_turn()
 
 
 @app.get("/current_state")
 async def current_state():
-    # if online_room > 0:
-    #     field = get_online_map_data(online_room),
-    #
-    #     # actions_json = requests.get('https://procon2023.duckdns.org/api/player/games/{}/actions'.format(online_room),
-    #     #                             headers={"Authorization": team_2_token}).json()
-    #     #
-    #     # actions = OnlineActionResponseList.parse_obj(actions_json)
-    #
-    #     return {"field": field, "actions": actions}
-
     state_jsonable = deepcopy(game.current_state)
     state_jsonable.map.map = state_jsonable.map.map.tolist()
 
@@ -86,6 +152,9 @@ async def current_state():
         "score": game.score,
         "state": state_jsonable
     }
+
+    if game_status is not None:
+        res["game_status"] = game_status
 
     if game.is_game_over:
         res["winner"] = game.winning_team
@@ -95,16 +164,50 @@ async def current_state():
 
 @app.on_event("startup")
 @repeat_every(seconds=0.3)
-async def get_game_status():
+async def auto_update_online_game_state():
+    global game_status
+    print(game_status, game.current_state.turn_number)
     if online_room > 0:
-        r = requests.get('https://procon2023.duckdns.org/api/player/games/{}/status'.format(online_room),
-                          headers={"Authorization": team_2_token})
-        json = r.json()
-        if json.get('detail'):
-            print("game ended", json)
-            return
-        status = OnlineGameStatus.parse_obj(json)
-        print(status)
+        game_status = get_game_status(online_room)
+
+        if game.current_state.turn_number != game_status.cur_turn:
+            game.load_online_action_list(
+                action_list=get_online_actions(online_room),
+                current_game_status=game_status
+            )
+            if game.current_state.turn_state == TurnState.TEAM1_TURN:
+                online_command_dict_per_craftsman_team2.clear()
+            elif game.current_state.turn_state == TurnState.TEAM2_TURN:
+                online_command_dict_per_craftsman_team1.clear()
+        else:
+            if len(online_command_dict_per_craftsman_team1) > 0 and team_1_token is not None:
+                res = requests.post(
+                    '{}/player/games/{}/actions'.format(BASE_URL, online_room),
+                    headers={"Authorization": team_1_token},
+                    json={
+                        "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM1_TURN else 2),
+                        "actions": list(online_command_dict_per_craftsman_team1.values()),
+                    }
+                )
+                if not (200 <= res.status_code < 300):
+                    print(res.text)
+                else:
+                    print("Sent online commands successfully")
+
+            if len(online_command_dict_per_craftsman_team2) > 0 and team_2_token is not None:
+                res = requests.post(
+                    '{}/player/games/{}/actions'.format(BASE_URL, online_room),
+                    headers={"Authorization": team_2_token},
+                    json={
+                        "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM2_TURN else 2),
+                        "actions": list(online_command_dict_per_craftsman_team2.values()),
+                    }
+                )
+                if not (200 <= res.status_code < 300):
+                    print(res.text)
+                else:
+                    print("Sent online commands successfully")
+
 
 @app.get("/history")
 async def current_state():

@@ -15,7 +15,7 @@ class GameState:
     def __init__(self):
         self.map: Union[GameMap, None] = GameMap()
         self.craftsmen: List[Craftsman] = []
-        self.turn_state = TurnState.INITIAL
+        self.turn_state = TurnState.TEAM1_TURN
         self.turn_number = 1
 
     def team1_craftsman_count(self):

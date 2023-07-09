@@ -3,6 +3,8 @@ extends AspectRatioContainer
 @export var width: int
 @export var height: int
 
+var turn_number = 1
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	var current_state = await HTTP.get_current_state()
@@ -57,13 +59,30 @@ func update_score(score):
 		e.text =  "Total pts: %d" % score.team2.points.total
 
 
+func update_time_left(time):
+	for e in get_nodes_by_group("time_left"):
+		if time != null:
+			e.text = "Time left: %d" % time
+		else:
+			e.text = "Time left: Infinite"
+
 func load_map(state):
 	if state.has('score'):
 		var score = state.score
 		update_score(score)
+	
+	var time_left = null
+	if state.has("game_status"):
+		time_left = state.game_status.remaining
+		
+	update_time_left(time_left)
+		
+	
 	var game_state = state.state
 	for child in $GridContainer.get_children():
 		child.free()
+		
+	turn_number = game_state.turn_number
 	
 	var map = game_state.map.map
 	width = map[0].size()
@@ -114,40 +133,3 @@ func load_map(state):
 	var replay_node = get_tree().get_first_node_in_group('replay_feature')
 	if state.has("winner") && replay_node.replay_turns == null:
 		replay_node.load_replay_data(await HTTP.get_match_history())
-
-
-func load_mock_map(width:int, height:int):
-	$GridContainer.columns = width
-	var aspect_ratio = float(width)/height
-	self.ratio = aspect_ratio
-	
-
-	var MapTile = preload("res://gamemap_tile.tscn")
-	for i in range(width*height):
-		var tile = MapTile.instantiate()
-		var wallrng = randf()
-		if wallrng <= 0.33:
-			tile.wall_team = Enums.TeamType.NEUTRAL
-		elif wallrng <= 0.67:
-			tile.wall_team = Enums.TeamType.TEAM1
-		else:
-			tile.wall_team = Enums.TeamType.TEAM2
-		
-		var tilerng = randf()
-		if tilerng <= 0.7:
-			tile.type = Enums.TileType.PLAIN
-		elif tilerng <= 0.9:
-			tile.type = Enums.TileType.POND
-		else:
-			tile.type = Enums.TileType.CASTLE
-			
-		var teamrng = randf()
-		if teamrng <= 0.9:
-			tile.craftsman_occupied = Enums.TeamType.NEUTRAL
-		elif teamrng <= 0.95:
-			tile.craftsman_occupied = Enums.TeamType.TEAM1
-		else:
-			tile.craftsman_occupied = Enums.TeamType.TEAM2
-			
-		$GridContainer.add_child(tile)
-	

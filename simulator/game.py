@@ -99,24 +99,23 @@ class Game:
         online_actions = sorted(action_list.__root__, key=lambda x: (x.turn, x.created_time))
         action_by_turn = {}
         for online_action in online_actions:
-            action_by_turn[online_action.turn] = online_action
+            action_by_turn[online_action.turn - 1] = online_action
         apply_until_reach_turn = current_game_status.cur_turn if current_game_status is not None else self.max_turn+1
 
-        if current_game_status is None:
-            while self.current_state.turn_number < apply_until_reach_turn:
-                if action_by_turn.get(self.current_state.turn_number) is not None:
-                    for online_action in action_by_turn[self.current_state.turn_number].actions:
-                        craftsman = self.find_craftsman_by_id(online_action.craftsman_id)
-                        action_type = ActionType.from_online_type(online_action.action)
-                        direction = Direction.from_online_type(online_action.action_param)
-                        craftsman_command = CraftsmanCommand(
-                            craftsman_pos=craftsman.pos,
-                            action_type=action_type,
-                            direction=direction,
-                        )
+        while self.current_state.turn_number < apply_until_reach_turn:
+            if action_by_turn.get(self.current_state.turn_number) is not None:
+                for online_action in action_by_turn[self.current_state.turn_number].actions:
+                    craftsman = self.find_craftsman_by_id(online_action.craftsman_id)
+                    action_type = ActionType.from_online_type(online_action.action)
+                    direction = Direction.from_online_type(online_action.action_param)
+                    craftsman_command = CraftsmanCommand(
+                        craftsman_pos=craftsman.pos,
+                        action_type=action_type,
+                        direction=direction,
+                    )
 
-                        self.add_command(craftsman_command)
-                self.process_turn()
+                    self.add_command(craftsman_command)
+            self.process_turn()
 
 
 
@@ -326,7 +325,7 @@ class Game:
         self.current_state.map = territory_computed_map
 
         self.current_state.turn_number += 1
-        self.current_state.turn_state = TurnState.TEAM1_TURN if self.current_state.turn_number % 2 == 0 else TurnState.TEAM2_TURN
+        self.current_state.turn_state = TurnState.TEAM2_TURN if self.current_state.turn_number % 2 == 0 else TurnState.TEAM1_TURN
 
         # set has_commited_action to False for all craftsmen
         for craftsman in self.current_state.craftsmen:

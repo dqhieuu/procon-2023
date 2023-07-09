@@ -134,7 +134,7 @@ def dijkstra(craftsman: Craftsman,
                 if (dx, dy) in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
                     local_cost += 1
                 else:
-                    local_cost += 2.5
+                    local_cost += 1e20
             if len(path) >= 1 and save_only_one_next_move_in_path:
                 q.put((cost + local_cost, (nx, ny), path))
             else:
