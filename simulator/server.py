@@ -14,10 +14,12 @@ import requests
 
 from online import OnlineFieldRequestList, online_field_decoder, OnlineActionResponseList, OnlineGameStatus
 from utils import numpy_game_map_to_list_from_history
+import aiohttp
+import asyncio
 
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-online_room = 57
+online_room = 70
 
 global_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
 
@@ -181,32 +183,33 @@ async def auto_update_online_game_state():
                 online_command_dict_per_craftsman_team1.clear()
         else:
             if len(online_command_dict_per_craftsman_team1) > 0 and team_1_token is not None:
-                res = requests.post(
-                    '{}/player/games/{}/actions'.format(BASE_URL, online_room),
-                    headers={"Authorization": team_1_token},
-                    json={
-                        "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM1_TURN else 2),
-                        "actions": list(online_command_dict_per_craftsman_team1.values()),
-                    }
-                )
-                if not (200 <= res.status_code < 300):
-                    print(res.text)
-                else:
-                    print("Sent online commands successfully")
+                # async post request is faster
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                            '{}/player/games/{}/actions'.format(BASE_URL, online_room),
+                            headers={"Authorization": team_1_token},
+                            json={
+                                "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM1_TURN else 2),
+                                "actions": list(online_command_dict_per_craftsman_team1.values()),
+                            }) as res:
+                        if not (200 <= res.status < 300):
+                            print(res.text)
+                        else:
+                            print("Sent online commands successfully")
 
             if len(online_command_dict_per_craftsman_team2) > 0 and team_2_token is not None:
-                res = requests.post(
-                    '{}/player/games/{}/actions'.format(BASE_URL, online_room),
-                    headers={"Authorization": team_2_token},
-                    json={
-                        "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM2_TURN else 2),
-                        "actions": list(online_command_dict_per_craftsman_team2.values()),
-                    }
-                )
-                if not (200 <= res.status_code < 300):
-                    print(res.text)
-                else:
-                    print("Sent online commands successfully")
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                            '{}/player/games/{}/actions'.format(BASE_URL, online_room),
+                            headers={"Authorization": team_2_token},
+                            json={
+                                "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM2_TURN else 2),
+                                "actions": list(online_command_dict_per_craftsman_team2.values()),
+                            }) as res:
+                        if not (200 <= res.status < 300):
+                            print(res.text)
+                        else:
+                            print("Sent online commands successfully")
 
 
 @app.get("/history")

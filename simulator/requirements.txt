@@ -4,3 +4,4 @@ pydantic==1.10.9
 uvicorn[standard]
 requests
 numpy
+aiohttp==3.8.4
