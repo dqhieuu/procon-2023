@@ -13,6 +13,7 @@ func _ready():
 
 func _turn_state_to_string(str):
 	var turn_state_map = {
+		'initial': "Initial",
 		'team1_turn': "Team 1 (Blue team)",
 		'team2_turn': "Team 2 (Red team)",
 	}
