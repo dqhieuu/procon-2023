@@ -15,6 +15,7 @@ from entities.game_state import GameState
 from entities.tile import Tile
 from entities.utils.enums import ActionType, get_direction_vector, Team, TurnState, Direction
 from score_compute import get_territory_computed_map, compute_score
+from online import OnlineEnumSide, OnlineFieldResponse, OnlineActionResponseList, OnlineGameStatus
 from utils import numpy_game_map_to_list_from_history
 
 
@@ -25,16 +26,15 @@ def save_game_history(game_history):
 
 
 class Game:
-    def __init__(self, map_path: str):
+    def __init__(self, map_path: str = None):
         self.current_state = GameState()
         self.history: List = []
         self.command_buffer: List[CraftsmanCommand] = []
 
         self.score_coefficients = ScoreCoefficients(territory=1, wall=1, castle=1)
         self.max_turn = 0
-        self.load_map(map_path)
-
-
+        if map_path is not None:
+            self.load_map(map_path)
 
     def categorize_and_deduplicate_commands_from_buffer(self):
         craftsman_pos_dict = {}
@@ -59,7 +59,7 @@ class Game:
     def load_map(self, file_path):
         # print("Current working directory: " + os.getcwd())
         # with open('/mnt/f/procon-2023/simulator/pettingzoo-environment/MARLlib/{}'.format(file_path), "r") as f:
-        with open('F:/procon-2023/simulator/assets/map2.txt'.format(file_path), "r") as f:
+        with open(file_path, "r") as f:
             self._reset_game_state()
             mode = ""
             for line in f:
@@ -85,11 +85,64 @@ class Game:
                 if mode == "map":
                     if self.current_state.map.map is None:
                         self.current_state.map.map = np.empty((0, len(line)), dtype=Tile)
-                    self.current_state.map.map = np.vstack((self.current_state.map.map, [Tile.from_file_string(tile) for tile in list(line)]))
+                    self.current_state.map.map = np.vstack(
+                        (self.current_state.map.map, [Tile.from_file_string(tile) for tile in list(line)]))
                 elif mode == "team1" or mode == "team2":
                     pos = list(map(int, line.split(" ")))
                     self.current_state.craftsmen.append(
                         Craftsman(Team.TEAM1 if mode == "team1" else Team.TEAM2, (pos[0], pos[1])))
+
+    def load_online_action_list(self, action_list: OnlineActionResponseList, current_game_status: OnlineGameStatus = None):
+        if self.is_game_over:
+            return
+
+        online_actions = sorted(action_list.__root__, key=lambda x: (x.turn, x.created_time))
+        action_by_turn = {}
+        for online_action in online_actions:
+            action_by_turn[online_action.turn] = online_action
+        apply_until_reach_turn = current_game_status.cur_turn if current_game_status is not None else self.max_turn+1
+
+        if current_game_status is None:
+            while self.current_state.turn_number < apply_until_reach_turn:
+                if action_by_turn.get(self.current_state.turn_number) is not None:
+                    for online_action in action_by_turn[self.current_state.turn_number].actions:
+                        craftsman = self.find_craftsman_by_id(online_action.craftsman_id)
+                        action_type = ActionType.from_online_type(online_action.action)
+                        direction = Direction.from_online_type(online_action.action_param)
+                        craftsman_command = CraftsmanCommand(
+                            craftsman_pos=craftsman.pos,
+                            action_type=action_type,
+                            direction=direction,
+                        )
+
+                        self.add_command(craftsman_command)
+                self.process_turn()
+
+
+
+
+
+    def load_online_map(self, field_data: OnlineFieldResponse):
+        self._reset_game_state()
+        self.max_turn = field_data.num_of_turns
+        self.score_coefficients = ScoreCoefficients(
+            territory=field_data.field.territory_coeff,
+            wall=field_data.field.wall_coeff,
+            castle=field_data.field.castle_coeff
+        )
+
+        self.current_state.map.map = np.array([Tile() for _ in range(field_data.field.width * field_data.field.height)])
+        self.current_state.map.map = self.current_state.map.map.reshape((field_data.field.height, field_data.field.width))
+
+        for craftsman in field_data.field.craftsmen:
+            self.current_state.craftsmen.append(
+                Craftsman(team=Team.TEAM1 if craftsman.side == OnlineEnumSide.A else Team.TEAM2,
+                          pos=(craftsman.x, craftsman.y), id=craftsman.id)
+            )
+        for castle_pos in field_data.field.castles:
+            self.current_state.map.get_tile(castle_pos.x, castle_pos.y).has_castle = True
+        for pond_pos in field_data.field.ponds:
+            self.current_state.map.get_tile(pond_pos.x, pond_pos.y).has_pond = True
 
     @property
     def is_game_over(self):
@@ -273,7 +326,7 @@ class Game:
         self.current_state.map = territory_computed_map
 
         self.current_state.turn_number += 1
-        self.current_state.turn_state = TurnState.TEAM1_TURN if self.current_state.turn_state == TurnState.TEAM2_TURN else TurnState.TEAM2_TURN
+        self.current_state.turn_state = TurnState.TEAM1_TURN if self.current_state.turn_number % 2 == 0 else TurnState.TEAM2_TURN
 
         # set has_commited_action to False for all craftsmen
         for craftsman in self.current_state.craftsmen:
@@ -290,7 +343,6 @@ class Game:
             print("Writing history to file...")
             thread = threading.Thread(target=save_game_history, args=(self.history,))
             thread.start()
-
 
         return command_res
 
@@ -337,8 +389,10 @@ class Game:
 
     def _reset_game_state(self):
         self.current_state = GameState()
-        self.history = []
+        self.history.clear()
         self.command_buffer.clear()
+        self.score_coefficients = ScoreCoefficients(1, 1, 1)
+        self.max_turn = 100
 
 
 def can_select_piece(piece_team: Team, turn_state: TurnState):

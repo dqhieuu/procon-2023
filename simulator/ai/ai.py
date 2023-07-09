@@ -29,30 +29,30 @@ class CraftsmanAgent:
 
         self.selected_castle_pos = None
 
-    def get_move(self, other_agents_moved_mask: np.ndarray) -> List[tuple[int, int]]:
+    def get_action(self, other_agents_moved_mask: np.ndarray) -> CraftsmanCommand:
         if self.current_strategy == CurrentStrategy.CAPTURE_CASTLE:
-            return self.get_capture_castle_move(other_agents_moved_mask)
+            return self.get_capture_castle_action(other_agents_moved_mask)
 
     @property
     def craftsman(self):
         return self.game.find_craftsman_by_id(self.craftsman_id)
 
-    def get_capture_castle_move(self, other_agent_moved_mask: np.ndarray) -> List[tuple[int, int]]:
-        craftsman = self.game.find_craftsman_by_id(self.craftsman_id)
+    def get_capture_castle_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand:
+        craftsman = self.craftsman
         map = self.game.current_state.map
 
         castle_positions = map.get_castle_positions()
         if len(castle_positions) == 0:
-            return []
+            return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.STAY)
 
         move_costs = dijkstra(craftsman, map,
                               save_only_one_next_move_in_path=True,
                               all_craftsmen=self.game.current_state.craftsmen,
-                              moved_craftsmen_mask=other_agent_moved_mask)
+                              excluded_move_mask=other_agent_moved_mask)
         castle_costs = [(move_costs[y][x]['move_cost'], (x, y)) for x, y in castle_positions]
         castle_costs.sort(key=lambda x: x[0])
         if castle_costs[0][0] > 1e10:
-            return []
+            return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.STAY)
 
         return move_costs[castle_costs[0][1][1]][castle_costs[0][1][0]]['move_path']
 
@@ -66,7 +66,7 @@ class CentralizedCritic:
     def act(self):
         moved_mask = np.zeros((self.game.current_state.map.height, self.game.current_state.map.width), dtype=bool)
         for agent in self.team_agents:
-            moves = agent.get_move(other_agents_moved_mask=moved_mask)
+            moves = agent.get_action(other_agents_moved_mask=moved_mask)
             best_move = moves[0] if len(moves) > 0 else None
             # print(self.team,self.game.current_state.turn_number, agent.craftsman.pos, moves, get_direction_from_vector(
             #             (best_move[0] - agent.craftsman.pos[0], best_move[1] - agent.craftsman.pos[1])))
@@ -81,7 +81,7 @@ def dijkstra(craftsman: Craftsman,
              game_map: GameMap,
              save_only_one_next_move_in_path=False,
              all_craftsmen: Optional[List[Craftsman]] = None,
-             moved_craftsmen_mask: Optional[np.ndarray] = None
+             excluded_move_mask: Optional[np.ndarray] = None
              ) -> np.ndarray:
     res = np.empty_like(game_map.map, dtype=object)
     for y in range(game_map.height):
@@ -121,7 +121,7 @@ def dijkstra(craftsman: Craftsman,
                 res[ny][nx]['move_cost'] = 1e20
                 continue
 
-            if moved_craftsmen_mask is not None and moved_craftsmen_mask[ny][nx]:
+            if excluded_move_mask is not None and excluded_move_mask[ny][nx]:
                 res[ny][nx]['move_cost'] = 1e20
                 continue
 

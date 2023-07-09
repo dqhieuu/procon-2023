@@ -1,12 +1,12 @@
 import secrets
-from copy import deepcopy, copy
+from copy import copy
+from typing import Union, List
 
 from pydantic import BaseModel
 
 from entities.game_state import GameState
 from entities.utils.action_result import ActionResult, FailError, FailCode
 from entities.utils.enums import Team, ActionType, Direction
-from typing import Union, List
 
 
 class CraftsmanCommand(BaseModel):
@@ -18,14 +18,14 @@ class CraftsmanCommand(BaseModel):
 # Different actions per craftsmans turn: 1 + 8 + 4 + 4 = 17
 # All 4 craftsman actions have no side effects
 class Craftsman:
-    def __init__(self, team: Team, pos: tuple[int, int]):
+    def __init__(self, team: Team, pos: tuple[int, int], id=None):
         self.team = team
         self.pos = pos
         # dependencies
         self.phase_start_game_state: Union[GameState, None] = None
         self.latest_action_game_state: Union[GameState, None] = None
         self.has_committed_action = False
-        self.id = secrets.token_hex(8)
+        self.id = id if id is not None else secrets.token_hex(8)
 
     def __eq__(self, other):
         return self.team == other.team and self.pos == other.pos and self.id == other.id

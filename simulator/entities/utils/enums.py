@@ -1,5 +1,7 @@
 from enum import Enum
 
+from online import OnlineEnumAction
+
 
 class Team(Enum):
     TEAM1 = 'team1'
@@ -35,6 +37,29 @@ class Direction(str, Enum):
     UP_RIGHT = 'up_right'
     DOWN_LEFT = 'down_left'
     DOWN_RIGHT = 'down_right'
+
+    @staticmethod
+    def from_online_type(online_type: str):
+        if online_type == 'UPPER_LEFT':
+            return Direction.UP_LEFT
+        elif online_type == 'UPPER_RIGHT':
+            return Direction.UP_RIGHT
+        elif online_type == 'LOWER_LEFT':
+            return Direction.DOWN_LEFT
+        elif online_type == 'LOWER_RIGHT':
+            return Direction.DOWN_RIGHT
+        elif online_type in ['UP', 'ABOVE']:
+            return Direction.UP
+        elif online_type in ['DOWN', 'BELOW']:
+            return Direction.DOWN
+        elif online_type == 'LEFT':
+            return Direction.LEFT
+        elif online_type == 'RIGHT':
+            return Direction.RIGHT
+        else:
+            return None
+
+
 
 
 def get_direction_vector(direction: Direction) -> (int, int):
@@ -80,3 +105,16 @@ class ActionType(Enum):
     MOVE = "move"
     BUILD = "build"
     DESTROY = "destroy"
+
+    @staticmethod
+    def from_online_type(online_type: OnlineEnumAction):
+        if online_type == OnlineEnumAction.STAY:
+            return ActionType.STAY
+        elif online_type == OnlineEnumAction.MOVE:
+            return ActionType.MOVE
+        elif online_type == OnlineEnumAction.BUILD:
+            return ActionType.BUILD
+        elif online_type == OnlineEnumAction.DESTROY:
+            return ActionType.DESTROY
+        else:
+            raise ValueError("invalid online type")
