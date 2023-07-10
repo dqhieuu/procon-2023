@@ -8,18 +8,19 @@ from fastapi_restful.tasks import repeat_every
 
 from ai.ai import dijkstra, CentralizedCritic, CraftsmanAgent
 from entities.craftsman import CraftsmanCommand, get_craftsman_at
-from entities.utils.enums import Team, TurnState, ActionType, Direction
+from entities.utils.enums import Team, TurnState, ActionType, Direction, get_direction_vector
 from game import Game
 import requests
 
-from online import OnlineFieldRequestList, online_field_decoder, OnlineActionResponseList, OnlineGameStatus
+from online import OnlineFieldRequestList, online_field_decoder, OnlineActionResponseList, OnlineGameStatus, \
+    OnlineEnumAction
 from utils import numpy_game_map_to_list_from_history
 import aiohttp
 
 ### SET THESE VARIABLES ###
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-competition_token = None
+competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
 team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODg4OTIyNjMsImV4cCI6MTY4OTA2NTA2M30.phqhY5a8ox0ObRa-vXn5T6JHIO5Cl3BEJUo2-a6BK4E"
 ### END SET THESE VARIABLES ###
@@ -102,6 +103,7 @@ def get_game_status(room_id):
             return None
     return OnlineGameStatus.parse_obj(game_status_json)
 
+
 def get_online_actions(room_id):
     actions_json = requests.get('{}/player/games/{}/actions'.format(BASE_URL, online_room),
                                 headers={"Authorization": global_token}).json()
@@ -118,8 +120,8 @@ if online_room > 0:
 
 app = FastAPI()
 
-online_command_dict_per_craftsman_team1 = {}
-online_command_dict_per_craftsman_team2 = {}
+online_command_dict_per_craftsman_team1: dict[str, dict[str,str]] = {}
+online_command_dict_per_craftsman_team2: dict[str, dict[str,str]] = {}
 
 
 @app.post("/command")
@@ -207,6 +209,26 @@ async def current_state():
 
     if game.is_game_over:
         res["winner"] = game.winning_team
+
+    actions_to_be_applied: dict[str, dict[str, str]] = {
+        **online_command_dict_per_craftsman_team1,
+        **online_command_dict_per_craftsman_team2,
+    }
+
+    actions_to_be_applied_list = []
+    for craftsman_id, action in actions_to_be_applied.items():
+        if action.get('action_param') is None:
+            continue
+        craftsman = game.find_craftsman_by_id(craftsman_id)
+
+        dir_vec = get_direction_vector(Direction.from_online_type(action['action_param']))
+        action_type = ActionType.from_online_type(OnlineEnumAction(action['action']))
+        actions_to_be_applied_list.append({
+            'pos': (craftsman.pos[0] + dir_vec[0], craftsman.pos[1] + dir_vec[1]),
+            'action_type': action_type
+        })
+
+    res['actions_to_be_applied'] = actions_to_be_applied_list
 
     return res
 

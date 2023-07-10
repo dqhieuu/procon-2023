@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bsohxm1t2erqj"]
+[gd_scene load_steps=16 format=3 uid="uid://bsohxm1t2erqj"]
 
 [ext_resource type="Texture2D" uid="uid://dn12uq5dxtlng" path="res://sprites/castle.png" id="1_bdoet"]
 [ext_resource type="Script" path="res://gamemap_tile.gd" id="1_hsfm8"]
@@ -13,6 +13,8 @@
 [ext_resource type="Texture2D" uid="uid://dx7dyrh225n0m" path="res://sprites/territory/C2.png" id="10_w6rjf"]
 [ext_resource type="Texture2D" uid="uid://kqmfmec5pye8" path="res://sprites/territory/C1.png" id="11_iq403"]
 [ext_resource type="Texture2D" uid="uid://g2n5dpgcj7jk" path="res://sprites/territory/O2.png" id="12_i7tj0"]
+[ext_resource type="Texture2D" uid="uid://43d8881kw7gt" path="res://sprites/foot.png" id="14_1hv5c"]
+[ext_resource type="Texture2D" uid="uid://dljkmflnw1y6t" path="res://sprites/destroy.png" id="15_q3n4g"]
 
 [node name="AspectRatioContainer" type="AspectRatioContainer"]
 offset_right = 200.0
@@ -98,6 +100,29 @@ expand_mode = 1
 visible = false
 layout_mode = 2
 texture = ExtResource("9_0u1d1")
+expand_mode = 1
+
+[node name="MoveAction" type="TextureRect" parent="."]
+modulate = Color(0.996078, 0.65098, 0.662745, 0.678431)
+layout_mode = 2
+texture = ExtResource("14_1hv5c")
+expand_mode = 1
+
+[node name="DestroyAction" type="TextureRect" parent="."]
+modulate = Color(0.996078, 0.65098, 0.662745, 0.905882)
+layout_mode = 2
+texture = ExtResource("15_q3n4g")
+expand_mode = 1
+
+[node name="WallAction" type="AspectRatioContainer" parent="."]
+layout_mode = 2
+ratio = 3.0
+alignment_vertical = 2
+
+[node name="Walltexture" type="TextureRect" parent="WallAction"]
+modulate = Color(0.882353, 0.713726, 0.392157, 0.811765)
+layout_mode = 2
+texture = ExtResource("5_g3t1e")
 expand_mode = 1
 
 [connection signal="gui_input" from="." to="." method="_on_gui_input"]

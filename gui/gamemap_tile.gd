@@ -8,6 +8,9 @@ extends AspectRatioContainer
 @export var is_team1_closed_territory = false
 @export var is_team2_open_territory = false
 @export var is_team2_closed_territory = false
+@export var has_to_be_applied_wall = false
+@export var has_to_be_applied_destroy = false
+@export var has_to_be_applied_move = false
 
 func _ready():
 	update_visible_sprite()
@@ -37,6 +40,12 @@ func update_visible_sprite():
 	
 	$TileSelect.is_selected = self.get_index() == Globals.selected_tile
 	$Hammer.self_modulate = team_modulate
+	
+	$MoveAction.visible = has_to_be_applied_move
+	$WallAction.visible = has_to_be_applied_wall
+	$DestroyAction.visible = has_to_be_applied_destroy
+	
+	
 
 func _get_drag_data(pos):
 	var is_build_destroy_wall = Input.is_action_pressed("build_destroy_wall")

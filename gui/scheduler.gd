@@ -31,4 +31,6 @@ func _on_Timer_timeout():
 			time_left = current_state.game_status.remaining
 		
 		map_node.update_time_left(time_left)
+		
+		map_node.update_actions_to_be_applied(current_state.actions_to_be_applied)
 	

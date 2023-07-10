@@ -59,6 +59,26 @@ func update_score(score):
 		e.text =  "Total pts: %d" % score.team2.points.total
 
 
+func update_actions_to_be_applied(action_list):
+	var has_wall_dict = {}
+	var has_destroy_dict = {}
+	var has_move_dict = {}
+	
+	for action in action_list:
+		var pos_idx = int(action.pos[1]*width+action.pos[0])
+		if action.action_type == "move":
+			has_move_dict[pos_idx] = true
+		elif action.action_type == "build":
+			has_wall_dict[pos_idx] = true
+		elif action.action_type == "destroy":
+			has_destroy_dict[pos_idx] = true
+	
+	for i in range($GridContainer.get_child_count()):
+		var tile = $GridContainer.get_child(i)
+		tile.has_to_be_applied_move = has_move_dict.has(i)
+		tile.has_to_be_applied_wall = has_wall_dict.has(i)
+		tile.has_to_be_applied_destroy = has_destroy_dict.has(i)
+
 func update_time_left(time):
 	for e in get_nodes_by_group("time_left"):
 		if time != null:
@@ -76,7 +96,6 @@ func load_map(state):
 		time_left = state.game_status.remaining
 		
 	update_time_left(time_left)
-		
 	
 	var game_state = state.state
 	for child in $GridContainer.get_children():
