@@ -63,13 +63,12 @@ grow_vertical = 2
 layout_mode = 2
 
 [node name="Background" type="ColorRect" parent="HBoxContainer"]
-custom_minimum_size = Vector2(320, 2.08165e-12)
+custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
 size_flags_vertical = 3
 color = Color(0.933333, 0.933333, 0.933333, 1)
 
 [node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/Background"]
-custom_minimum_size = Vector2(300, 0)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -82,6 +81,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Interact" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
@@ -695,15 +695,160 @@ theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Total pts: 0"
 horizontal_alignment = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/Replay/VBoxContainer"]
-layout_mode = 2
-
-[node name="ResetActions" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/Replay/VBoxContainer/HBoxContainer"]
+[node name="AI" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-focus_mode = 0
-text = "Reset actions"
-script = ExtResource("4_so8eh")
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI" groups=["replay_feature"]]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TurnInfo" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer" groups=["turn_info"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Turn"
+
+[node name="Team1Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Team 1"
+
+[node name="Team1Info" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
+layout_mode = 2
+
+[node name="Count" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Count" groups=["t1_terr_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr count: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Count" groups=["t1_wall_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall count: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Count" groups=["t1_castle_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle count: 0"
+
+[node name="Point" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Point" groups=["t1_terr_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr pts: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Point" groups=["t1_wall_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall pts: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Point" groups=["t1_castle_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle pts: 0"
+
+[node name="Total" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team1Info/Point" groups=["t1_total_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Total pts: 0"
+horizontal_alignment = 2
+
+[node name="Team2Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Team 2
+"
+
+[node name="Team2Info" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
+layout_mode = 2
+
+[node name="Count" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Count" groups=["t2_terr_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr count: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Count" groups=["t2_wall_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall count: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Count" groups=["t2_castle_count"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle count: 0"
+
+[node name="Point" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Territory" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Point" groups=["t2_terr_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Terr pts: 0"
+
+[node name="Wall" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Point" groups=["t2_wall_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Wall pts: 0"
+
+[node name="Castle" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Point" groups=["t2_castle_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Castle pts: 0"
+
+[node name="Total" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/Team2Info/Point" groups=["t2_total_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Total pts: 0"
+horizontal_alignment = 2
+
+[node name="AgentList" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
+layout_mode = 2
+
+[node name="Agent1" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Agent 21f231f (3, 3)"
+
+[node name="TabContainer" type="TabContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1"]
+layout_mode = 2
+
+[node name="Man" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+layout_mode = 2
+
+[node name="Terr" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Cast" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Sabt" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+visible = false
+layout_mode = 2
+
+[node name="Terr+Sabt" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+visible = false
+layout_mode = 2
 
 [node name="Flash" type="ColorRect" parent="." groups=["flash"]]
 visible = false
