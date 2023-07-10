@@ -15,16 +15,63 @@ import requests
 from online import OnlineFieldRequestList, online_field_decoder, OnlineActionResponseList, OnlineGameStatus
 from utils import numpy_game_map_to_list_from_history
 import aiohttp
-import asyncio
 
+### SET THESE VARIABLES ###
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-online_room = 70
-
-global_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
-
+competition_token = None
 team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODg4OTIyNjMsImV4cCI6MTY4OTA2NTA2M30.phqhY5a8ox0ObRa-vXn5T6JHIO5Cl3BEJUo2-a6BK4E"
+### END SET THESE VARIABLES ###
+
+global_token = None
+online_room = -1
+
+print("""
+SELECT A MODE:
+1. Local
+2. Online, practice: team A - team B
+3. Online, practice: swap team A - team B token
+4. Online, competition: you = team A
+5. Online, competition: you = team B
+""")
+
+mode = int(input())
+if not 1 <= mode <= 5:
+    print("Invalid mode")
+    exit(1)
+
+if 2 <= mode <= 5:
+    print("Enter room id: ")
+    online_room = int(input())
+    if online_room < 0:
+        print("Invalid room id")
+        exit(1)
+
+if mode == 1:
+    print("Selected local mode")
+    team_1_token = team_2_token = global_token = None
+elif mode == 2:
+    print("Selected online mode, practice team 1 - team 2")
+    global_token = team_1_token
+elif mode == 3:
+    print("Selected online mode, practice swap team 1 - team 2 token")
+    team_1_token, team_2_token = team_2_token, team_1_token
+    global_token = team_1_token
+elif mode == 4:
+    if competition_token is None:
+        print("Competition token is not set")
+        exit(1)
+    print("Selected online mode, competition you = team 1")
+    global_token = team_1_token = competition_token
+    team_2_token = None
+elif mode == 5:
+    if competition_token is None:
+        print("Competition token is not set")
+        exit(1)
+    print("Selected online mode, competition you = team 2")
+    global_token = team_2_token = competition_token
+    team_1_token = None
 
 
 def get_online_map_data(room_id):
