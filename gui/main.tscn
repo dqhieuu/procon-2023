@@ -831,12 +831,87 @@ text = "Agent 21f231f (3, 3)"
 [node name="TabContainer" type="TabContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1"]
 layout_mode = 2
 
-[node name="Man" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+[node name="Pos" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+visible = false
 layout_mode = 2
 
 [node name="Terr" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
-visible = false
 layout_mode = 2
+
+[node name="Template" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr" groups=["t2_wall_pts"]]
+layout_mode = 2
+text = "Template"
+
+[node name="TacticList" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr"]
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/TacticList"]
+layout_mode = 2
+columns = 2
+
+[node name="Button" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/TacticList/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "2x2 top left"
+
+[node name="Button2" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/TacticList/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "2x2 top right"
+
+[node name="Button3" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/TacticList/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "2x2 bottom left"
+
+[node name="Button4" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/TacticList/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "2x2 bottom right"
+
+[node name="Pivot" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr" groups=["t2_wall_pts"]]
+layout_mode = 2
+text = "Pivot"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer"]
+layout_mode = 2
+text = "X:"
+
+[node name="LineEdit" type="LineEdit" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label2" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer"]
+layout_mode = 2
+text = "Y:"
+
+[node name="LineEdit2" type="LineEdit" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button5" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set pivot"
+
+[node name="Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr"]
+layout_mode = 2
+text = "Step"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr"]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button5" type="Button" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set step"
 
 [node name="Cast" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
 visible = false
