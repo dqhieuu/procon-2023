@@ -1,6 +1,7 @@
 from copy import deepcopy
 
-from entities.game_map import GameMap, ScoreCoefficients
+from entities.game_map import GameMap
+from entities.score_coeff import ScoreCoefficients
 from entities.utils.enums import Team
 from utils import timeit
 

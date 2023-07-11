@@ -81,7 +81,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Interact" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
@@ -696,6 +695,7 @@ text = "Total pts: 0"
 horizontal_alignment = 2
 
 [node name="AI" type="MarginContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
@@ -832,10 +832,10 @@ text = "Agent 21f231f (3, 3)"
 layout_mode = 2
 
 [node name="Pos" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
-visible = false
 layout_mode = 2
 
 [node name="Terr" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer"]
+visible = false
 layout_mode = 2
 
 [node name="Template" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList/Agent1/TabContainer/Terr" groups=["t2_wall_pts"]]

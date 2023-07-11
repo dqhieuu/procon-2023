@@ -139,6 +139,7 @@ texture = ExtResource("5_g3t1e")
 expand_mode = 1
 
 [node name="StrategyTurn" type="Label" parent="."]
+visible = false
 layout_mode = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 7

@@ -13,7 +13,7 @@ from game import Game
 import requests
 
 from online import OnlineFieldRequestList, online_field_decoder, OnlineActionResponseList, OnlineGameStatus, \
-    OnlineEnumAction
+    OnlineEnumAction, local_command_to_online_action
 from utils import numpy_game_map_to_list_from_history
 import aiohttp
 
@@ -127,54 +127,13 @@ online_command_dict_per_craftsman_team2: dict[str, dict[str,str]] = {}
 @app.post("/command")
 async def do_command(command: CraftsmanCommand):
     if online_room > 0:
+        # ONLINE MODE
         craftsman = get_craftsman_at(game.current_state.craftsmen, command.craftsman_pos)
         craftsman_id = craftsman.id
         if craftsman_id is None:
             raise HTTPException(400, "Craftsman not found")
 
-        online_command = {
-            'craftsman_id': craftsman_id,
-            'action': 'STAY'
-        }
-
-        if command.action_type is ActionType.MOVE and command.direction in [Direction.UP, Direction.DOWN,
-                                                                            Direction.LEFT, Direction.RIGHT,
-                                                                            Direction.UP_LEFT, Direction.UP_RIGHT,
-                                                                            Direction.DOWN_LEFT, Direction.DOWN_RIGHT]:
-            online_command['action'] = 'MOVE'
-            if command.direction == Direction.UP:
-                online_command['action_param'] = 'UP'
-            elif command.direction == Direction.DOWN:
-                online_command['action_param'] = 'DOWN'
-            elif command.direction == Direction.LEFT:
-                online_command['action_param'] = 'LEFT'
-            elif command.direction == Direction.RIGHT:
-                online_command['action_param'] = 'RIGHT'
-            elif command.direction == Direction.UP_LEFT:
-                online_command['action_param'] = 'UPPER_LEFT'
-            elif command.direction == Direction.UP_RIGHT:
-                online_command['action_param'] = 'UPPER_RIGHT'
-            elif command.direction == Direction.DOWN_LEFT:
-                online_command['action_param'] = 'LOWER_LEFT'
-            elif command.direction == Direction.DOWN_RIGHT:
-                online_command['action_param'] = 'LOWER_RIGHT'
-        elif command.action_type in [ActionType.BUILD, ActionType.DESTROY] and command.direction in [Direction.UP,
-                                                                                                     Direction.DOWN,
-                                                                                                     Direction.LEFT,
-                                                                                                     Direction.RIGHT]:
-            if command.action_type is ActionType.BUILD:
-                online_command['action'] = 'BUILD'
-            elif command.action_type is ActionType.DESTROY:
-                online_command['action'] = 'DESTROY'
-
-            if command.direction == Direction.UP:
-                online_command['action_param'] = 'ABOVE'
-            elif command.direction == Direction.DOWN:
-                online_command['action_param'] = 'BELOW'
-            elif command.direction == Direction.LEFT:
-                online_command['action_param'] = 'LEFT'
-            elif command.direction == Direction.RIGHT:
-                online_command['action_param'] = 'RIGHT'
+        online_command = local_command_to_online_action(command, game)
 
         if craftsman.team == Team.TEAM1:
             online_command_dict_per_craftsman_team1[craftsman_id] = online_command
@@ -182,16 +141,20 @@ async def do_command(command: CraftsmanCommand):
             online_command_dict_per_craftsman_team2[craftsman_id] = online_command
 
         return "OK"
-
-    game.add_command(command)
-    return "OK"
+    else:
+        # LOCAL MODE
+        game.add_command(command)
+        return "OK"
 
 
 @app.post("/end_turn")
 async def end_turn():
     if online_room > 0:
+        # ONLINE MODE
         return "OK"
-    game.process_turn()
+    else:
+        # LOCAL MODE
+        game.process_turn()
 
 
 @app.get("/current_state")
@@ -296,12 +259,12 @@ async def path(x: int, y: int, simple: bool = False):
 
 @app.get("/auto")
 async def auto():
-    team1_critic = CentralizedCritic(Team.TEAM1, game)
+    team1_critic = CentralizedCritic(Team.TEAM1, game, online_command_dict_per_craftsman_team1)
     team1_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM1]
     team1_craftsman_agents = [CraftsmanAgent(c.id, game, team1_critic) for c in team1_craftsmen]
     team1_critic.team_agents = team1_craftsman_agents
 
-    team2_critic = CentralizedCritic(Team.TEAM2, game)
+    team2_critic = CentralizedCritic(Team.TEAM2, game, online_command_dict_per_craftsman_team2)
     team2_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM2]
     team2_craftsman_agents = [CraftsmanAgent(c.id, game, team2_critic) for c in team2_craftsmen]
     team2_critic.team_agents = team2_craftsman_agents

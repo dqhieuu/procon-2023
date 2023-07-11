@@ -28,8 +28,3 @@ class GameMap:
         return [(x, y) for y in range(self.height) for x in range(self.width) if self.map[y][x].has_castle]
 
 
-class ScoreCoefficients:
-    def __init__(self, territory: int, wall: int, castle: int):
-        self.territory = territory
-        self.wall = wall
-        self.castle = castle

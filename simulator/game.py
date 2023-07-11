@@ -1,22 +1,23 @@
+from __future__ import annotations
 import threading
 from datetime import datetime
-import functools
-import os
 from copy import deepcopy
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from fastapi.encoders import jsonable_encoder
 
 import numpy as np
 import json
 
-from entities.craftsman import CraftsmanCommand, get_craftsman_at, Craftsman
-from entities.game_map import ScoreCoefficients
-from entities.game_state import GameState
-from entities.tile import Tile
+import entities.craftsman
+from entities.score_coeff import ScoreCoefficients
+
 from entities.utils.enums import ActionType, get_direction_vector, Team, TurnState, Direction
-from score_compute import get_territory_computed_map, compute_score
+import score_compute
 from online import OnlineEnumSide, OnlineFieldResponse, OnlineActionResponseList, OnlineGameStatus
 from utils import numpy_game_map_to_list_from_history
+
+from entities.tile import Tile
+from entities.game_state import GameState
 
 
 def save_game_history(game_history):
@@ -29,7 +30,7 @@ class Game:
     def __init__(self, map_path: str = None):
         self.current_state = GameState()
         self.history: List = []
-        self.command_buffer: List[CraftsmanCommand] = []
+        self.command_buffer: List[entities.craftsman.CraftsmanCommand] = []
 
         self.score_coefficients = ScoreCoefficients(territory=1, wall=1, castle=1)
         self.max_turn = 0
@@ -38,7 +39,7 @@ class Game:
 
     def categorize_and_deduplicate_commands_from_buffer(self):
         craftsman_pos_dict = {}
-        result: dict[str, List[CraftsmanCommand]] = {
+        result: dict[str, List[entities.craftsman.CraftsmanCommand]] = {
             "move": [],
             "build": [],
             "destroy": []
@@ -90,7 +91,7 @@ class Game:
                 elif mode == "team1" or mode == "team2":
                     pos = list(map(int, line.split(" ")))
                     self.current_state.craftsmen.append(
-                        Craftsman(Team.TEAM1 if mode == "team1" else Team.TEAM2, (pos[0], pos[1])))
+                        entities.craftsman.Craftsman(Team.TEAM1 if mode == "team1" else Team.TEAM2, (pos[0], pos[1])))
 
     def load_online_action_list(self, action_list: OnlineActionResponseList, current_game_status: OnlineGameStatus = None):
         if self.is_game_over:
@@ -108,7 +109,7 @@ class Game:
                     craftsman = self.find_craftsman_by_id(online_action.craftsman_id)
                     action_type = ActionType.from_online_type(online_action.action)
                     direction = Direction.from_online_type(online_action.action_param)
-                    craftsman_command = CraftsmanCommand(
+                    craftsman_command = entities.craftsman.CraftsmanCommand(
                         craftsman_pos=craftsman.pos,
                         action_type=action_type,
                         direction=direction,
@@ -116,10 +117,6 @@ class Game:
 
                     self.add_command(craftsman_command)
             self.process_turn()
-
-
-
-
 
     def load_online_map(self, field_data: OnlineFieldResponse):
         self._reset_game_state()
@@ -135,8 +132,8 @@ class Game:
 
         for craftsman in field_data.field.craftsmen:
             self.current_state.craftsmen.append(
-                Craftsman(team=Team.TEAM1 if craftsman.side == OnlineEnumSide.A else Team.TEAM2,
-                          pos=(craftsman.x, craftsman.y), id=craftsman.id)
+                entities.craftsman.Craftsman(team=Team.TEAM1 if craftsman.side == OnlineEnumSide.A else Team.TEAM2,
+                                             pos=(craftsman.x, craftsman.y), id=craftsman.id)
             )
         for castle_pos in field_data.field.castles:
             self.current_state.map.get_tile(castle_pos.x, castle_pos.y).has_castle = True
@@ -147,22 +144,22 @@ class Game:
     def is_game_over(self):
         return self.current_state.turn_number > self.max_turn
 
-    def add_command(self, command: CraftsmanCommand):
+    def add_command(self, command: entities.craftsman.CraftsmanCommand):
         if self.is_game_over:
             return
-        craftsman = get_craftsman_at(self.current_state.craftsmen, command.craftsman_pos)
+        craftsman = entities.craftsman.get_craftsman_at(self.current_state.craftsmen, command.craftsman_pos)
         if craftsman is not None:
             craftsman.has_committed_action = True
 
         self.command_buffer.append(command)
 
-    def find_craftsman_by_id(self, craftsman_id: str) -> Optional[Craftsman]:
+    def find_craftsman_by_id(self, craftsman_id: str) -> Optional[entities.craftsman.Craftsman]:
         for craftsman in self.current_state.craftsmen:
             if craftsman.id == craftsman_id:
                 return craftsman
         return None
 
-    def _agent_name_to_craftsman(self, agent: str) -> Optional[Craftsman]:
+    def _agent_name_to_craftsman(self, agent: str) -> Optional[entities.craftsman.Craftsman]:
         team = Team.TEAM1 if agent.startswith("team1") else Team.TEAM2
         craftsman_index = int(agent.split("_")[1].replace("craftsman", "")) - 1
         craftsman_of_team = [c for c in self.current_state.craftsmen if c.team == team]
@@ -176,55 +173,55 @@ class Game:
         if craftsman is None:
             return
         if command == 0:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.STAY))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.STAY))
         elif command == 1:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
-                                              direction=Direction.UP))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
+                                                                 direction=Direction.UP))
         elif command == 2:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
-                                              direction=Direction.DOWN))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
+                                                                 direction=Direction.DOWN))
         elif command == 3:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
-                                              direction=Direction.LEFT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
+                                                                 direction=Direction.LEFT))
         elif command == 4:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
-                                              direction=Direction.RIGHT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE,
+                                                                 direction=Direction.RIGHT))
         elif command == 5:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
-                                              , direction=Direction.UP_LEFT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
+                                                                 , direction=Direction.UP_LEFT))
         elif command == 6:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
-                                              , direction=Direction.UP_RIGHT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
+                                                                 , direction=Direction.UP_RIGHT))
         elif command == 7:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
-                                              , direction=Direction.DOWN_LEFT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
+                                                                 , direction=Direction.DOWN_LEFT))
         elif command == 8:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
-                                              , direction=Direction.DOWN_RIGHT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE
+                                                                 , direction=Direction.DOWN_RIGHT))
         elif command == 9:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
-                                              direction=Direction.UP))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
+                                                                 direction=Direction.UP))
         elif command == 10:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
-                                              direction=Direction.DOWN))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
+                                                                 direction=Direction.DOWN))
         elif command == 11:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
-                                              direction=Direction.LEFT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
+                                                                 direction=Direction.LEFT))
         elif command == 12:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
-                                              direction=Direction.RIGHT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
+                                                                 direction=Direction.RIGHT))
         elif command == 13:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
-                                              , direction=Direction.UP))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
+                                                                 , direction=Direction.UP))
         elif command == 14:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
-                                              , direction=Direction.DOWN))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
+                                                                 , direction=Direction.DOWN))
         elif command == 15:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
-                                              , direction=Direction.LEFT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
+                                                                 , direction=Direction.LEFT))
         elif command == 16:
-            self.add_command(CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
-                                              , direction=Direction.RIGHT))
+            self.add_command(entities.craftsman.CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY
+                                                                 , direction=Direction.RIGHT))
 
     @property
     def gym_observable_space(self) -> np.ndarray:
@@ -283,7 +280,7 @@ class Game:
         })
 
         for command in commands["destroy"]:
-            selected = get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
+            selected = entities.craftsman.get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
             if selected is not None:
                 if can_select_piece(selected.team, phase_start_state.turn_state) is False:
                     command_res.append("Cannot select enemy craftsman (at {})".format(command.craftsman_pos))
@@ -296,7 +293,7 @@ class Game:
 
         phase_start_state = deepcopy(self.current_state)
         for command in commands["build"]:
-            selected = get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
+            selected = entities.craftsman.get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
             if selected is not None:
                 if can_select_piece(selected.team, phase_start_state.turn_state) is False:
                     command_res.append("Cannot select enemy craftsman (at {})".format(command.craftsman_pos))
@@ -309,7 +306,7 @@ class Game:
 
         phase_start_state = deepcopy(self.current_state)
         for command in commands["move"]:
-            selected = get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
+            selected = entities.craftsman.get_craftsman_at(phase_start_state.craftsmen, command.craftsman_pos)
             if selected is not None:
                 if can_select_piece(selected.team, phase_start_state.turn_state) is False:
                     command_res.append("Cannot select enemy craftsman (at {})".format(command.craftsman_pos))
@@ -321,7 +318,7 @@ class Game:
                     self.current_state = res.game_state_after
 
         # compute territory
-        territory_computed_map = get_territory_computed_map(prev_turn_state.map, self.current_state.map)
+        territory_computed_map = score_compute.get_territory_computed_map(prev_turn_state.map, self.current_state.map)
         self.current_state.map = territory_computed_map
 
         self.current_state.turn_number += 1
@@ -347,7 +344,7 @@ class Game:
 
     @property
     def score(self) -> dict:
-        return compute_score(self.current_state.map, self.score_coefficients)
+        return score_compute.compute_score(self.current_state.map, self.score_coefficients)
 
     @property
     def winning_team(self) -> Team:

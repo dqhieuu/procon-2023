@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union, List
 
-import numpy as np
-
 from entities.game_map import GameMap
 from entities.utils.enums import TurnState, Team
 

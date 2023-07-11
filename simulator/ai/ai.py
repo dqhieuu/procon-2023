@@ -8,27 +8,30 @@ from typing import List, Optional
 
 from entities.craftsman import Craftsman, CraftsmanCommand
 from entities.game_map import GameMap
-from entities.utils.enums import Team, ActionType, get_direction_from_vector
+from entities.utils.enums import Team, ActionType, get_direction_from_vector, get_direction_vector
 from game import Game
+from online import local_command_to_online_action
 
 
 class CurrentStrategy(Enum):
-    CAPTURE_CASTLE = 1
-    SABOTAGE_OPPONENT = 2
-    EXPAND_TERRITORY = 3
-    PASSIVE_AGRESSIVE = 4
+    MANUAL = 'manual'
+    EXPAND_TERRITORY = 'expand_territory'
+    CAPTURE_CASTLE = 'capture_castle'
+    SABOTAGE_OPPONENT = 'sabotage_opponent'
+    PASSIVE_AGRESSIVE = 'passive_agressive'
 
 
 class CraftsmanAgent:
-    def __init__(self, craftsman_id: str, game: Game, critic: CentralizedCritic):
+    def __init__(self, craftsman_id: str, game: Game, critic: CentralizedCritic, ):
         self.craftsman_id = craftsman_id
         self.game = game
         self.current_strategy = CurrentStrategy.CAPTURE_CASTLE
         self.critic = critic
-        self.selected_castle_pos = None
 
         self.expand_strategy_matrix = []
         self.expand_strategy_position = '00.'
+
+        self.selected_castle_pos = None
 
         self.init_esm()
 
@@ -110,36 +113,101 @@ class CraftsmanAgent:
         if len(castle_positions) == 0:
             return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.STAY)
 
-        move_costs = dijkstra(craftsman, map,
+        map_tiles_insight = dijkstra(craftsman, map,
                               save_only_one_next_move_in_path=True,
                               all_craftsmen=self.game.current_state.craftsmen,
                               excluded_move_mask=other_agent_moved_mask)
-        castle_costs = [(move_costs[y][x]['move_cost'], (x, y)) for x, y in castle_positions]
-        castle_costs.sort(key=lambda x: x[0])
-        if castle_costs[0][0] > 1e10:
+        castle_info_list = []
+        for x, y in castle_positions:
+            castle_info_list.append({
+                "cost": map_tiles_insight[y][x]['move_cost'],
+                "path": map_tiles_insight[y][x]['move_path'][0] if len(map_tiles_insight[y][x]['move_path']) > 0 else None,
+                "pos": (x, y),
+            })
+
+        print(castle_info_list)
+
+        # Remove castles that are already in our closed territory and castles
+        unclosed_territory_castle_info_list = []
+        for castle_cost_and_pos in castle_info_list:
+            castle_tile = map.get_tile(*castle_cost_and_pos["pos"])
+            if not ((castle_tile.t1c and craftsman.team == Team.TEAM1) or (castle_tile.t2c and craftsman.team == Team.TEAM2)):
+                unclosed_territory_castle_info_list.append(castle_cost_and_pos)
+        castle_info_list = unclosed_territory_castle_info_list
+
+        select_castle_info = None
+        # Select the castle that we chose before and is still needed to be captured
+        if self.selected_castle_pos is not None and self.selected_castle_pos in castle_positions:
+            for elem in castle_info_list:
+                if elem == self.selected_castle_pos:
+                    select_castle_info = elem
+                    break
+
+        # Select the castle that is closest to us
+        if select_castle_info is None:
+            castle_info_list.sort(key=lambda x: x["cost"])
+            select_castle_info = castle_info_list[0]
+
+        # If the castle is too far away, then just stay
+        if select_castle_info["cost"] > 1000:
             return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.STAY)
 
-        return move_costs[castle_costs[0][1][1]][castle_costs[0][1][0]]['move_path']
+        cur_pos = craftsman.pos
+
+        print(select_castle_info["cost"])
+        # We are already at the castle
+        if select_castle_info["cost"] == 0:
+            for build_wall_dir_vec in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                tile = map.get_tile(cur_pos[0] + build_wall_dir_vec[0], cur_pos[1] + build_wall_dir_vec[1])
+                # If there is an opponent wall, then destroy it
+                if (tile.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (tile.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
+                    destroy_wall_dir = get_direction_from_vector(build_wall_dir_vec)
+                    return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY, direction=destroy_wall_dir)
+                # If there is no wall, then build our wall
+                elif tile.wall == Team.NEUTRAL:
+                    build_wall_dir = get_direction_from_vector(build_wall_dir_vec)
+                    return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD, direction=build_wall_dir)
+
+
+        # If we are not at the castle, then move towards it
+        next_pos = select_castle_info["path"]
+        dir_vec = (next_pos[0] - cur_pos[0], next_pos[1] - cur_pos[1])
+        direction = get_direction_from_vector(dir_vec)
+        print(dir_vec)
+        tile_at_next_pos = map.get_tile(*next_pos)
+
+        # If there is an opponent wall, then destroy it before moving
+        if (tile_at_next_pos.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (tile_at_next_pos.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
+            return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY, direction=direction)
+
+        # If there is no wall, then move towards the castle
+        return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE, direction=direction)
 
 
 class CentralizedCritic:
-    def __init__(self, team: Team, game: Game):
+    def __init__(self, team: Team, game: Game, online_command_dict=None):
         self.team = team
         self.team_agents: List[CraftsmanAgent] = []
         self.game = game
+        self.online_command_dict = online_command_dict
 
     def act(self):
         moved_mask = np.zeros((self.game.current_state.map.height, self.game.current_state.map.width), dtype=bool)
         for agent in self.team_agents:
-            moves = agent.get_action(other_agents_moved_mask=moved_mask)
-            best_move = moves[0] if len(moves) > 0 else None
-            # print(self.team,self.game.current_state.turn_number, agent.craftsman.pos, moves, get_direction_from_vector(
-            #             (best_move[0] - agent.craftsman.pos[0], best_move[1] - agent.craftsman.pos[1])))
-            if best_move is not None:
-                self.game.add_command(CraftsmanCommand(craftsman_pos=agent.craftsman.pos, action_type=ActionType.MOVE
-                                                       , direction=get_direction_from_vector(
-                        (best_move[0] - agent.craftsman.pos[0], best_move[1] - agent.craftsman.pos[1]))))
-                moved_mask[best_move[1]][best_move[0]] = True
+            action = agent.get_action(other_agents_moved_mask=moved_mask)
+            if action is not None:
+                if action.action_type is not ActionType.STAY and self.online_command_dict is not None:
+                    online_action = local_command_to_online_action(action, self.game)
+                    self.online_command_dict[agent.craftsman.id] = online_action
+
+                if action.action_type == ActionType.MOVE:
+                    self.game.add_command(action)
+                    print(action)
+                    dir_vec = get_direction_vector(action.direction)
+                    next_pos = (agent.craftsman.pos[0] + dir_vec[0], agent.craftsman.pos[1] + dir_vec[1])
+                    if self.game.current_state.map.is_valid_pos(*next_pos):
+                        moved_mask[next_pos[1]][next_pos[0]] = True
+
 
 
 def dijkstra(craftsman: Craftsman,
@@ -163,6 +231,8 @@ def dijkstra(craftsman: Craftsman,
     craftsman_pos_dict = None
     if all_craftsmen is not None:
         craftsman_pos_dict = {craftsman.pos: craftsman for craftsman in all_craftsmen}
+        # Remove the current craftsman from the dict
+        craftsman_pos_dict.pop(craftsman.pos)
 
     while not q.empty():
         cost, pos, path = q.get()
