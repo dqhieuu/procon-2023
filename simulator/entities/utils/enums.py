@@ -1,6 +1,9 @@
+from __future__ import annotations
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from online import OnlineEnumAction
+if TYPE_CHECKING:
+    from online import OnlineEnumAction
 
 
 class Team(Enum):
@@ -108,6 +111,7 @@ class ActionType(Enum):
 
     @staticmethod
     def from_online_type(online_type: OnlineEnumAction):
+        from online import OnlineEnumAction
         if online_type == OnlineEnumAction.STAY:
             return ActionType.STAY
         elif online_type == OnlineEnumAction.MOVE:
