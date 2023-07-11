@@ -20,6 +20,8 @@ func _process(_delta):
 	update_visible_sprite()
 	
 func update_visible_sprite():
+	var tile_index = self.get_index()
+	
 	$Castle.visible = has_castle
 	$Plain.visible = !has_pond
 	$Pond.visible = has_pond
@@ -38,12 +40,16 @@ func update_visible_sprite():
 	$Team2ClosedTerritory.visible = is_team2_closed_territory
 	$Team2OpenTerritory.visible = is_team2_open_territory
 	
-	$TileSelect.is_selected = self.get_index() == Globals.selected_tile
+	$TileSelect.is_selected = tile_index == Globals.selected_tile
 	$Hammer.self_modulate = team_modulate
 	
 	$MoveAction.visible = has_to_be_applied_move
 	$WallAction.visible = has_to_be_applied_wall
 	$DestroyAction.visible = has_to_be_applied_destroy
+	
+	$AgentHighlight.visible = tile_index == Globals.hovered_strategy_craftsman_tile_index
+	
+	
 	
 	
 

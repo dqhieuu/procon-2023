@@ -1,36 +1,32 @@
 from __future__ import annotations
 
-from enum import Enum
 from queue import PriorityQueue
 
 import numpy as np
 from typing import List, Optional
 
+from ai.ai_request import AIStrategyEnum, AIStrategyRequest
 from entities.craftsman import Craftsman, CraftsmanCommand
 from entities.game_map import GameMap
 from entities.utils.enums import Team, ActionType, get_direction_from_vector, get_direction_vector
 from game import Game
-from online import local_command_to_online_action
-
-
-class CurrentStrategy(Enum):
-    MANUAL = 'manual'
-    EXPAND_TERRITORY = 'expand_territory'
-    CAPTURE_CASTLE = 'capture_castle'
-    SABOTAGE_OPPONENT = 'sabotage_opponent'
-    PASSIVE_AGRESSIVE = 'passive_agressive'
 
 
 class CraftsmanAgent:
     def __init__(self, craftsman_id: str, game: Game, critic: CentralizedCritic, ):
         self.craftsman_id = craftsman_id
         self.game = game
-        self.current_strategy = CurrentStrategy.CAPTURE_CASTLE
+        self.current_strategy = AIStrategyEnum.MANUAL
         self.critic = critic
 
+        # manual strategy
+        self.manual_destination = None
+
+        # expand strategy
         self.expand_strategy_matrix = []
         self.expand_strategy_position = '00.'
 
+        # capture castle strategy
         self.selected_castle_pos = None
 
         self.init_esm()
@@ -45,11 +41,25 @@ class CraftsmanAgent:
                     self.expand_strategy_matrix.append(row)
         self.expand_strategy_matrix = np.array(self.expand_strategy_matrix)
 
-    def get_action(self, other_agents_moved_mask: np.ndarray) -> CraftsmanCommand:
-        if self.current_strategy == CurrentStrategy.CAPTURE_CASTLE:
+    def set_strategy(self, req: AIStrategyRequest):
+        self.current_strategy = req.strategy
+        if self.current_strategy == AIStrategyEnum.CAPTURE_CASTLE:
+            self.selected_castle_pos = req.detail.get("castle_pos", None)
+        elif self.current_strategy == AIStrategyEnum.MANUAL:
+            self.manual_destination = req.detail.get("destination", None)
+        elif self.current_strategy == AIStrategyEnum.EXPAND_TERRITORY:
+            # TODO: implement
+            pass
+
+
+    def get_action(self, other_agents_moved_mask: np.ndarray) -> Optional[CraftsmanCommand]:
+        if self.current_strategy == AIStrategyEnum.MANUAL:
+            return self.get_manual_action(other_agents_moved_mask)
+        if self.current_strategy == AIStrategyEnum.CAPTURE_CASTLE:
             return self.get_capture_castle_action(other_agents_moved_mask)
-        if self.current_strategy == CurrentStrategy.EXPAND_TERRITORY:
+        if self.current_strategy == AIStrategyEnum.EXPAND_TERRITORY:
             return self.get_expand_territory_action(other_agents_moved_mask)
+
 
     @property
     def craftsman(self):
@@ -121,11 +131,9 @@ class CraftsmanAgent:
         for x, y in castle_positions:
             castle_info_list.append({
                 "cost": map_tiles_insight[y][x]['move_cost'],
-                "path": map_tiles_insight[y][x]['move_path'][0] if len(map_tiles_insight[y][x]['move_path']) > 0 else None,
+                "next_pos_to_move": map_tiles_insight[y][x]['move_path'][0] if len(map_tiles_insight[y][x]['move_path']) > 0 else None,
                 "pos": (x, y),
             })
-
-        print(castle_info_list)
 
         # Remove castles that are already in our closed territory and castles
         unclosed_territory_castle_info_list = []
@@ -154,7 +162,6 @@ class CraftsmanAgent:
 
         cur_pos = craftsman.pos
 
-        print(select_castle_info["cost"])
         # We are already at the castle
         if select_castle_info["cost"] == 0:
             for build_wall_dir_vec in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
@@ -170,10 +177,9 @@ class CraftsmanAgent:
 
 
         # If we are not at the castle, then move towards it
-        next_pos = select_castle_info["path"]
+        next_pos = select_castle_info["next_pos_to_move"]
         dir_vec = (next_pos[0] - cur_pos[0], next_pos[1] - cur_pos[1])
         direction = get_direction_from_vector(dir_vec)
-        print(dir_vec)
         tile_at_next_pos = map.get_tile(*next_pos)
 
         # If there is an opponent wall, then destroy it before moving
@@ -183,31 +189,68 @@ class CraftsmanAgent:
         # If there is no wall, then move towards the castle
         return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE, direction=direction)
 
+    def get_manual_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand | None:
+        if self.manual_destination is None:
+            return None
+
+        craftsman = self.craftsman
+        map = self.game.current_state.map
+
+        map_tiles_insight = dijkstra(craftsman, map,
+                              save_only_one_next_move_in_path=True,
+                              all_craftsmen=self.game.current_state.craftsmen,
+                              excluded_move_mask=other_agent_moved_mask)
+        destination_insight = map_tiles_insight[self.manual_destination[1]][self.manual_destination[0]]
+
+        # If we are already at the destination, reset the manual destination and do nothing
+        if destination_insight['move_cost'] == 0:
+            self.manual_destination = None
+            return None
+
+        # If the destination is too far away, unable to reach, then do nothing
+        if destination_insight['move_cost'] > 1000 or len(destination_insight['move_path']) <= 0:
+            return None
+
+        cur_pos = craftsman.pos
+        next_pos = destination_insight['move_path'][0]
+        dir_vec = (next_pos[0] - cur_pos[0], next_pos[1] - cur_pos[1])
+        direction = get_direction_from_vector(dir_vec)
+        tile_at_next_pos = map.get_tile(*next_pos)
+
+        # If there is an opponent wall, then destroy it before moving
+        if (tile_at_next_pos.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (tile_at_next_pos.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
+            return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY, direction=direction)
+
+        # If there is no wall, then move towards the destination
+        return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE, direction=direction)
+
 
 class CentralizedCritic:
-    def __init__(self, team: Team, game: Game, online_command_dict=None):
+    def __init__(self, team: Team, game: Game):
         self.team = team
         self.team_agents: List[CraftsmanAgent] = []
         self.game = game
-        self.online_command_dict = online_command_dict
 
-    def act(self):
+    async def act(self):
+        from server import do_command
         moved_mask = np.zeros((self.game.current_state.map.height, self.game.current_state.map.width), dtype=bool)
         for agent in self.team_agents:
             action = agent.get_action(other_agents_moved_mask=moved_mask)
             if action is not None:
-                if action.action_type is not ActionType.STAY and self.online_command_dict is not None:
-                    online_action = local_command_to_online_action(action, self.game)
-                    self.online_command_dict[agent.craftsman.id] = online_action
-
                 if action.action_type == ActionType.MOVE:
-                    self.game.add_command(action)
-                    print(action)
+                    await do_command(action)
                     dir_vec = get_direction_vector(action.direction)
                     next_pos = (agent.craftsman.pos[0] + dir_vec[0], agent.craftsman.pos[1] + dir_vec[1])
                     if self.game.current_state.map.is_valid_pos(*next_pos):
                         moved_mask[next_pos[1]][next_pos[0]] = True
+                elif action.action_type == ActionType.BUILD or action.action_type == ActionType.DESTROY:
+                    await do_command(action)
 
+    def update_agent_strategy(self, strategy: AIStrategyRequest):
+        for agent in self.team_agents:
+            if agent.craftsman.id == strategy.craftsman_id:
+                agent.set_strategy(strategy)
+                break
 
 
 def dijkstra(craftsman: Craftsman,

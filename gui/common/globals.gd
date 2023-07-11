@@ -1,6 +1,7 @@
 extends Node
 
 var selected_tile = null
+var hovered_strategy_craftsman_tile_index = null
 
 var team_turn: Enums.TeamType
 

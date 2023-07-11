@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://bsohxm1t2erqj"]
+[gd_scene load_steps=20 format=3 uid="uid://bsohxm1t2erqj"]
 
 [ext_resource type="Texture2D" uid="uid://dn12uq5dxtlng" path="res://sprites/castle.png" id="1_bdoet"]
 [ext_resource type="Script" path="res://gamemap_tile.gd" id="1_hsfm8"]
@@ -13,8 +13,11 @@
 [ext_resource type="Texture2D" uid="uid://dx7dyrh225n0m" path="res://sprites/territory/C2.png" id="10_w6rjf"]
 [ext_resource type="Texture2D" uid="uid://kqmfmec5pye8" path="res://sprites/territory/C1.png" id="11_iq403"]
 [ext_resource type="Texture2D" uid="uid://g2n5dpgcj7jk" path="res://sprites/territory/O2.png" id="12_i7tj0"]
+[ext_resource type="Texture2D" uid="uid://b70an7vryhfqw" path="res://sprites/selected.png" id="14_0sugb"]
 [ext_resource type="Texture2D" uid="uid://43d8881kw7gt" path="res://sprites/foot.png" id="14_1hv5c"]
+[ext_resource type="Texture2D" uid="uid://c7cep6usjp8o5" path="res://sprites/pivot.png" id="15_amlae"]
 [ext_resource type="Texture2D" uid="uid://dljkmflnw1y6t" path="res://sprites/destroy.png" id="15_q3n4g"]
+[ext_resource type="Texture2D" uid="uid://blpt04qmdt5tk" path="res://sprites/target.png" id="16_18je3"]
 
 [sub_resource type="SystemFont" id="SystemFont_jkipc"]
 
@@ -66,13 +69,6 @@ self_modulate = Color(0.3, 0.3, 1, 1)
 layout_mode = 2
 texture = ExtResource("6_drohf")
 expand_mode = 1
-
-[node name="TileSelect" type="TextureRect" parent="."]
-self_modulate = Color(1, 1, 1, 0)
-layout_mode = 2
-texture = ExtResource("7_mr1db")
-expand_mode = 1
-script = ExtResource("8_d5w47")
 
 [node name="Team1OpenTerritory" type="TextureRect" parent="."]
 self_modulate = Color(0, 0.980392, 0.929412, 1)
@@ -128,6 +124,7 @@ texture = ExtResource("5_g3t1e")
 expand_mode = 1
 
 [node name="StrategyWall" type="AspectRatioContainer" parent="."]
+visible = false
 layout_mode = 2
 ratio = 3.0
 alignment_vertical = 2
@@ -147,6 +144,34 @@ theme_override_fonts/font = SubResource("SystemFont_jkipc")
 theme_override_font_sizes/font_size = 16
 text = "1"
 horizontal_alignment = 1
+
+[node name="AgentHighlight" type="TextureRect" parent="."]
+visible = false
+self_modulate = Color(0.894118, 0.560784, 0.203922, 0.709804)
+layout_mode = 2
+texture = ExtResource("14_0sugb")
+expand_mode = 1
+
+[node name="Pivot" type="TextureRect" parent="."]
+visible = false
+self_modulate = Color(1, 1, 1, 0.67451)
+layout_mode = 2
+texture = ExtResource("15_amlae")
+expand_mode = 1
+
+[node name="Target" type="TextureRect" parent="."]
+visible = false
+self_modulate = Color(1, 1, 1, 0.67451)
+layout_mode = 2
+texture = ExtResource("16_18je3")
+expand_mode = 1
+
+[node name="TileSelect" type="TextureRect" parent="."]
+self_modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+texture = ExtResource("7_mr1db")
+expand_mode = 1
+script = ExtResource("8_d5w47")
 
 [connection signal="gui_input" from="." to="." method="_on_gui_input"]
 [connection signal="mouse_entered" from="." to="TileSelect" method="_on_aspect_ratio_container_mouse_entered"]

@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi_restful.tasks import repeat_every
 
 from ai.ai import dijkstra, CentralizedCritic, CraftsmanAgent
+from ai.ai_request import AIStrategyRequest, AIStrategyEnum
 from entities.craftsman import CraftsmanCommand, get_craftsman_at
 from entities.utils.enums import Team, TurnState, ActionType, Direction, get_direction_vector
 from game import Game
@@ -118,10 +119,26 @@ if online_room > 0:
     game_status = get_game_status(online_room)
     game.load_online_action_list(get_online_actions(online_room), game_status)
 
-app = FastAPI()
-
 online_command_dict_per_craftsman_team1: dict[str, dict[str,str]] = {}
 online_command_dict_per_craftsman_team2: dict[str, dict[str,str]] = {}
+
+# load AI
+team1_critic = None
+if team_1_token is not None or mode == 1:
+    team1_critic = CentralizedCritic(Team.TEAM1, game)
+    _team1_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM1]
+    _team1_craftsman_agents = [CraftsmanAgent(c.id, game, team1_critic) for c in _team1_craftsmen]
+    team1_critic.team_agents = _team1_craftsman_agents
+
+team2_critic = None
+if team_2_token is not None or mode == 1:
+    team2_critic = CentralizedCritic(Team.TEAM2, game)
+    _team2_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM2]
+    _team2_craftsman_agents = [CraftsmanAgent(c.id, game, team2_critic) for c in _team2_craftsmen]
+    team2_critic.team_agents = _team2_craftsman_agents
+
+
+app = FastAPI()
 
 
 @app.post("/command")
@@ -157,6 +174,14 @@ async def end_turn():
         game.process_turn()
 
 
+@app.post("/ai_strategy")
+async def ai_strategy(strategy: AIStrategyRequest):
+    if team1_critic is not None:
+        team1_critic.update_agent_strategy(strategy)
+    elif team2_critic is not None:
+        team2_critic.update_agent_strategy(strategy)
+
+
 @app.get("/current_state")
 async def current_state():
     state_jsonable = deepcopy(game.current_state)
@@ -190,8 +215,37 @@ async def current_state():
             'pos': (craftsman.pos[0] + dir_vec[0], craftsman.pos[1] + dir_vec[1]),
             'action_type': action_type
         })
-
     res['actions_to_be_applied'] = actions_to_be_applied_list
+
+    agent_list = []
+    if team1_critic is not None:
+        agent_list += team1_critic.team_agents
+    if team2_critic is not None:
+        agent_list += team2_critic.team_agents
+
+    agent_strategy_list = []
+    for agent in agent_list:
+        detail = {}
+        if agent.current_strategy == AIStrategyEnum.MANUAL:
+            detail = {
+                'destination': agent.manual_destination,
+            }
+        elif agent.current_strategy == AIStrategyEnum.CAPTURE_CASTLE:
+            detail = {
+                'castle_pos': agent.selected_castle_pos,
+            }
+        elif agent.current_strategy == AIStrategyEnum.EXPAND_TERRITORY:
+            # TODO: implement
+            pass
+
+        agent_strategy_list.append({
+            'craftsman_id': agent.craftsman_id,
+            'craftsman_pos': agent.craftsman.pos,
+            'strategy': agent.current_strategy,
+            'detail': detail
+        })
+
+    res['agent_strategy_list'] = agent_strategy_list
 
     return res
 
@@ -213,6 +267,11 @@ async def auto_update_online_game_state():
                 online_command_dict_per_craftsman_team2.clear()
             elif game.current_state.turn_state == TurnState.TEAM2_TURN:
                 online_command_dict_per_craftsman_team1.clear()
+
+            if game.current_state.turn_state == TurnState.TEAM1_TURN and team1_critic is not None:
+                await team1_critic.act()
+            elif game.current_state.turn_state == TurnState.TEAM2_TURN and team2_critic is not None:
+                await team2_critic.act()
         else:
             if len(online_command_dict_per_craftsman_team1) > 0 and team_1_token is not None:
                 # async post request is faster
@@ -259,20 +318,12 @@ async def path(x: int, y: int, simple: bool = False):
 
 @app.get("/auto")
 async def auto():
-    team1_critic = CentralizedCritic(Team.TEAM1, game, online_command_dict_per_craftsman_team1)
-    team1_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM1]
-    team1_craftsman_agents = [CraftsmanAgent(c.id, game, team1_critic) for c in team1_craftsmen]
-    team1_critic.team_agents = team1_craftsman_agents
-
-    team2_critic = CentralizedCritic(Team.TEAM2, game, online_command_dict_per_craftsman_team2)
-    team2_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM2]
-    team2_craftsman_agents = [CraftsmanAgent(c.id, game, team2_critic) for c in team2_craftsmen]
-    team2_critic.team_agents = team2_craftsman_agents
-
+    if online_room > 0:
+        return "OK"
     while not game.is_game_over:
         if game.current_state.turn_state == TurnState.TEAM1_TURN:
-            team1_critic.act()
+            await team1_critic.act()
         elif game.current_state.turn_state == TurnState.TEAM2_TURN:
-            team2_critic.act()
+            await team2_critic.act()
 
         game.process_turn()
