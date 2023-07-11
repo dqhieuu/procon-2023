@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://ai_agent_info.gd" id="1_p3457"]
 
-[node name="AgentInfo" type="VBoxContainer"]
+[node name="AgentInfo" type="VBoxContainer" groups=["agent_info"]]
 script = ExtResource("1_p3457")
 
 [node name="AgentId" type="Label" parent="."]

@@ -1,12 +1,9 @@
 extends VBoxContainer
 
-var craftsman_id = 25
-var tile_index = 25
-
-
-func _ready():
-	pass # Replace with function body.
-
+var craftsman_id = null
+var craftsman_pos = null
+var strategy = null
+var detail = null
 
 
 func _process(delta):
@@ -14,7 +11,13 @@ func _process(delta):
 
 
 func _on_mouse_entered():
-	Globals.hovered_strategy_craftsman_tile_index = tile_index
+	if craftsman_pos == null:
+		Globals.hovered_strategy_craftsman_tile_index = null
+		return
+	
+	print(craftsman_pos)
+	
+	Globals.hovered_strategy_craftsman_tile_index = Globals.get_index_from_position(craftsman_pos)
 
 
 func _on_mouse_exited():

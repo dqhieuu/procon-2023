@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://buttons/refresh_state_button.gd" id="4_sl0ey"]
 [ext_resource type="Script" path="res://buttons/reset_actions_button.gd" id="4_so8eh"]
 [ext_resource type="Script" path="res://replay_tab.gd" id="5_rtpfi"]
-[ext_resource type="PackedScene" uid="uid://bxseht8j5j336" path="res://ai_agent_info.tscn" id="8_6m81f"]
+[ext_resource type="Script" path="res://ai_agent_list.gd" id="8_3hu1n"]
 
 [sub_resource type="Animation" id="Animation_vodis"]
 length = 0.4
@@ -818,11 +818,10 @@ theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Total pts: 0"
 horizontal_alignment = 2
 
-[node name="AgentList" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
+[node name="AgentList" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer" groups=["agent_list"]]
 layout_mode = 2
-
-[node name="Agent1" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer/AgentList" instance=ExtResource("8_6m81f")]
-layout_mode = 2
+theme_override_constants/separation = 30
+script = ExtResource("8_3hu1n")
 
 [node name="Flash" type="ColorRect" parent="." groups=["flash"]]
 visible = false
