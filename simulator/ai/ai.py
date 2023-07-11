@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional
+from queue import PriorityQueue
 
 import numpy as np
+from typing import List, Optional
 
 from entities.craftsman import Craftsman, CraftsmanCommand
 from entities.game_map import GameMap
-from queue import PriorityQueue
-
 from entities.utils.enums import Team, ActionType, get_direction_from_vector
 from game import Game
 
@@ -26,16 +25,82 @@ class CraftsmanAgent:
         self.game = game
         self.current_strategy = CurrentStrategy.CAPTURE_CASTLE
         self.critic = critic
-
         self.selected_castle_pos = None
+
+        self.expand_strategy_matrix = []
+        self.expand_strategy_position = '00.'
+
+        self.init_esm()
+
+    def init_esm(self):
+        file_path = "assets//path_strat_expand.txt"
+        with open(file_path, "r") as file:
+            for line in file:
+                line = line.strip()
+                if line:
+                    row = line.split(" ")
+                    self.expand_strategy_matrix.append(row)
+        self.expand_strategy_matrix = np.array(self.expand_strategy_matrix)
 
     def get_action(self, other_agents_moved_mask: np.ndarray) -> CraftsmanCommand:
         if self.current_strategy == CurrentStrategy.CAPTURE_CASTLE:
             return self.get_capture_castle_action(other_agents_moved_mask)
+        if self.current_strategy == CurrentStrategy.EXPAND_TERRITORY:
+            return self.get_expand_territory_action(other_agents_moved_mask)
 
     @property
     def craftsman(self):
         return self.game.find_craftsman_by_id(self.craftsman_id)
+
+    def get_expand_territory_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand:
+        craftsman = self.craftsman
+        current_positions = np.where(self.expand_strategy_matrix == self.expand_strategy_position)
+        current_position = (current_positions[0][0], current_positions[1][0])
+        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+
+        for dx, dy in directions:
+            nx, ny = current_position[1] + dx, current_position[0] + dy
+            if nx < 0 or ny < 0 or nx >= self.expand_strategy_matrix.shape[1] or ny >= \
+                    self.expand_strategy_matrix.shape[0]:
+                continue
+
+            if self.expand_strategy_matrix[ny][nx] == '..x':
+                self.expand_strategy_matrix[ny][nx] = 'done'
+                return CraftsmanCommand(
+                    craftsman_pos=craftsman.pos,
+                    action_type=ActionType.BUILD,
+                    direction=get_direction_from_vector((dx, dy))
+                )
+
+        diagonal_directions = [(1, -1), (1, 1), (-1, 1), (-1, -1)]
+        candidate_points = []
+        for dx, dy in diagonal_directions:
+            nx, ny = current_position[1] + dx, current_position[0] + dy
+            if nx < 0 or ny < 0 or nx >= self.expand_strategy_matrix.shape[1] or ny >= \
+                    self.expand_strategy_matrix.shape[0]:
+                continue
+
+            value = self.expand_strategy_matrix[ny][nx]
+            if len(value) == 3 and value[0:2].isdigit() and value[2] == '.':
+                candidate_points.append((nx, ny))
+
+        if candidate_points:
+            min_value = float('inf')
+            min_point = None
+
+            for point in candidate_points:
+                value = int(self.expand_strategy_matrix[point[1]][point[0]][0:2])
+                if value < min_value:
+                    min_value = value
+                    min_point = point
+            self.expand_strategy_position = self.expand_strategy_matrix[min_point[1]][min_point[0]]
+            direction = (min_point[0] - current_position[1], min_point[1] - current_position[0])
+
+            return CraftsmanCommand(
+                craftsman_pos=craftsman.pos,
+                action_type=ActionType.MOVE,
+                direction=get_direction_from_vector(direction)
+            )
 
     def get_capture_castle_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand:
         craftsman = self.craftsman
