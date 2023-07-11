@@ -3,7 +3,18 @@ extends Node
 var selected_tile = null
 var hovered_strategy_craftsman_tile_index = null
 
+var pos_inputs_to_be_updated = null
+
 var team_turn: Enums.TeamType
+
+func is_picking():
+	return pos_inputs_to_be_updated != null && len(pos_inputs_to_be_updated) == 2
+
+func update_pos_inputs_by_picking(pos):
+	pos_inputs_to_be_updated[0].value = pos[0]
+	pos_inputs_to_be_updated[1].value = pos[1]
+	
+	pos_inputs_to_be_updated = null
 
 func selected_position():
 	if selected_tile == null:

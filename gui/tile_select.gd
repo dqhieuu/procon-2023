@@ -4,12 +4,17 @@ extends TextureRect
 @export var is_selected = false
 
 func _process(_delta):
-	if is_selected:
-		self.self_modulate.a = 1.0
-	elif is_hovered:
-		self.self_modulate.a = 0.7
+	if Globals.is_picking():
+		self_modulate = Color(0.7,0,1,1)
 	else:
-		self.self_modulate.a = 0.0
+		self_modulate = Color(1.0,0.8,0.2,1)
+	
+	if is_selected:
+		self_modulate.a = 1.0
+	elif is_hovered:
+		self_modulate.a = 0.7
+	else:
+		self_modulate.a = 0.0
 
 func _on_aspect_ratio_container_mouse_entered():
 	is_hovered = true

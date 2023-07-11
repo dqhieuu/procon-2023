@@ -1,13 +1,7 @@
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel
-
-
-class AIStrategyRequest(BaseModel):
-    craftsman_id: str
-    strategy: str
-    detail: dict[str, str]
-
 
 class AIStrategyEnum(Enum):
     MANUAL = 'manual'
@@ -15,3 +9,9 @@ class AIStrategyEnum(Enum):
     CAPTURE_CASTLE = 'capture_castle'
     SABOTAGE_OPPONENT = 'sabotage_opponent'
     PASSIVE_AGGRESSIVE = 'passive_aggressive'
+
+
+class AIStrategyRequest(BaseModel):
+    craftsman_id: str
+    strategy: AIStrategyEnum
+    detail: dict[str, Any]

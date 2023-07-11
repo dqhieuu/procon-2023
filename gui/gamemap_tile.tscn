@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://bndlf38150ljx" path="res://sprites/pond.jpg" id="3_7qxnx"]
 [ext_resource type="Texture2D" uid="uid://3iyem73p358n" path="res://sprites/wall.jpeg" id="5_g3t1e"]
 [ext_resource type="Texture2D" uid="uid://2rw5t6ird3ob" path="res://sprites/craftman.png" id="6_drohf"]
-[ext_resource type="Texture2D" uid="uid://dvrbshhacpe3g" path="res://sprites/tile_indicator.png" id="7_mr1db"]
 [ext_resource type="Script" path="res://tile_select.gd" id="8_d5w47"]
 [ext_resource type="Texture2D" uid="uid://cy8vejpx6xs0q" path="res://sprites/hammer.png" id="9_0u1d1"]
 [ext_resource type="Texture2D" uid="uid://72rclo5tytog" path="res://sprites/territory/O1.png" id="9_6ww2q"]
@@ -18,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://c7cep6usjp8o5" path="res://sprites/pivot.png" id="15_amlae"]
 [ext_resource type="Texture2D" uid="uid://dljkmflnw1y6t" path="res://sprites/destroy.png" id="15_q3n4g"]
 [ext_resource type="Texture2D" uid="uid://blpt04qmdt5tk" path="res://sprites/target.png" id="16_18je3"]
+[ext_resource type="Texture2D" uid="uid://dvrbshhacpe3g" path="res://sprites/tile_indicator.png" id="17_6pth1"]
 
 [sub_resource type="SystemFont" id="SystemFont_jkipc"]
 
@@ -167,9 +167,9 @@ texture = ExtResource("16_18je3")
 expand_mode = 1
 
 [node name="TileSelect" type="TextureRect" parent="."]
-self_modulate = Color(1, 1, 1, 0)
+modulate = Color(1, 1, 0, 1)
 layout_mode = 2
-texture = ExtResource("7_mr1db")
+texture = ExtResource("17_6pth1")
 expand_mode = 1
 script = ExtResource("8_d5w47")
 

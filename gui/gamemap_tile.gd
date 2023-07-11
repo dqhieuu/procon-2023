@@ -106,12 +106,18 @@ func _drop_data(pos, data):
 
 func _on_gui_input(event):
 	if event.is_action_pressed("click"):
+		var tile_idx = get_index()
+		
+		if Globals.is_picking():
+			Globals.update_pos_inputs_by_picking(Globals.get_position_from_index(tile_idx))
+			return
+		
 		if craftsman_occupied == Enums.TeamType.NEUTRAL or Globals.team_turn != craftsman_occupied:
 			Globals.selected_tile = null
 			return
 
-		if Globals.selected_tile == self.get_index():
+		if Globals.selected_tile == tile_idx:
 			Globals.selected_tile = null
 		else:
-			Globals.selected_tile = self.get_index()
+			Globals.selected_tile = tile_idx
 			

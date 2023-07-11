@@ -178,7 +178,7 @@ async def end_turn():
 async def ai_strategy(strategy: AIStrategyRequest):
     if team1_critic is not None:
         team1_critic.update_agent_strategy(strategy)
-    elif team2_critic is not None:
+    if team2_critic is not None:
         team2_critic.update_agent_strategy(strategy)
 
 

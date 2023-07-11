@@ -13,7 +13,7 @@ from game import Game
 
 
 class CraftsmanAgent:
-    def __init__(self, craftsman_id: str, game: Game, critic: CentralizedCritic, ):
+    def __init__(self, craftsman_id: str, game: Game, critic: CentralizedCritic):
         self.craftsman_id = craftsman_id
         self.game = game
         self.current_strategy = AIStrategyEnum.MANUAL

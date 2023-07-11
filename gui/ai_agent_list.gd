@@ -29,6 +29,7 @@ func update_agent_list(new_agent_list):
 	for i in len(node_list):
 		node_list[i].craftsman_pos = agent_list[i].craftsman_pos
 		node_list[i].strategy = agent_list[i].strategy
+		node_list[i].strategy_detail = agent_list[i].detail
 	
 
 
