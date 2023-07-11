@@ -160,8 +160,7 @@ texture = ExtResource("15_amlae")
 expand_mode = 1
 
 [node name="Target" type="TextureRect" parent="."]
-visible = false
-self_modulate = Color(1, 1, 1, 0.67451)
+self_modulate = Color(0.992157, 0.698039, 0, 1)
 layout_mode = 2
 texture = ExtResource("16_18je3")
 expand_mode = 1

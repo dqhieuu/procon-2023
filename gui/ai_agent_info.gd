@@ -5,10 +5,12 @@ var craftsman_pos = null
 var strategy = null
 var strategy_detail = null
 
+var target_pos = null
 
 
 func _process(delta):
 	# Process server output
+	var new_target_pos = null
 	if craftsman_id != null and craftsman_pos != null:
 		$AgentId.text = "Agent: %s (x=%d, y=%d)" % [craftsman_id, craftsman_pos[0], craftsman_pos[1]]
 	if strategy != null:
@@ -19,14 +21,16 @@ func _process(delta):
 				$StrategyDetail.text = "No destination set"
 			else:
 				$StrategyDetail.text = "Going to pos: x=%d, y=%d" % [strategy_detail.destination[0], strategy_detail.destination[1]]
+				new_target_pos = strategy_detail.destination
 		elif strategy == "capture_castle":
 			if strategy_detail.castle_pos == null:
 				$StrategyDetail.text = "Going to nearest castle"
 			else:
 				$StrategyDetail.text = "Going to castle pos: x=%d, y=%d" % [strategy_detail.castle_pos[0], strategy_detail.castle_pos[1]]
+				new_target_pos = strategy_detail.castle_pos
 		elif strategy == "expand_territory":
 			$StrategyDetail.text = "Expanding territory (set wrong)"
-
+	target_pos = new_target_pos
 
 func _on_mouse_entered():
 	if craftsman_pos == null:
@@ -74,3 +78,5 @@ func _on_capture_castle_from_pos_btn_pressed():
 
 func _on_capture_nearest_castles_btn_pressed():
 	HTTP.update_strategy({'craftsman_id': craftsman_id, "strategy": 'capture_castle', "detail":{}})
+	
+

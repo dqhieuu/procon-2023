@@ -49,7 +49,17 @@ func update_visible_sprite():
 	
 	$AgentHighlight.visible = tile_index == Globals.hovered_strategy_craftsman_tile_index
 	
-	
+	var has_target = false
+	if Globals.hovered_strategy_craftsman_tile_index != null:
+		var agent_info_list = get_tree().get_nodes_in_group("agent_info")
+		for agent in agent_info_list:
+			if Globals.hovered_strategy_craftsman_tile_index == Globals.get_index_from_position(agent.craftsman_pos) \
+			and agent.target_pos != null \
+			and Globals.get_index_from_position(agent.target_pos) == tile_index:
+				has_target = true
+				break
+
+	$Target.visible = has_target
 	
 	
 

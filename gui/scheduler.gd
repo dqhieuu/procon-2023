@@ -37,6 +37,4 @@ func _on_Timer_timeout():
 		
 		map_node.update_actions_to_be_applied(current_state.actions_to_be_applied)
 		
-
-		
 	

@@ -172,6 +172,8 @@ async def end_turn():
     else:
         # LOCAL MODE
         game.process_turn()
+        await team1_critic.act()
+        await team2_critic.act()
 
 
 @app.post("/ai_strategy")
