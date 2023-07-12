@@ -1,219 +1,277 @@
-[gd_scene load_steps=2 format=3 uid="uid://bxseht8j5j336"]
+[gd_scene load_steps=5 format=3 uid="uid://bxseht8j5j336"]
 
 [ext_resource type="Script" path="res://ai_agent_info.gd" id="1_p3457"]
 
-[node name="AgentInfo" type="VBoxContainer" groups=["agent_info"]]
-offset_right = 415.0
-offset_bottom = 232.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l4rbf"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.25098, 0.25098, 0.25098, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grxcj"]
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+expand_margin_left = 20.0
+expand_margin_top = 20.0
+expand_margin_right = 20.0
+expand_margin_bottom = 20.0
+
+[sub_resource type="Theme" id="Theme_unavp"]
+VBoxContainer/styles/rounded = SubResource("StyleBoxFlat_grxcj")
+
+[node name="Panel" type="PanelContainer" groups=["agent_info"]]
+offset_right = 418.0
+offset_bottom = 168.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_l4rbf")
 script = ExtResource("1_p3457")
 
-[node name="AgentId" type="Label" parent="."]
+[node name="AgentInfo" type="VBoxContainer" parent="."]
 layout_mode = 2
+theme = SubResource("Theme_unavp")
+
+[node name="AgentId" type="Label" parent="AgentInfo"]
+layout_mode = 2
+mouse_filter = 1
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Agent: null"
 
-[node name="Strategy" type="Label" parent="."]
+[node name="Strategy" type="Label" parent="AgentInfo"]
 layout_mode = 2
+mouse_filter = 1
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Stategy: null"
 
-[node name="StrategyDetail" type="Label" parent="."]
+[node name="StrategyDetail" type="Label" parent="AgentInfo"]
 layout_mode = 2
+mouse_filter = 1
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Detail: null"
 
-[node name="StrategySelector" type="TabContainer" parent="."]
+[node name="StrategySelector" type="TabContainer" parent="AgentInfo"]
 layout_mode = 2
 
-[node name="Man" type="VBoxContainer" parent="StrategySelector"]
+[node name="Man" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
+visible = false
 layout_mode = 2
 
-[node name="Position" type="Label" parent="StrategySelector/Man"]
+[node name="Position" type="Label" parent="AgentInfo/StrategySelector/Man"]
 layout_mode = 2
+mouse_filter = 1
 text = "Select position to go to"
 
-[node name="PositionControl" type="HBoxContainer" parent="StrategySelector/Man"]
+[node name="PositionControl" type="HBoxContainer" parent="AgentInfo/StrategySelector/Man"]
 layout_mode = 2
 
-[node name="XLabel" type="Label" parent="StrategySelector/Man/PositionControl"]
+[node name="XLabel" type="Label" parent="AgentInfo/StrategySelector/Man/PositionControl"]
 layout_mode = 2
 mouse_filter = 1
 text = "X:"
 
-[node name="X" type="SpinBox" parent="StrategySelector/Man/PositionControl"]
+[node name="X" type="SpinBox" parent="AgentInfo/StrategySelector/Man/PositionControl"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="YLabel" type="Label" parent="StrategySelector/Man/PositionControl"]
+[node name="YLabel" type="Label" parent="AgentInfo/StrategySelector/Man/PositionControl"]
 layout_mode = 2
 mouse_filter = 1
 text = "Y:"
 
-[node name="Y" type="SpinBox" parent="StrategySelector/Man/PositionControl"]
+[node name="Y" type="SpinBox" parent="AgentInfo/StrategySelector/Man/PositionControl"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="PickDestination" type="Button" parent="StrategySelector/Man/PositionControl"]
+[node name="PickDestination" type="Button" parent="AgentInfo/StrategySelector/Man/PositionControl"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Pick on map"
 
-[node name="GoToInputDest" type="Button" parent="StrategySelector/Man"]
+[node name="GoToInputDest" type="Button" parent="AgentInfo/StrategySelector/Man"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Go to input destination"
 
-[node name="FullManual" type="Button" parent="StrategySelector/Man"]
+[node name="FullManual" type="Button" parent="AgentInfo/StrategySelector/Man"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Full manual mode"
 
-[node name="Terr" type="VBoxContainer" parent="StrategySelector"]
-visible = false
+[node name="Terr" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
 layout_mode = 2
 
-[node name="Template" type="Label" parent="StrategySelector/Terr"]
+[node name="Template" type="Label" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
+mouse_filter = 1
 text = "Template"
 
-[node name="TacticList" type="VBoxContainer" parent="StrategySelector/Terr"]
+[node name="TacticList" type="VBoxContainer" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
 
-[node name="GridContainer" type="GridContainer" parent="StrategySelector/Terr/TacticList"]
+[node name="GridContainer" type="GridContainer" parent="AgentInfo/StrategySelector/Terr/TacticList"]
 layout_mode = 2
 columns = 2
 
-[node name="Button" type="Button" parent="StrategySelector/Terr/TacticList/GridContainer"]
+[node name="Button" type="Button" parent="AgentInfo/StrategySelector/Terr/TacticList/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 1
 text = "2x2 top left"
 
-[node name="Button2" type="Button" parent="StrategySelector/Terr/TacticList/GridContainer"]
+[node name="Button2" type="Button" parent="AgentInfo/StrategySelector/Terr/TacticList/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 1
 text = "2x2 top right"
 
-[node name="Button3" type="Button" parent="StrategySelector/Terr/TacticList/GridContainer"]
+[node name="Button3" type="Button" parent="AgentInfo/StrategySelector/Terr/TacticList/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 1
 text = "2x2 bottom left"
 
-[node name="Button4" type="Button" parent="StrategySelector/Terr/TacticList/GridContainer"]
+[node name="Button4" type="Button" parent="AgentInfo/StrategySelector/Terr/TacticList/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 1
 text = "2x2 bottom right"
 
-[node name="Pivot" type="Label" parent="StrategySelector/Terr"]
+[node name="Pivot" type="Label" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
+mouse_filter = 1
 text = "Pivot"
 
-[node name="PivotPosition" type="HBoxContainer" parent="StrategySelector/Terr"]
+[node name="PivotPosition" type="HBoxContainer" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
 
-[node name="XLabel" type="Label" parent="StrategySelector/Terr/PivotPosition"]
+[node name="XLabel" type="Label" parent="AgentInfo/StrategySelector/Terr/PivotPosition"]
 layout_mode = 2
 mouse_filter = 1
 text = "X:"
 
-[node name="X" type="SpinBox" parent="StrategySelector/Terr/PivotPosition"]
+[node name="X" type="SpinBox" parent="AgentInfo/StrategySelector/Terr/PivotPosition"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="YLabel" type="Label" parent="StrategySelector/Terr/PivotPosition"]
+[node name="YLabel" type="Label" parent="AgentInfo/StrategySelector/Terr/PivotPosition"]
 layout_mode = 2
 mouse_filter = 1
 text = "Y:"
 
-[node name="Y" type="SpinBox" parent="StrategySelector/Terr/PivotPosition"]
+[node name="Y" type="SpinBox" parent="AgentInfo/StrategySelector/Terr/PivotPosition"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="PickExpandPivot" type="Button" parent="StrategySelector/Terr/PivotPosition"]
+[node name="PickExpandPivot" type="Button" parent="AgentInfo/StrategySelector/Terr/PivotPosition"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Pick on map"
 
-[node name="Label" type="Label" parent="StrategySelector/Terr"]
+[node name="Label" type="Label" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
+mouse_filter = 1
 text = "Step"
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="StrategySelector/Terr"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
 
-[node name="X" type="SpinBox" parent="StrategySelector/Terr/HBoxContainer2"]
+[node name="X" type="SpinBox" parent="AgentInfo/StrategySelector/Terr/HBoxContainer2"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="Button5" type="Button" parent="StrategySelector/Terr"]
+[node name="UseExpandStrategy" type="Button" parent="AgentInfo/StrategySelector/Terr"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 1
 text = "Use this strategy"
 
-[node name="Cast" type="VBoxContainer" parent="StrategySelector"]
+[node name="Cast" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
 visible = false
 layout_mode = 2
 
-[node name="Position" type="Label" parent="StrategySelector/Cast"]
+[node name="Position" type="Label" parent="AgentInfo/StrategySelector/Cast"]
 layout_mode = 2
+mouse_filter = 1
 text = "Select castle position"
 
-[node name="PositionControl" type="HBoxContainer" parent="StrategySelector/Cast"]
+[node name="PositionControl" type="HBoxContainer" parent="AgentInfo/StrategySelector/Cast"]
 layout_mode = 2
 
-[node name="XLabel" type="Label" parent="StrategySelector/Cast/PositionControl"]
+[node name="XLabel" type="Label" parent="AgentInfo/StrategySelector/Cast/PositionControl"]
 layout_mode = 2
 mouse_filter = 1
 text = "X:"
 
-[node name="X" type="SpinBox" parent="StrategySelector/Cast/PositionControl"]
+[node name="X" type="SpinBox" parent="AgentInfo/StrategySelector/Cast/PositionControl"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="YLabel" type="Label" parent="StrategySelector/Cast/PositionControl"]
+[node name="YLabel" type="Label" parent="AgentInfo/StrategySelector/Cast/PositionControl"]
 layout_mode = 2
 mouse_filter = 1
 text = "Y:"
 
-[node name="Y" type="SpinBox" parent="StrategySelector/Cast/PositionControl"]
+[node name="Y" type="SpinBox" parent="AgentInfo/StrategySelector/Cast/PositionControl"]
 layout_mode = 2
+mouse_filter = 1
 max_value = 30.0
 
-[node name="PickCastle" type="Button" parent="StrategySelector/Cast/PositionControl"]
+[node name="PickCastle" type="Button" parent="AgentInfo/StrategySelector/Cast/PositionControl"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Pick on map"
 
-[node name="CaptureCastleFromPosBtn" type="Button" parent="StrategySelector/Cast"]
+[node name="CaptureCastleFromPosBtn" type="Button" parent="AgentInfo/StrategySelector/Cast"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Capture castle from input pos"
 
-[node name="CaptureNearestCastlesBtn" type="Button" parent="StrategySelector/Cast"]
+[node name="CaptureNearestCastlesBtn" type="Button" parent="AgentInfo/StrategySelector/Cast"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 1
 text = "Capture nearest castles"
 
-[node name="Sabt" type="VBoxContainer" parent="StrategySelector"]
+[node name="Sabt" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
 visible = false
 layout_mode = 2
 
-[node name="Terr+Sabt" type="VBoxContainer" parent="StrategySelector"]
+[node name="Terr+Sabt" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
 visible = false
 layout_mode = 2
 
 [connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
-[connection signal="pressed" from="StrategySelector/Man/PositionControl/PickDestination" to="." method="_on_pick_destination_pressed"]
-[connection signal="pressed" from="StrategySelector/Man/GoToInputDest" to="." method="_on_go_to_input_dest_pressed"]
-[connection signal="pressed" from="StrategySelector/Man/FullManual" to="." method="_on_full_manual_pressed"]
-[connection signal="pressed" from="StrategySelector/Terr/PivotPosition/PickExpandPivot" to="." method="_on_pick_expand_pivot_pressed"]
-[connection signal="pressed" from="StrategySelector/Cast/PositionControl/PickCastle" to="." method="_on_pick_castle_pressed"]
-[connection signal="pressed" from="StrategySelector/Cast/CaptureCastleFromPosBtn" to="." method="_on_capture_castle_from_pos_btn_pressed"]
-[connection signal="pressed" from="StrategySelector/Cast/CaptureNearestCastlesBtn" to="." method="_on_capture_nearest_castles_btn_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Man/PositionControl/PickDestination" to="." method="_on_pick_destination_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Man/GoToInputDest" to="." method="_on_go_to_input_dest_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Man/FullManual" to="." method="_on_full_manual_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Terr/PivotPosition/PickExpandPivot" to="." method="_on_pick_expand_pivot_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Terr/UseExpandStrategy" to="." method="_on_use_expand_strategy_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Cast/PositionControl/PickCastle" to="." method="_on_pick_castle_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Cast/CaptureCastleFromPosBtn" to="." method="_on_capture_castle_from_pos_btn_pressed"]
+[connection signal="pressed" from="AgentInfo/StrategySelector/Cast/CaptureNearestCastlesBtn" to="." method="_on_capture_nearest_castles_btn_pressed"]

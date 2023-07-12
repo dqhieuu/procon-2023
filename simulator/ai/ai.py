@@ -25,11 +25,13 @@ class CraftsmanAgent:
         # expand strategy
         self.expand_strategy_matrix = []
         self.expand_strategy_position = '00.'
+        self.expand_pivot_pos = None
+        self.init_esm()
 
         # capture castle strategy
         self.selected_castle_pos = None
 
-        self.init_esm()
+
 
     def init_esm(self):
         file_path = "assets//path_strat_expand.txt"
@@ -48,9 +50,8 @@ class CraftsmanAgent:
         elif self.current_strategy == AIStrategyEnum.MANUAL:
             self.manual_destination = req.detail.get("destination", None)
         elif self.current_strategy == AIStrategyEnum.EXPAND_TERRITORY:
-            # TODO: implement
-            pass
-
+            # TODO: implement this
+            self.expand_pivot_pos = req.detail.get("pivot_pos", None)
 
     def get_action(self, other_agents_moved_mask: np.ndarray) -> Optional[CraftsmanCommand]:
         if self.current_strategy == AIStrategyEnum.MANUAL:
@@ -68,6 +69,7 @@ class CraftsmanAgent:
     def get_expand_territory_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand:
         craftsman = self.craftsman
         current_positions = np.where(self.expand_strategy_matrix == self.expand_strategy_position)
+        print(current_positions)
         current_position = (current_positions[0][0], current_positions[1][0])
         directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
 

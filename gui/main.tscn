@@ -64,7 +64,7 @@ grow_vertical = 2
 layout_mode = 2
 
 [node name="Background" type="ColorRect" parent="HBoxContainer"]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
 size_flags_vertical = 3
 color = Color(0.933333, 0.933333, 0.933333, 1)
@@ -713,6 +713,11 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 text = "Turn"
 
+[node name="TimeLeft" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer" groups=["time_left"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Time left: Infinite"
+
 [node name="Team1Label" type="Label" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
@@ -820,7 +825,6 @@ horizontal_alignment = 2
 
 [node name="AgentList" type="VBoxContainer" parent="HBoxContainer/Background/ScrollContainer/TabContainer/AI/VBoxContainer" groups=["agent_list"]]
 layout_mode = 2
-theme_override_constants/separation = 30
 script = ExtResource("8_3hu1n")
 
 [node name="Flash" type="ColorRect" parent="." groups=["flash"]]
