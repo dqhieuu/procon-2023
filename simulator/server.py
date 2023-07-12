@@ -239,8 +239,8 @@ async def current_state():
         elif agent.current_strategy == AIStrategyEnum.EXPAND_TERRITORY:
             detail = {
                 'pivot_pos': agent.expand_pivot_pos,
+                'step': agent.expand_step,
             }
-            # TODO: implement
 
         agent_strategy_list.append({
             'craftsman_id': agent.craftsman_id,

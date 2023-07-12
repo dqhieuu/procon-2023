@@ -5,11 +5,20 @@ from queue import PriorityQueue
 import numpy as np
 from typing import List, Optional
 
+from pydantic import BaseModel
+
 from ai.ai_request import AIStrategyEnum, AIStrategyRequest
 from entities.craftsman import Craftsman, CraftsmanCommand
 from entities.game_map import GameMap
 from entities.utils.enums import Team, ActionType, get_direction_from_vector, get_direction_vector
 from game import Game
+
+
+class ExpandTileInfo(BaseModel):
+    step: Optional[int]
+    is_pivot: bool
+    need_to_build_on: bool
+    build_alternative: bool
 
 
 class CraftsmanAgent:
@@ -23,25 +32,59 @@ class CraftsmanAgent:
         self.manual_destination = None
 
         # expand strategy
-        self.expand_strategy_matrix = []
-        self.expand_strategy_position = '00.'
+        self._expand_strategy_matrix = np.array([])
+        self._expand_max_step = 0
+        self._pivot_offset = (0, 0)
+
+        self.expand_step = 0
         self.expand_pivot_pos = None
         self.init_esm()
 
         # capture castle strategy
         self.selected_castle_pos = None
 
-
+    def reset_esm(self):
+        self._expand_strategy_matrix = []
+        self._expand_max_step = 0
+        self._pivot_offset = (0, 0)
 
     def init_esm(self):
         file_path = "assets//path_strat_expand.txt"
+        self.reset_esm()
+
         with open(file_path, "r") as file:
             for line in file:
                 line = line.strip()
                 if line:
                     row = line.split(" ")
-                    self.expand_strategy_matrix.append(row)
-        self.expand_strategy_matrix = np.array(self.expand_strategy_matrix)
+                    row_of_expand_tile_info = []
+                    for elem in row:
+                        idx = None
+                        idx_str = elem[:2]
+                        if idx_str.isdigit():
+                            idx = int(idx_str)
+                            self._expand_max_step = max(self._expand_max_step, idx)
+
+                        is_pivot = elem[2] == 'p'
+                        need_to_build_on = elem[2] == 'x'
+                        build_alternative = elem[2] == 'a'
+                        tile = ExpandTileInfo(step=idx, is_pivot=is_pivot, need_to_build_on=need_to_build_on, build_alternative=build_alternative)
+
+                        row_of_expand_tile_info.append(tile)
+                    self._expand_strategy_matrix.append(row_of_expand_tile_info)
+
+
+        self._expand_strategy_matrix = np.array(self._expand_strategy_matrix)
+
+        # get pivot offset
+        for y in range(self._expand_strategy_matrix.shape[0]):
+            for x in range(self._expand_strategy_matrix.shape[1]):
+                if self._expand_strategy_matrix[y][x].is_pivot:
+                    self._pivot_offset = (x, y)
+                    break
+
+    def is_valid_pos_in_expand_strategy_matrix(self, x, y):
+        return 0 <= x < self._expand_strategy_matrix.shape[1] and 0 <= y < self._expand_strategy_matrix.shape[0]
 
     def set_strategy(self, req: AIStrategyRequest):
         self.current_strategy = req.strategy
@@ -50,8 +93,9 @@ class CraftsmanAgent:
         elif self.current_strategy == AIStrategyEnum.MANUAL:
             self.manual_destination = req.detail.get("destination", None)
         elif self.current_strategy == AIStrategyEnum.EXPAND_TERRITORY:
-            # TODO: implement this
             self.expand_pivot_pos = req.detail.get("pivot_pos", None)
+            self.expand_step = req.detail.get("step", 0)
+            self.init_esm()
 
     def get_action(self, other_agents_moved_mask: np.ndarray) -> Optional[CraftsmanCommand]:
         if self.current_strategy == AIStrategyEnum.MANUAL:
@@ -66,56 +110,84 @@ class CraftsmanAgent:
     def craftsman(self):
         return self.game.find_craftsman_by_id(self.craftsman_id)
 
-    def get_expand_territory_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand:
+    def get_expand_territory_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand | None:
+        if self.expand_step > self._expand_max_step or self.expand_pivot_pos is None:
+            self.current_strategy = AIStrategyEnum.MANUAL
+            return None
+
         craftsman = self.craftsman
-        current_positions = np.where(self.expand_strategy_matrix == self.expand_strategy_position)
-        print(current_positions)
-        current_position = (current_positions[0][0], current_positions[1][0])
-        directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+        map = self.game.current_state.map
+        map_tiles_insight = dijkstra(craftsman, map,
+                              save_only_one_next_move_in_path=True,
+                              all_craftsmen=self.game.current_state.craftsmen,
+                              excluded_move_mask=other_agent_moved_mask)
 
-        for dx, dy in directions:
-            nx, ny = current_position[1] + dx, current_position[0] + dy
-            if nx < 0 or ny < 0 or nx >= self.expand_strategy_matrix.shape[1] or ny >= \
-                    self.expand_strategy_matrix.shape[0]:
+        esm_step_pos = (0,0)
+        for y in range(self._expand_strategy_matrix.shape[0]):
+            for x in range(self._expand_strategy_matrix.shape[1]):
+                if self._expand_strategy_matrix[y][x].step == self.expand_step:
+                    esm_step_pos = (x, y)
+                    break
+
+        step_pos = (self.expand_pivot_pos[0] + esm_step_pos[0] - self._pivot_offset[0],
+                    self.expand_pivot_pos[1] + esm_step_pos[1] - self._pivot_offset[1])
+
+        # We need to go to the step_pos
+        if craftsman.pos != step_pos:
+            destination_insight = map_tiles_insight[step_pos[1]][step_pos[0]]
+
+            # If the destination is too far away, unable to reach, then do nothing
+            if destination_insight['move_cost'] > 1000 or len(destination_insight['move_path']) <= 0:
+                return None
+
+            cur_pos = craftsman.pos
+            next_pos = destination_insight['move_path'][0]
+            dir_vec = (next_pos[0] - cur_pos[0], next_pos[1] - cur_pos[1])
+            direction = get_direction_from_vector(dir_vec)
+            tile_at_next_pos = map.get_tile(*next_pos)
+
+            # If there is an opponent wall, then destroy it before moving
+            if (tile_at_next_pos.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (
+                    tile_at_next_pos.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
+                return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY,
+                                        direction=direction)
+
+            # If there is no wall, then move towards the destination
+            return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.MOVE, direction=direction)
+
+        # We are at the step_pos, so we need to check if we need to build walls
+        for dir_vec in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            build_pos = (craftsman.pos[0] + dir_vec[0], craftsman.pos[1] + dir_vec[1])
+            esm_build_pos = (esm_step_pos[0] + dir_vec[0], esm_step_pos[1] + dir_vec[1])
+            if not self.is_valid_pos_in_expand_strategy_matrix(*esm_build_pos) or not map.is_valid_pos(*build_pos):
                 continue
 
-            if self.expand_strategy_matrix[ny][nx] == '..x':
-                self.expand_strategy_matrix[ny][nx] = 'done'
-                return CraftsmanCommand(
-                    craftsman_pos=craftsman.pos,
-                    action_type=ActionType.BUILD,
-                    direction=get_direction_from_vector((dx, dy))
-                )
-
-        diagonal_directions = [(1, -1), (1, 1), (-1, 1), (-1, -1)]
-        candidate_points = []
-        for dx, dy in diagonal_directions:
-            nx, ny = current_position[1] + dx, current_position[0] + dy
-            if nx < 0 or ny < 0 or nx >= self.expand_strategy_matrix.shape[1] or ny >= \
-                    self.expand_strategy_matrix.shape[0]:
+            if not self._expand_strategy_matrix[esm_build_pos[1]][esm_build_pos[0]].need_to_build_on:
                 continue
 
-            value = self.expand_strategy_matrix[ny][nx]
-            if len(value) == 3 and value[0:2].isdigit() and value[2] == '.':
-                candidate_points.append((nx, ny))
+            tile = map.get_tile(*build_pos)
+            # We don't need to build walls on our closed territory
+            if (tile.t1c and craftsman.team == Team.TEAM1) or (tile.t2c and craftsman.team == Team.TEAM2):
+                continue
 
-        if candidate_points:
-            min_value = float('inf')
-            min_point = None
+            # Our wall is already there, so we don't need to build it
+            if (tile.wall == Team.TEAM1 and craftsman.team == Team.TEAM1) or (tile.wall == Team.TEAM2 and craftsman.team == Team.TEAM2):
+                continue
 
-            for point in candidate_points:
-                value = int(self.expand_strategy_matrix[point[1]][point[0]][0:2])
-                if value < min_value:
-                    min_value = value
-                    min_point = point
-            self.expand_strategy_position = self.expand_strategy_matrix[min_point[1]][min_point[0]]
-            direction = (min_point[0] - current_position[1], min_point[1] - current_position[0])
+            # If there is opponent wall, then destroy it
+            if (tile.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (tile.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
+                return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY,
+                                        direction=get_direction_from_vector(dir_vec))
 
-            return CraftsmanCommand(
-                craftsman_pos=craftsman.pos,
-                action_type=ActionType.MOVE,
-                direction=get_direction_from_vector(direction)
-            )
+            # If there is no wall, then build it
+            return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.BUILD,
+                                    direction=get_direction_from_vector(dir_vec))
+
+        # If we are here, then we have built all the walls, so we need to move to the next step
+        self.expand_step += 1
+
+        # Recursively call this function to get the next action
+        return self.get_expand_territory_action(other_agent_moved_mask)
 
     def get_capture_castle_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand:
         craftsman = self.craftsman
