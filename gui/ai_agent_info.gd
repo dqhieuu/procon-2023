@@ -34,7 +34,7 @@ func _process(delta):
 			if strategy_detail.pivot_pos == null:
 				$AgentInfo/StrategyDetail.text = "Expanding territory (set wrong)"
 			else:
-				$AgentInfo/StrategyDetail.text = "Expanding from pos: x=%d, y=%d" % [strategy_detail.pivot_pos[0], strategy_detail.pivot_pos[1]]
+				$AgentInfo/StrategyDetail.text = "Step %d. Expanding from: x=%d, y=%d" % [strategy_detail.step, strategy_detail.pivot_pos[0], strategy_detail.pivot_pos[1]]
 				new_pivot_pos = strategy_detail.pivot_pos
 	target_pos = new_target_pos
 	pivot_pos = new_pivot_pos
@@ -91,6 +91,8 @@ func _on_capture_nearest_castles_btn_pressed():
 func _on_use_expand_strategy_pressed():
 	var pivot_x = $AgentInfo/StrategySelector/Terr/PivotPosition/X.value
 	var pivot_y = $AgentInfo/StrategySelector/Terr/PivotPosition/Y.value
+	var step = $AgentInfo/StrategySelector/Terr/Step.value
 	HTTP.update_strategy({'craftsman_id': craftsman_id, "strategy": 'expand_territory', "detail":{
-		'pivot_pos': [pivot_x, pivot_y]
+		'pivot_pos': [pivot_x, pivot_y],
+		'step': step
 	}})
