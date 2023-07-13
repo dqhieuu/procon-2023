@@ -136,7 +136,7 @@ func load_map(state):
 	for i in range(height):
 		for j in range(width):
 			var json_tile = map[i][j]
-			var tile = MapTile.instantiate() if is_num_of_tiles_changed else $GridContainer.get_child(i*j)
+			var tile = MapTile.instantiate() if is_num_of_tiles_changed else $GridContainer.get_child(i*width+j)
 			tile.wall_team = string_to_team_type[json_tile.wall]
 			tile.has_pond = json_tile.has_pond
 			tile.has_castle = json_tile.has_castle
