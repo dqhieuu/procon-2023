@@ -21,7 +21,7 @@ import aiohttp
 ### SET THESE VARIABLES ###
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4ODg5MjI0NiwiZXhwIjoxNjg5MDY1MDQ2fQ.rKpQyVo_EiJ7b-bbmu9zDxzfMhjv-X-OLIFcLkcNRbs"
+competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4OTExMTIyMCwiZXhwIjoxNjg5Mjg0MDIwfQ.f7vrLdZgKJpCMpMTGzBu4vRW2UNHFmNTU8T2UFAMejY"
 team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4OTExMTIyMCwiZXhwIjoxNjg5Mjg0MDIwfQ.f7vrLdZgKJpCMpMTGzBu4vRW2UNHFmNTU8T2UFAMejY"
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODkxMTEyNTQsImV4cCI6MTY4OTI4NDA1NH0.svYPXPvKkr0P4sR3FGKS5FMrrkdAOn-y89zHvy3VxU8"
 ### END SET THESE VARIABLES ###
@@ -288,7 +288,7 @@ async def auto_update_online_game_state():
                             "actions": list(online_command_dict_per_craftsman_team1.values()),
                         }) as res:
                     if not (200 <= res.status < 300):
-                        print(res.text)
+                        print(await res.text())
                     else:
                         print("Sent online commands successfully")
 
@@ -301,7 +301,7 @@ async def auto_update_online_game_state():
                             "actions": list(online_command_dict_per_craftsman_team2.values()),
                         }) as res:
                     if not (200 <= res.status < 300):
-                        print(res.text)
+                        print(await res.text())
                     else:
                         print("Sent online commands successfully")
 

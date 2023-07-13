@@ -28,6 +28,9 @@ class CraftsmanAgent:
         self.current_strategy = AIStrategyEnum.MANUAL
         self.critic = critic
 
+        # memo
+        self.map_tile_insight = None
+
         # manual strategy
         self.manual_destination = None
 
@@ -110,17 +113,25 @@ class CraftsmanAgent:
     def craftsman(self):
         return self.game.find_craftsman_by_id(self.craftsman_id)
 
-    def get_expand_territory_action(self, other_agent_moved_mask: np.ndarray) -> CraftsmanCommand | None:
+    def get_expand_territory_action(self, other_agent_moved_mask: np.ndarray, can_reuse_map_tile_insight = False) -> CraftsmanCommand | None:
         if self.expand_step > self._expand_max_step or self.expand_pivot_pos is None:
             self.current_strategy = AIStrategyEnum.MANUAL
             return None
 
         craftsman = self.craftsman
         map = self.game.current_state.map
-        map_tiles_insight = dijkstra(craftsman, map,
-                              save_only_one_next_move_in_path=True,
-                              all_craftsmen=self.game.current_state.craftsmen,
-                              excluded_move_mask=other_agent_moved_mask)
+
+        map_tiles_insight = None
+
+        if not can_reuse_map_tile_insight or self.map_tile_insight is None:
+            map_tiles_insight = dijkstra(craftsman, map,
+                                  save_only_one_next_move_in_path=True,
+                                  all_craftsmen=self.game.current_state.craftsmen,
+                                  excluded_move_mask=other_agent_moved_mask)
+            self.map_tile_insight = map_tiles_insight
+        else:
+            map_tiles_insight = self.map_tile_insight
+
 
         esm_step_pos = (0,0)
         for y in range(self._expand_strategy_matrix.shape[0]):
@@ -131,6 +142,22 @@ class CraftsmanAgent:
 
         step_pos = (self.expand_pivot_pos[0] + esm_step_pos[0] - self._pivot_offset[0],
                     self.expand_pivot_pos[1] + esm_step_pos[1] - self._pivot_offset[1])
+
+        if not map.is_valid_pos(*step_pos):
+            self.current_strategy = AIStrategyEnum.MANUAL
+            return None
+
+        destination_tile = map.get_tile(*step_pos)
+
+        # There's a permanent obstacle on the destination tile, so we can't go there
+        if destination_tile.has_pond:
+            self.current_strategy = AIStrategyEnum.MANUAL
+            return None
+
+        # The destination tile is our closed territory, we don't need to go there, so we recursively go to the next step
+        if (destination_tile.t1c and craftsman.team == Team.TEAM1) or (destination_tile.t2c and craftsman.team == Team.TEAM2):
+            self.expand_step += 1
+            return self.get_expand_territory_action(other_agent_moved_mask, can_reuse_map_tile_insight=True)
 
         # We need to go to the step_pos
         if craftsman.pos != step_pos:
@@ -165,17 +192,21 @@ class CraftsmanAgent:
             if not self._expand_strategy_matrix[esm_build_pos[1]][esm_build_pos[0]].need_to_build_on:
                 continue
 
-            tile = map.get_tile(*build_pos)
+            tile_at_build_pos = map.get_tile(*build_pos)
+
+            if tile_at_build_pos.has_pond or tile_at_build_pos.has_castle:
+                continue
+
             # We don't need to build walls on our closed territory
-            if (tile.t1c and craftsman.team == Team.TEAM1) or (tile.t2c and craftsman.team == Team.TEAM2):
+            if (tile_at_build_pos.t1c and craftsman.team == Team.TEAM1) or (tile_at_build_pos.t2c and craftsman.team == Team.TEAM2):
                 continue
 
             # Our wall is already there, so we don't need to build it
-            if (tile.wall == Team.TEAM1 and craftsman.team == Team.TEAM1) or (tile.wall == Team.TEAM2 and craftsman.team == Team.TEAM2):
+            if (tile_at_build_pos.wall == Team.TEAM1 and craftsman.team == Team.TEAM1) or (tile_at_build_pos.wall == Team.TEAM2 and craftsman.team == Team.TEAM2):
                 continue
 
             # If there is opponent wall, then destroy it
-            if (tile.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (tile.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
+            if (tile_at_build_pos.wall == Team.TEAM1 and craftsman.team == Team.TEAM2) or (tile_at_build_pos.wall == Team.TEAM2 and craftsman.team == Team.TEAM1):
                 return CraftsmanCommand(craftsman_pos=craftsman.pos, action_type=ActionType.DESTROY,
                                         direction=get_direction_from_vector(dir_vec))
 
