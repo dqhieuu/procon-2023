@@ -51,6 +51,10 @@ class CraftsmanAgent:
         self._expand_max_step = 0
         self._pivot_offset = (0, 0)
 
+    @property
+    def esm_offset(self):
+        return self.expand_pivot_pos[0] - self._pivot_offset[0], self.expand_pivot_pos[1] - self._pivot_offset[1]
+
     def init_esm(self):
         file_path = "assets//path_strat_expand.txt"
         self.reset_esm()

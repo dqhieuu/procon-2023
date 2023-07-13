@@ -241,6 +241,8 @@ async def current_state():
             detail = {
                 'pivot_pos': agent.expand_pivot_pos,
                 'step': agent.expand_step,
+                'esm_offset': agent.esm_offset,
+                # 'esm': agent._expand_strategy_matrix.tolist(),
             }
 
         agent_strategy_list.append({
