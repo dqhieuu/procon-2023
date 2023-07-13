@@ -155,6 +155,16 @@ class Craftsman:
                                          next_pos)),
             )
 
+        if (next_pos_tile.wall == Team.TEAM1 and self.team == Team.TEAM2) or (next_pos_tile.wall == Team.TEAM2 and self.team == Team.TEAM1):
+            return ActionResult.from_fail(
+                action_type=ActionType.BUILD,
+                actor=self,
+                game_state=self.latest_action_game_state,
+                fail_error=FailError(code=FailCode.BUILD_ON_OPPONENT_WALL,
+                                     message="Can't build at {} because it's opponent's team wall".format(
+                                         next_pos)),
+            )
+
         selected_tile_with_wall_built = copy(next_pos_tile)
         selected_tile_with_wall_built.wall = Team.TEAM1 if self.team == Team.TEAM1 else Team.TEAM2
 
