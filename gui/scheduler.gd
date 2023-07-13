@@ -8,7 +8,7 @@ func _ready():
 	add_child(_timer)
 
 	_timer.connect("timeout", _on_Timer_timeout)
-	_timer.set_wait_time(0.3)
+	_timer.set_wait_time(0.4)
 	_timer.set_one_shot(false) # Make sure it loops
 	_timer.start()
 
@@ -37,4 +37,3 @@ func _on_Timer_timeout():
 		
 		map_node.update_actions_to_be_applied(current_state.actions_to_be_applied)
 		
-	
