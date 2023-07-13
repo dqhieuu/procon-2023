@@ -98,14 +98,20 @@ func load_map(state):
 	update_time_left(time_left)
 	
 	var game_state = state.state
-	for child in $GridContainer.get_children():
-		child.free()
-		
-	turn_number = game_state.turn_number
 	
 	var map = game_state.map.map
 	width = map[0].size()
 	height = map.size()
+	
+	turn_number = game_state.turn_number
+	
+	var num_of_tiles = width*height;
+	var is_num_of_tiles_changed = num_of_tiles != $GridContainer.get_child_count()
+	
+	if is_num_of_tiles_changed:
+		for child in $GridContainer.get_children():
+			child.free()
+
 	
 	$GridContainer.columns = width
 	var aspect_ratio = float(width)/height
@@ -130,7 +136,7 @@ func load_map(state):
 	for i in range(height):
 		for j in range(width):
 			var json_tile = map[i][j]
-			var tile = MapTile.instantiate()
+			var tile = MapTile.instantiate() if is_num_of_tiles_changed else $GridContainer.get_child(i*j)
 			tile.wall_team = string_to_team_type[json_tile.wall]
 			tile.has_pond = json_tile.has_pond
 			tile.has_castle = json_tile.has_castle
@@ -138,8 +144,10 @@ func load_map(state):
 			tile.is_team2_closed_territory = json_tile.t2c
 			tile.is_team1_open_territory = json_tile.t1o
 			tile.is_team2_open_territory = json_tile.t2o
+			tile.craftsman_occupied = Enums.TeamType.NEUTRAL
 			
-			$GridContainer.add_child(tile)
+			if is_num_of_tiles_changed:
+				$GridContainer.add_child(tile)
 
 	for man in craftsmen:
 		var tile = $GridContainer.get_child(man.pos[1]*width+man.pos[0])
