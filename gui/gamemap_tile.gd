@@ -51,10 +51,12 @@ func update_visible_sprite():
 	
 	var has_target = false
 	var has_pivot = false
-	if Globals.hovered_strategy_craftsman_tile_index != null:
+	
+	if Globals.hovered_strategy_craftsman_tile_index != null or Globals.hovered_tile != null:
 		var agent_info_list = get_tree().get_nodes_in_group("agent_info")
 		for agent in agent_info_list:
-			if Globals.hovered_strategy_craftsman_tile_index == Globals.get_index_from_position(agent.craftsman_pos):
+			var craftsman_idx = Globals.get_index_from_position(agent.craftsman_pos)
+			if Globals.hovered_strategy_craftsman_tile_index == craftsman_idx or Globals.hovered_tile == craftsman_idx:
 				if agent.target_pos != null and Globals.get_index_from_position(agent.target_pos) == tile_index:
 					has_target = true
 				if agent.pivot_pos != null and Globals.get_index_from_position(agent.pivot_pos) == tile_index:

@@ -1,6 +1,7 @@
 extends Node
 
 var selected_tile = null
+var hovered_tile = null
 var hovered_strategy_craftsman_tile_index = null
 
 var pos_inputs_to_be_updated = null
