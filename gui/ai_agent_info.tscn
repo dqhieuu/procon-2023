@@ -66,7 +66,6 @@ text = "Detail: null"
 layout_mode = 2
 
 [node name="Man" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
-visible = false
 layout_mode = 2
 
 [node name="Position" type="Label" parent="AgentInfo/StrategySelector/Man"]
@@ -116,6 +115,7 @@ mouse_filter = 1
 text = "Full manual mode"
 
 [node name="Terr" type="VBoxContainer" parent="AgentInfo/StrategySelector"]
+visible = false
 layout_mode = 2
 
 [node name="Template" type="Label" parent="AgentInfo/StrategySelector/Terr"]

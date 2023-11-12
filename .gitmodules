@@ -1,0 +1,4 @@
+[submodule "cpp-simulator/Procon2023/extern/pybind11"]
+	path = cpp-simulator/Procon2023/extern/pybind11
+	url = https://github.com/pybind/pybind11
+	branch = stable

@@ -103,7 +103,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="Interact" type="MarginContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
@@ -703,6 +702,7 @@ text = "Total pts: 0"
 horizontal_alignment = 2
 
 [node name="AI" type="MarginContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
