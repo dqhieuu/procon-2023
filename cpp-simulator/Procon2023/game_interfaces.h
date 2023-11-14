@@ -10,17 +10,10 @@
 #include <unordered_map>
 #include <set>
 #include <algorithm>
+#include <bitset>
+#include <queue>
 
-struct GameOptions
-{
-    int32_t mapWidth;
-    int32_t mapHeight;
-    int32_t maxTurns;
-
-    int32_t wallCoeff;
-    int32_t castleCoeff;
-    int32_t territoryCoeff;
-};
+typedef int32_t CraftsmanID;
 
 enum ActionType
 {
@@ -64,10 +57,27 @@ enum TileMask
     T2_OPEN_TERRITORY,
 };
 
+enum TileStatus : uint8_t
+{
+    NOT_VISITED,
+    IS_TERRITORY,
+    NOT_TERRITORY
+};
+
 int32_t subActionToX(SubActionType subActionType);
 int32_t subActionToY(SubActionType subActionType);
 
-typedef int CraftsmanID;
+struct GameOptions
+{
+    int32_t mapWidth;
+    int32_t mapHeight;
+    int32_t maxTurns;
+
+    int32_t wallCoeff;
+    int32_t castleCoeff;
+    int32_t territoryCoeff;
+};
+
 struct GameAction
 {
     GameAction();
@@ -101,39 +111,35 @@ struct Craftsman
     bool isT1;
 };
 
-enum TileStatus : uint8_t
-{
-    NOT_VISITED,
-    IS_TERRITORY,
-    NOT_TERRITORY
-};
-
 struct MapState
 {
 public:
     std::vector<std::vector<uint32_t>> tiles;
-
-    int32_t mapWidth;
-    int32_t mapHeight;
     std::vector<std::vector<TileStatus>> tileStatusesT1;
     std::vector<std::vector<TileStatus>> tileStatusesT2;
 
+    int32_t mapWidth;
+    int32_t mapHeight;
+
     MapState(int32_t mapWidth, int32_t mapHeight);
-    bool tileExists(int x, int y);
+    bool validPosition(int x, int y);
     void setTile(size_t x, size_t y, uint32_t mask);
     void setBit(size_t x, size_t y, TileMask mask);
     void clearBit(size_t x, size_t y, TileMask mask);
-    bool isBitToggled(size_t x, size_t y, TileMask mask);
-    bool isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask);
+    bool isBitToggled(size_t x, size_t y, TileMask mask) const;
+    bool isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const;
     void clearMapBit(TileMask mask);
     uint32_t getTile(uint64_t x, uint64_t y);
     void printMap();
-    int calcPoints(const GameOptions &gameOptions, bool isT1);
-    TileStatus checkCloseTerritory(int32_t x, int32_t y, bool is_t1);
-    void updateTerritory(std::vector<DestroyAction> destroyActions, std::vector<BuildAction> buildActions);
+    int calcPoints(const GameOptions &gameOptions, bool isT1) const;
+    void checkCloseTerritory(int32_t x, int32_t y, bool is_t1);
+    void updateTerritory(const std::vector<DestroyAction> &&destroyActions,
+                         const std::vector<BuildAction> &&buildActions);
+
+    void clearTileStatuses();
 
 private:
-    void updateCloseTerritoryAndClearOpenTerritoryInside();
+    void updateCloseTerritoryAndClearOpenTerritoryInside(const MapState &previousMap);
 };
 
 struct GameState

@@ -4,27 +4,6 @@ int32_t subActionToX(SubActionType subActionType)
 {
     switch (subActionType)
     {
-    case MOVE_UP:
-    case MOVE_UP_LEFT:
-    case MOVE_UP_RIGHT:
-    case BUILD_UP:
-    case DESTROY_UP:
-        return -1;
-    case MOVE_DOWN:
-    case MOVE_DOWN_LEFT:
-    case MOVE_DOWN_RIGHT:
-    case BUILD_DOWN:
-    case DESTROY_DOWN:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-int32_t subActionToY(SubActionType subActionType)
-{
-    switch (subActionType)
-    {
     case MOVE_LEFT:
     case MOVE_UP_LEFT:
     case MOVE_DOWN_LEFT:
@@ -42,20 +21,41 @@ int32_t subActionToY(SubActionType subActionType)
     }
 }
 
+int32_t subActionToY(SubActionType subActionType)
+{
+    switch (subActionType)
+    {
+    case MOVE_UP:
+    case MOVE_UP_LEFT:
+    case MOVE_UP_RIGHT:
+    case BUILD_UP:
+    case DESTROY_UP:
+        return -1;
+    case MOVE_DOWN:
+    case MOVE_DOWN_LEFT:
+    case MOVE_DOWN_RIGHT:
+    case BUILD_DOWN:
+    case DESTROY_DOWN:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 MapState::MapState(int32_t mapWidth, int32_t mapHeight)
 {
     assert(mapHeight <= 25 && mapWidth <= 25 && mapHeight >= 0 && mapWidth >= 0);
     this->mapWidth = mapWidth;
     this->mapHeight = mapHeight;
-    tiles = std::vector<std::vector<uint32_t>>(25, std::vector<uint32_t>(25, 0));
+    tiles = std::vector<std::vector<uint32_t>>(25, std::vector<uint32_t>(25, 1 << TileMask::POND));
 
     tileStatusesT1 = std::vector<std::vector<TileStatus>>(25, std::vector<TileStatus>(25, NOT_VISITED));
     tileStatusesT2 = std::vector<std::vector<TileStatus>>(25, std::vector<TileStatus>(25, NOT_VISITED));
 
-    // if mapWidth or mapHeight < 25, set POND bit of outer tiles to POND
-    for (auto y = mapHeight; y < 25; ++y)
-        for (auto x = mapWidth; x < 25; ++x)
-            setBit(x, y, TileMask::POND);
+    // movable tiles
+    for (auto y = 0; y < mapHeight; ++y)
+        for (auto x = 0; x < mapWidth; ++x)
+            clearBit(x, y, TileMask::POND);
 }
 
 GameAction::GameAction() : craftsmanId(-1), actionType(ActionType::MOVE), subActionType(SubActionType::MOVE_DOWN)
@@ -74,43 +74,43 @@ Craftsman::Craftsman(int32_t id, int32_t x, int32_t y, bool isT1) : id(id), x(x)
 {
 }
 
-bool MapState::tileExists(int x, int y)
+bool MapState::validPosition(int x, int y)
 {
     return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
 }
 
-void MapState::setTile(size_t x, size_t y, uint32_t mask)
+void MapState::setTile(size_t x, size_t y, uint32_t bit)
 {
-    tiles[y][x] = mask;
+    tiles[y][x] = bit;
 }
 
-void MapState::setBit(size_t x, size_t y, TileMask mask)
+void MapState::setBit(size_t x, size_t y, TileMask bit)
 {
-    tiles[y][x] |= (1 << mask);
+    tiles[y][x] |= (1 << bit);
 }
 
-void MapState::clearBit(size_t x, size_t y, TileMask mask)
+void MapState::clearBit(size_t x, size_t y, TileMask bit)
 {
-    tiles[y][x] &= ~(1 << mask);
+    tiles[y][x] &= ~(1 << bit);
 }
 
-bool MapState::isBitToggled(size_t x, size_t y, TileMask mask)
+bool MapState::isBitToggled(size_t x, size_t y, TileMask bit) const
 {
-    return tiles[y][x] & (1 << mask);
+    return tiles[y][x] & (1 << bit);
 }
 
-bool MapState::isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask)
+bool MapState::isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const
 {
     return tiles[y][x] & mask;
 }
 
-void MapState::clearMapBit(TileMask mask)
+void MapState::clearMapBit(TileMask bit)
 {
     for (int y = 0; y < mapHeight; y++)
     {
         for (int x = 0; x < mapWidth; x++)
         {
-            clearBit(x, y, mask);
+            clearBit(x, y, bit);
         }
     }
 }
@@ -126,13 +126,17 @@ void MapState::printMap()
     {
         for (int j = 0; j < tiles[i].size(); j++)
         {
-            std::cout << tiles[i][j] << " ";
+            // convert to bitmask of 10 bits
+            uint32_t tile = tiles[i][j];
+            std::string tileStr = std::bitset<10>(tile).to_string();
+            std::cout << tileStr << " ";
         }
         std::cout << std::endl;
     }
+    std::cout << std::endl;
 }
 
-int MapState::calcPoints(const GameOptions &gameOptions, bool isT1)
+int MapState::calcPoints(const GameOptions &gameOptions, bool isT1) const
 {
     int points = 0;
     auto teamCloseTerritoryMask = isT1 ? TileMask::T1_CLOSE_TERRITORY : TileMask::T2_CLOSE_TERRITORY;
@@ -161,49 +165,59 @@ int MapState::calcPoints(const GameOptions &gameOptions, bool isT1)
     return points;
 }
 
-TileStatus MapState::checkCloseTerritory(int32_t x, int32_t y, bool is_t1)
+void MapState::checkCloseTerritory(int32_t _x, int32_t _y, bool is_t1)
 {
-    if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight)
-    {
-        return NOT_TERRITORY;
-    }
-
     auto &tileStatuses = is_t1 ? tileStatusesT1 : tileStatusesT2;
     const auto wallMask = is_t1 ? TileMask::T1_WALL : TileMask::T2_WALL;
 
-    if (tileStatuses[y][x] != TileStatus::NOT_VISITED)
+    std::set<std::pair<int32_t, int32_t>> positions;
+    bool enclosed = true;
+
+    std::queue<std::pair<int32_t, int32_t>> q;
+    q.push({_x, _y});
+
+    while (!q.empty())
     {
-        return tileStatuses[y][x];
+        auto [x, y] = q.front();
+        q.pop();
+
+        if (!validPosition(x, y))
+        {
+            enclosed = false;
+            continue;
+        }
+
+        if (isBitToggled(x, y, wallMask) || positions.find({x, y}) != positions.end())
+        {
+            continue;
+        }
+
+        positions.insert({x, y});
+
+        if (positions.find({x + 1, y}) == positions.end())
+            q.push({x + 1, y});
+        if (positions.find({x - 1, y}) == positions.end())
+            q.push({x - 1, y});
+        if (positions.find({x, y + 1}) == positions.end())
+            q.push({x, y + 1});
+        if (positions.find({x, y - 1}) == positions.end())
+            q.push({x, y - 1});
     }
 
-    // check 4 direction
-    if (tiles[y][x - 1] != wallMask)
+    for (const auto &[x, y] : positions)
     {
-        if (checkCloseTerritory(x - 1, y, is_t1) == NOT_TERRITORY)
-            return tileStatuses[y][x] = NOT_TERRITORY;
+        tileStatuses[y][x] = enclosed ? TileStatus::IS_TERRITORY : TileStatus::NOT_TERRITORY;
     }
-    if (tiles[y][x + 1] != wallMask)
-    {
-        if (checkCloseTerritory(x + 1, y, is_t1) == NOT_TERRITORY)
-            return tileStatuses[y][x] = NOT_TERRITORY;
-    }
-    if (tiles[y - 1][x] != wallMask)
-    {
-        if (checkCloseTerritory(x, y - 1, is_t1) == NOT_TERRITORY)
-            return tileStatuses[y][x] = NOT_TERRITORY;
-    }
-    if (tiles[y + 1][x] != wallMask)
-    {
-        if (checkCloseTerritory(x, y + 1, is_t1) == NOT_TERRITORY)
-            return tileStatuses[y][x] = NOT_TERRITORY;
-    }
-    return tileStatuses[y][x] = IS_TERRITORY;
 }
 
-void MapState::updateTerritory(std::vector<DestroyAction> destroyActions, std::vector<BuildAction> buildActions)
+void MapState::updateTerritory(const std::vector<DestroyAction> &&destroyActions,
+                               const std::vector<BuildAction> &&buildActions)
 {
+    MapState previousMap = *this;
+
     clearMapBit(TileMask::T1_CLOSE_TERRITORY);
     clearMapBit(TileMask::T2_CLOSE_TERRITORY);
+    clearTileStatuses();
 
     // apply actions
     for (const DestroyAction &action : destroyActions)
@@ -228,20 +242,23 @@ void MapState::updateTerritory(std::vector<DestroyAction> destroyActions, std::v
         setBit(action.x, action.y, action.isT1 ? TileMask::T1_WALL : TileMask::T2_WALL);
     }
 
-    updateCloseTerritoryAndClearOpenTerritoryInside();
+    updateCloseTerritoryAndClearOpenTerritoryInside(previousMap);
 }
 
-void MapState::updateCloseTerritoryAndClearOpenTerritoryInside()
+void MapState::updateCloseTerritoryAndClearOpenTerritoryInside(const MapState &previousMap)
 {
-    MapState previousMap = *this;
-
     for (int y = 0; y < mapHeight; y++)
         for (int x = 0; x < mapWidth; x++)
         {
-            if (tileStatusesT1[y][x] == NOT_VISITED)
+            if (isBitToggled(x, y, TileMask::T1_WALL) || isBitToggled(x, y, TileMask::T2_WALL))
             {
-                tileStatusesT1[y][x] = checkCloseTerritory(x, y, true);
+                clearBit(x, y, TileMask::T1_OPEN_TERRITORY);
+                clearBit(x, y, TileMask::T2_OPEN_TERRITORY);
+                continue;
             }
+
+            if (tileStatusesT1[y][x] == NOT_VISITED)
+                checkCloseTerritory(x, y, true);
 
             if (tileStatusesT1[y][x] == IS_TERRITORY)
             {
@@ -251,9 +268,8 @@ void MapState::updateCloseTerritoryAndClearOpenTerritoryInside()
             }
 
             if (tileStatusesT2[y][x] == NOT_VISITED)
-            {
-                tileStatusesT2[y][x] = checkCloseTerritory(x, y, false);
-            }
+                checkCloseTerritory(x, y, false);
+
             if (tileStatusesT2[y][x] == IS_TERRITORY)
             {
                 setBit(x, y, TileMask::T2_CLOSE_TERRITORY);
@@ -265,12 +281,16 @@ void MapState::updateCloseTerritoryAndClearOpenTerritoryInside()
     for (int y = 0; y < mapHeight; y++)
         for (int x = 0; x < mapWidth; x++)
         {
-            if (previousMap.tileStatusesT1[y][x] == IS_TERRITORY &&
+            if (isBitToggled(x, y, TileMask::T1_WALL) ||
+                isBitToggled(x, y, TileMask::T2_WALL))
+                continue;
+
+            if ((previousMap.isBitToggled(x, y, TileMask::T1_CLOSE_TERRITORY)) &&
                 tileStatusesT1[y][x] == NOT_TERRITORY && tileStatusesT2[y][x] == NOT_TERRITORY)
             {
                 setBit(y, x, TileMask::T1_OPEN_TERRITORY);
             }
-            else if (previousMap.tileStatusesT2[y][x] == IS_TERRITORY &&
+            else if ((previousMap.isBitToggled(x, y, TileMask::T2_CLOSE_TERRITORY)) &&
                      tileStatusesT1[y][x] == NOT_TERRITORY && tileStatusesT2[y][x] == NOT_TERRITORY)
             {
                 setBit(y, x, TileMask::T2_OPEN_TERRITORY);
@@ -278,8 +298,18 @@ void MapState::updateCloseTerritoryAndClearOpenTerritoryInside()
         }
 }
 
-GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> craftsmen)
-    : map(_map.mapWidth, _map.mapHeight), craftsmen(craftsmen)
+void MapState::clearTileStatuses()
+{
+    for (int y = 0; y < mapHeight; y++)
+        for (int x = 0; x < mapWidth; x++)
+        {
+            tileStatusesT1[y][x] = NOT_VISITED;
+            tileStatusesT2[y][x] = NOT_VISITED;
+        }
+}
+
+GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _craftsmen)
+    : map(_map), craftsmen(_craftsmen)
 {
 }
 
@@ -300,7 +330,7 @@ GameState GameState::applyActions(const std::unordered_map<CraftsmanID, GameActi
         auto nextX = craftsman.x + subActionToX(action.subActionType);
         auto nextY = craftsman.y + subActionToY(action.subActionType);
 
-        if (!map.tileExists(nextX, nextY))
+        if (!map.validPosition(nextX, nextY))
             continue;
 
         if (action.actionType == ActionType::MOVE)
@@ -312,7 +342,7 @@ GameState GameState::applyActions(const std::unordered_map<CraftsmanID, GameActi
     }
 
     auto nextMap = map;
-    nextMap.updateTerritory(destroyActions, buildActions);
+    nextMap.updateTerritory(std::move(destroyActions), std::move(buildActions));
 
     for (const auto [_, craftsman] : craftsmen)
     {
@@ -364,12 +394,13 @@ Game::Game(GameOptions game_options, std::vector<std::vector<uint32_t>> map, std
     for (const Craftsman &craftsman : craftsmen)
     {
         initialCraftsmen[craftsman.id] = craftsman;
+        initialMap.setBit(craftsman.x, craftsman.y, craftsman.isT1 ? TileMask::T1_CRAFTSMAN : TileMask::T2_CRAFTSMAN);
     }
 
     // load initial state
-    auto initialState = GameState(initialMap, initialCraftsmen);
+    auto turn0 = GameState(initialMap, initialCraftsmen);
 
-    allTurns.push_back(initialState);
+    allTurns.push_back(turn0);
 }
 
 void Game::addAction(GameAction action)
@@ -439,18 +470,76 @@ int main(void)
     }
 
     vector<Craftsman> craftsmen;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 2; i++)
     {
-        craftsmen.push_back(Craftsman(i, i + 1, i + 1, true));
+        craftsmen.push_back(Craftsman(i, i, i, true));
     }
 
     Game game = Game(gameOptions, map, craftsmen);
     for (int i = 0; i < 10; i++)
     {
-        game.addAction(GameAction(0, ActionType::MOVE, SubActionType::MOVE_DOWN));
+        for (int j = 0; j < 2; j++)
+        {
+            if (i % 2 == 0)
+                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_RIGHT));
+            else
+                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_RIGHT));
+        }
         game.nextTurn();
     }
-    cout << game.getCurrentState().map.tiles[0][0];
+
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            if (i % 2 == 0)
+                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_DOWN));
+            else
+                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_DOWN));
+        }
+        game.nextTurn();
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            if (i % 2 == 0)
+                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_LEFT));
+            else
+                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_LEFT));
+        }
+        game.nextTurn();
+    }
+
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            if (i % 2 == 0)
+                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_UP));
+            else
+                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_UP));
+        }
+        game.nextTurn();
+    }
+
+    game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
+    game.nextTurn();
+    game.addAction(GameAction(1, ActionType::MOVE, SubActionType::MOVE_RIGHT));
+    game.nextTurn();
+    game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
+    game.nextTurn();
+    game.addAction(GameAction(1, ActionType::MOVE, SubActionType::MOVE_DOWN));
+    game.nextTurn();
+    game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
+    game.nextTurn();
+    game.addAction(GameAction(1, ActionType::BUILD, SubActionType::BUILD_RIGHT));
+    game.nextTurn();
+    game.addAction(GameAction(1, ActionType::BUILD, SubActionType::BUILD_LEFT));
+    game.nextTurn();
+
+    game.getCurrentState().map.printMap();
 
     return 0;
 }
