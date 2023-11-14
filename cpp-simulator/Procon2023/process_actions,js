@@ -1,0 +1,52 @@
+function actionToIndex(a, subA) {
+  return [
+    ["MOVE", "UP"],
+    ["MOVE", "DOWN"],
+    ["MOVE", "LEFT"],
+    ["MOVE", "RIGHT"],
+    ["MOVE", "UPPER_LEFT"],
+    ["MOVE", "UPPER_RIGHT"],
+    ["MOVE", "LOWER_LEFT"],
+    ["MOVE", "LOWER_RIGHT"],
+    ["BUILD", "ABOVE"],
+    ["BUILD", "BELOW"],
+    ["BUILD", "LEFT"],
+    ["BUILD", "RIGHT"],
+    ["DESTROY", "ABOVE"],
+    ["DESTROY", "BELOW"],
+    ["DESTROY", "LEFT"],
+    ["DESTROY", "RIGHT"],
+  ].findIndex((e) => a === e[0] && subA === e[1]);
+}
+
+function processActions(_a) {
+  const removedAndCategorized = _a
+    .reduce(
+      (acc, cur) => {
+        acc[cur.turn] = cur.actions;
+        return acc;
+      },
+      Array(Math.max(..._a.map(a => a.turn))+1)
+        .fill("")
+        .map((_) => [])
+    )
+    .map((t) =>
+      t.map((a) => ({
+        action: a.action,
+        subAction: a.action_param,
+        craftsmanId: a.craftsman_id,
+      }))
+    );
+
+  return removedAndCategorized
+    .map((turn) =>
+      turn.map((action) =>
+        [
+          action.craftsmanId,
+          actionToIndex(action.action, action.subAction),
+        ].join(" ")
+      )
+    )
+    .map((turn) => turn.join("\n"))
+    .join("\n- -\n");
+}

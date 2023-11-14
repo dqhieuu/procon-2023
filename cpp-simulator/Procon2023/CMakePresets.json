@@ -35,7 +35,8 @@
             "displayName": "x64 Release",
             "inherits": "x64-debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "pybind11_DIR": "C:\\Users\\daohi\\miniconda3\\envs\\procon\\Library\\share\\cmake\\pybind11"
             }
         }
     ]

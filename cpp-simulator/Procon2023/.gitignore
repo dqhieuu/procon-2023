@@ -11,5 +11,8 @@ CTestTestfile.cmake
 _deps
 
 out
-out-linux
+out-*
 .vs
+bin
+__pycache__
+*.out
