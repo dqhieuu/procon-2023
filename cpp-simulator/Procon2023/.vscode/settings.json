@@ -84,6 +84,45 @@
         "xutility": "cpp",
         "map": "cpp",
         "valarray": "cpp",
-        "variant": "cpp"
-    }
+        "variant": "cpp",
+        "__tree": "cpp"
+    },
+    "textmarker.savedHighlights": [
+        {
+            "pattern": {
+                "type": "regex",
+                "expression": "\\b\\d*1\\d{2}\\b",
+                "ignoreCase": false,
+                "wholeMatch": false
+            },
+            "color": "darkgoldenrod"
+        },
+        {
+            "pattern": {
+                "type": "regex",
+                "expression": "\\b\\d*1\\d{6}\\b",
+                "ignoreCase": false,
+                "wholeMatch": false
+            },
+            "color": "darkmagenta"
+        },
+        {
+            "pattern": {
+                "type": "regex",
+                "expression": "\\b\\d*1\\d{3}\\b",
+                "ignoreCase": false,
+                "wholeMatch": false
+            },
+            "color": "darkolivegreen"
+        },
+        {
+            "pattern": {
+                "type": "regex",
+                "expression": "\\b\\d*1\\d{7}\\b",
+                "ignoreCase": false,
+                "wholeMatch": false
+            },
+            "color": "darkslateblue"
+        }
+    ]
 }

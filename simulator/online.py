@@ -2,7 +2,7 @@ from __future__ import annotations
 import datetime
 import json
 from enum import Enum
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel
 
@@ -18,8 +18,8 @@ class OnlineEnumSide(str, Enum):
 
 class OnlineSide(BaseModel):
     side: OnlineEnumSide
-    team_name: str
-    team_id: int
+    team_name: Union[str, None]
+    team_id: Union[str, None]
     game_id: int
     id: int
 
@@ -38,7 +38,7 @@ class OnlineCraftsman(BaseModel):
 
 class OnlineField(BaseModel):
     id: int
-    match_id: int
+    match_id: Union[int, None]
     name: str
     castle_coeff: int
     territory_coeff: int
@@ -57,7 +57,7 @@ class OnlineFieldResponse(BaseModel):
     name: str
     num_of_turns: int
     sides: List[OnlineSide]
-    start_time: datetime.datetime
+    start_time: Union[datetime.datetime, None]
     time_per_turn: int
 
 
@@ -90,7 +90,7 @@ class OnlineEnumAction(str, Enum):
 class OnlineAction(BaseModel):
     action: OnlineEnumAction
     action_id: int
-    action_param: str
+    action_param: Union[str, None]
     craftsman_id: str
     id: int
 

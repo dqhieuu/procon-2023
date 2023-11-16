@@ -21,9 +21,9 @@ import aiohttp
 ### SET THESE VARIABLES ###
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4OTI2MDUwMCwiZXhwIjoxNjg5NDMzMzAwfQ.Q1zeBPMEBT4w_Y5qJO8EcJdI7Bfp1iS7prKyaNXWEJ0"
-team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTUsIm5hbWUiOiJQUk9DT04gVUVUIDEiLCJpc19hZG1pbiI6ZmFsc2UsImlhdCI6MTY4OTI2MDUwMCwiZXhwIjoxNjg5NDMzMzAwfQ.Q1zeBPMEBT4w_Y5qJO8EcJdI7Bfp1iS7prKyaNXWEJ0"
-team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTYsIm5hbWUiOiJQUk9DT04gVUVUIDIgIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE2ODkyNjA0MDMsImV4cCI6MTY4OTQzMzIwM30.DBgATSInatjI1WQCJQj_QLzv1_uuHSvrju2_yHSiINY"
+competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAwMTQ3MTIwLCJleHAiOjE3MDAzMTk5MjB9.R2ALaML-k7bNRESeHXuhdzMxuWTbDCw556PhI2wrWa8"
+team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAwMTQ3MTIwLCJleHAiOjE3MDAzMTk5MjB9.R2ALaML-k7bNRESeHXuhdzMxuWTbDCw556PhI2wrWa8"
+team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAwMTQ3MTIwLCJleHAiOjE3MDAzMTk5MjB9.R2ALaML-k7bNRESeHXuhdzMxuWTbDCw556PhI2wrWa8"
 ### END SET THESE VARIABLES ###
 
 global_token = None
@@ -79,7 +79,9 @@ elif mode == 5:
 def get_online_map_data(room_id):
     rooms_json = requests.get('{}/player/games'.format(BASE_URL, online_room),
                               headers={"Authorization": global_token}).json()
+
     rooms_json = json.loads(json.dumps(rooms_json), object_hook=online_field_decoder)
+
     rooms = OnlineFieldRequestList.parse_obj(rooms_json).__root__
     selected_room = None
     for room in rooms:

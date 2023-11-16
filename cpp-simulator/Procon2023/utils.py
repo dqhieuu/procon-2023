@@ -42,8 +42,9 @@ def load_map(file_path):
             if mode == "map":
                 game_map.append(list(map(int, list(line))))
             elif mode == "team1" or mode == "team2":
-                pos = list(map(int, line.split(" ")))
-                craftsmen[mode].append(pos)
+                data = line.split(" ")
+                craftsmen[mode].append(
+                    {"x": int(data[1]), "y": int(data[2]), "id": data[0]})
 
     game_settings["map_width"] = len(game_map[0])
     game_settings["map_height"] = len(game_map)

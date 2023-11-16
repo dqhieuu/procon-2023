@@ -1,6 +1,6 @@
 #include "game_interfaces.h"
 
-int32_t subActionToX(SubActionType subActionType)
+inline int32_t subActionToX(SubActionType subActionType)
 {
     switch (subActionType)
     {
@@ -21,7 +21,7 @@ int32_t subActionToX(SubActionType subActionType)
     }
 }
 
-int32_t subActionToY(SubActionType subActionType)
+inline int32_t subActionToY(SubActionType subActionType)
 {
     switch (subActionType)
     {
@@ -47,12 +47,13 @@ MapState::MapState(int32_t mapWidth, int32_t mapHeight)
     assert(mapHeight <= 25 && mapWidth <= 25 && mapHeight >= 0 && mapWidth >= 0);
     this->mapWidth = mapWidth;
     this->mapHeight = mapHeight;
+    // all tiles are ponds by default
     tiles = std::vector<std::vector<uint32_t>>(25, std::vector<uint32_t>(25, 1 << TileMask::POND));
 
     tileStatusesT1 = std::vector<std::vector<TileStatus>>(25, std::vector<TileStatus>(25, NOT_VISITED));
     tileStatusesT2 = std::vector<std::vector<TileStatus>>(25, std::vector<TileStatus>(25, NOT_VISITED));
 
-    // movable tiles
+    // remove ponds to make tiles movable
     for (auto y = 0; y < mapHeight; ++y)
         for (auto x = 0; x < mapWidth; ++x)
             clearBit(x, y, TileMask::POND);
@@ -74,32 +75,32 @@ Craftsman::Craftsman(int32_t id, int32_t x, int32_t y, bool isT1) : id(id), x(x)
 {
 }
 
-bool MapState::validPosition(int x, int y)
+inline bool MapState::validPosition(int x, int y) const
 {
     return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
 }
 
-void MapState::setTile(size_t x, size_t y, uint32_t bit)
+inline void MapState::setTile(size_t x, size_t y, uint32_t bit)
 {
     tiles[y][x] = bit;
 }
 
-void MapState::setBit(size_t x, size_t y, TileMask bit)
+inline void MapState::setBit(size_t x, size_t y, TileMask bit)
 {
     tiles[y][x] |= (1 << bit);
 }
 
-void MapState::clearBit(size_t x, size_t y, TileMask bit)
+inline void MapState::clearBit(size_t x, size_t y, TileMask bit)
 {
     tiles[y][x] &= ~(1 << bit);
 }
 
-bool MapState::isBitToggled(size_t x, size_t y, TileMask bit) const
+inline bool MapState::isBitToggled(size_t x, size_t y, TileMask bit) const
 {
     return tiles[y][x] & (1 << bit);
 }
 
-bool MapState::isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const
+inline bool MapState::isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const
 {
     return tiles[y][x] & mask;
 }
@@ -115,13 +116,14 @@ void MapState::clearMapBit(TileMask bit)
     }
 }
 
-uint32_t MapState::getTile(uint64_t x, uint64_t y)
+inline uint32_t MapState::getTile(uint64_t x, uint64_t y) const
 {
     return tiles[y][x];
 }
 
-void MapState::printMap()
+std::string MapState::printMap()
 {
+    std::string res;
     for (int i = 0; i < tiles.size(); i++)
     {
         for (int j = 0; j < tiles[i].size(); j++)
@@ -130,10 +132,14 @@ void MapState::printMap()
             uint32_t tile = tiles[i][j];
             std::string tileStr = std::bitset<10>(tile).to_string();
             std::cout << tileStr << " ";
+
+            res += tileStr + " ";
         }
         std::cout << std::endl;
+        res += "\n";
     }
     std::cout << std::endl;
+    return res;
 }
 
 int MapState::calcPoints(const GameOptions &gameOptions, bool isT1) const
@@ -165,10 +171,9 @@ int MapState::calcPoints(const GameOptions &gameOptions, bool isT1) const
     return points;
 }
 
-void MapState::checkCloseTerritory(int32_t _x, int32_t _y, bool is_t1)
+void MapState::checkCloseTerritory(const int32_t _x, const int32_t _y, const bool is_t1)
 {
     auto &tileStatuses = is_t1 ? tileStatusesT1 : tileStatusesT2;
-    const auto wallMask = is_t1 ? TileMask::T1_WALL : TileMask::T2_WALL;
 
     std::set<std::pair<int32_t, int32_t>> positions;
     bool enclosed = true;
@@ -187,7 +192,7 @@ void MapState::checkCloseTerritory(int32_t _x, int32_t _y, bool is_t1)
             continue;
         }
 
-        if (isBitToggled(x, y, wallMask) || positions.find({x, y}) != positions.end())
+        if (isBitToggled(x, y, is_t1 ? TileMask::T1_WALL : TileMask::T2_WALL) || positions.find({x, y}) != positions.end())
         {
             continue;
         }
@@ -213,7 +218,7 @@ void MapState::checkCloseTerritory(int32_t _x, int32_t _y, bool is_t1)
 void MapState::updateTerritory(const std::vector<DestroyAction> &&destroyActions,
                                const std::vector<BuildAction> &&buildActions)
 {
-    MapState previousMap = *this;
+    const MapState previousMap = *this;
 
     clearMapBit(TileMask::T1_CLOSE_TERRITORY);
     clearMapBit(TileMask::T2_CLOSE_TERRITORY);
@@ -225,7 +230,8 @@ void MapState::updateTerritory(const std::vector<DestroyAction> &&destroyActions
         if (!(isBitToggled(action.x, action.y, TileMask::T1_WALL) || isBitToggled(action.x, action.y, TileMask::T2_WALL)))
             continue;
 
-        clearBit(action.x, action.y, action.isT1 ? TileMask::T1_WALL : TileMask::T2_WALL);
+        clearBit(action.x, action.y, TileMask::T1_WALL);
+        clearBit(action.x, action.y, TileMask::T2_WALL);
     }
 
     for (const BuildAction &action : buildActions)
@@ -254,46 +260,50 @@ void MapState::updateCloseTerritoryAndClearOpenTerritoryInside(const MapState &p
             {
                 clearBit(x, y, TileMask::T1_OPEN_TERRITORY);
                 clearBit(x, y, TileMask::T2_OPEN_TERRITORY);
-                continue;
             }
 
-            if (tileStatusesT1[y][x] == NOT_VISITED)
-                checkCloseTerritory(x, y, true);
-
-            if (tileStatusesT1[y][x] == IS_TERRITORY)
+            if (!isBitToggled(x, y, TileMask::T1_WALL))
             {
-                setBit(x, y, TileMask::T1_CLOSE_TERRITORY);
-                clearBit(x, y, TileMask::T1_OPEN_TERRITORY);
-                clearBit(x, y, TileMask::T2_OPEN_TERRITORY);
+                if (tileStatusesT1[y][x] == NOT_VISITED)
+                    checkCloseTerritory(x, y, true);
+
+                if (tileStatusesT1[y][x] == IS_TERRITORY)
+                {
+                    setBit(x, y, TileMask::T1_CLOSE_TERRITORY);
+                    clearBit(x, y, TileMask::T1_OPEN_TERRITORY);
+                    clearBit(x, y, TileMask::T2_OPEN_TERRITORY);
+                }
             }
 
-            if (tileStatusesT2[y][x] == NOT_VISITED)
-                checkCloseTerritory(x, y, false);
-
-            if (tileStatusesT2[y][x] == IS_TERRITORY)
+            if (!isBitToggled(x, y, TileMask::T2_WALL))
             {
-                setBit(x, y, TileMask::T2_CLOSE_TERRITORY);
-                clearBit(x, y, TileMask::T1_OPEN_TERRITORY);
-                clearBit(x, y, TileMask::T2_OPEN_TERRITORY);
+                if (tileStatusesT2[y][x] == NOT_VISITED)
+                    checkCloseTerritory(x, y, false);
+
+                if (tileStatusesT2[y][x] == IS_TERRITORY)
+                {
+                    setBit(x, y, TileMask::T2_CLOSE_TERRITORY);
+                    clearBit(x, y, TileMask::T1_OPEN_TERRITORY);
+                    clearBit(x, y, TileMask::T2_OPEN_TERRITORY);
+                }
             }
         }
 
     for (int y = 0; y < mapHeight; y++)
         for (int x = 0; x < mapWidth; x++)
         {
-            if (isBitToggled(x, y, TileMask::T1_WALL) ||
-                isBitToggled(x, y, TileMask::T2_WALL))
+            if (isBitToggled(x, y, TileMask::T1_WALL) || isBitToggled(x, y, TileMask::T2_WALL))
                 continue;
 
-            if ((previousMap.isBitToggled(x, y, TileMask::T1_CLOSE_TERRITORY)) &&
+            if ((previousMap.isBitToggled(x, y, TileMask::T1_CLOSE_TERRITORY) || previousMap.isBitToggled(x, y, TileMask::T1_OPEN_TERRITORY)) &&
                 tileStatusesT1[y][x] == NOT_TERRITORY && tileStatusesT2[y][x] == NOT_TERRITORY)
             {
-                setBit(y, x, TileMask::T1_OPEN_TERRITORY);
+                setBit(x, y, TileMask::T1_OPEN_TERRITORY);
             }
-            else if ((previousMap.isBitToggled(x, y, TileMask::T2_CLOSE_TERRITORY)) &&
+            else if ((previousMap.isBitToggled(x, y, TileMask::T2_CLOSE_TERRITORY) || previousMap.isBitToggled(x, y, TileMask::T2_OPEN_TERRITORY)) &&
                      tileStatusesT1[y][x] == NOT_TERRITORY && tileStatusesT2[y][x] == NOT_TERRITORY)
             {
-                setBit(y, x, TileMask::T2_OPEN_TERRITORY);
+                setBit(x, y, TileMask::T2_OPEN_TERRITORY);
             }
         }
 }
@@ -381,11 +391,11 @@ Game::Game(GameOptions game_options, std::vector<std::vector<uint32_t>> map, std
 
     // load map
     auto initialMap = MapState(game_options.mapWidth, game_options.mapHeight);
-    for (size_t i = 0; i < map.size(); i++)
+    for (size_t y = 0; y < map.size(); y++)
     {
-        for (size_t j = 0; j < map[i].size(); j++)
+        for (size_t x = 0; x < map[y].size(); x++)
         {
-            initialMap.setTile(i, j, map[i][j]);
+            initialMap.setTile(x, y, map[y][x]);
         }
     }
 
@@ -405,7 +415,7 @@ Game::Game(GameOptions game_options, std::vector<std::vector<uint32_t>> map, std
 
 void Game::addAction(GameAction action)
 {
-    actionBuffer.push_back(action);
+    actionBuffer.emplace_back(action);
 }
 
 void Game::nextTurn()
@@ -431,12 +441,12 @@ void Game::nextTurn()
     actionBuffer.clear();
 }
 
-bool Game::isFinished()
+inline bool Game::isFinished() const
 {
     return allTurns.size() >= gameOptions.maxTurns;
 }
 
-bool Game::isT1Turn()
+inline bool Game::isT1Turn() const
 {
     return allTurns.size() % 2 == 0;
 }

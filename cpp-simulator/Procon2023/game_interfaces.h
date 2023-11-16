@@ -15,12 +15,12 @@
 
 typedef int32_t CraftsmanID;
 
-enum ActionType
+enum class ActionType
 {
     MOVE,
     BUILD,
     DESTROY,
-    STAY
+    STAY,
 };
 
 enum SubActionType
@@ -41,12 +41,13 @@ enum SubActionType
     DESTROY_DOWN,
     DESTROY_LEFT,
     DESTROY_RIGHT,
+    STAY_STAY,
 };
 
 enum TileMask
 {
-    CASTLE,
     POND,
+    CASTLE,
     T1_WALL,
     T2_WALL,
     T1_CRAFTSMAN,
@@ -64,8 +65,8 @@ enum TileStatus : uint8_t
     NOT_TERRITORY
 };
 
-int32_t subActionToX(SubActionType subActionType);
-int32_t subActionToY(SubActionType subActionType);
+inline int32_t subActionToX(SubActionType subActionType);
+inline int32_t subActionToY(SubActionType subActionType);
 
 struct GameOptions
 {
@@ -122,17 +123,17 @@ public:
     int32_t mapHeight;
 
     MapState(int32_t mapWidth, int32_t mapHeight);
-    bool validPosition(int x, int y);
-    void setTile(size_t x, size_t y, uint32_t mask);
-    void setBit(size_t x, size_t y, TileMask mask);
-    void clearBit(size_t x, size_t y, TileMask mask);
-    bool isBitToggled(size_t x, size_t y, TileMask mask) const;
-    bool isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const;
+    inline bool validPosition(int x, int y) const;
+    inline void setTile(size_t x, size_t y, uint32_t mask);
+    inline void setBit(size_t x, size_t y, TileMask mask);
+    inline void clearBit(size_t x, size_t y, TileMask mask);
+    inline bool isBitToggled(size_t x, size_t y, TileMask mask) const;
+    inline bool isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const;
     void clearMapBit(TileMask mask);
-    uint32_t getTile(uint64_t x, uint64_t y);
-    void printMap();
+    inline uint32_t getTile(uint64_t x, uint64_t y) const;
+    std::string printMap();
     int calcPoints(const GameOptions &gameOptions, bool isT1) const;
-    void checkCloseTerritory(int32_t x, int32_t y, bool is_t1);
+    void checkCloseTerritory(const int32_t x, const int32_t y, const bool is_t1);
     void updateTerritory(const std::vector<DestroyAction> &&destroyActions,
                          const std::vector<BuildAction> &&buildActions);
 
@@ -165,8 +166,8 @@ public:
     void addAction(GameAction action);
     void nextTurn();
     GameState getCurrentState();
-    bool isT1Turn();
-    bool isFinished();
+    inline bool isT1Turn() const;
+    inline bool isFinished() const;
 };
 
 #endif // GAME_INTERFACES_H

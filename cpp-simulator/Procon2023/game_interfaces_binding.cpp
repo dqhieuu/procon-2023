@@ -29,7 +29,8 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 		.value("DESTROY_UP", SubActionType::DESTROY_UP)
 		.value("DESTROY_DOWN", SubActionType::DESTROY_DOWN)
 		.value("DESTROY_LEFT", SubActionType::DESTROY_LEFT)
-		.value("DESTROY_RIGHT", SubActionType::DESTROY_RIGHT);
+		.value("DESTROY_RIGHT", SubActionType::DESTROY_RIGHT)
+		.value("STAY", SubActionType::STAY_STAY);
 
 	py::enum_<TileMask>(m, "TileMask")
 		.value("CASTLE", TileMask::CASTLE)
@@ -48,9 +49,6 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 		.value("IS_TERRITORY", TileStatus::IS_TERRITORY)
 		.value("NOT_TERRITORY", TileStatus::NOT_TERRITORY);
 
-	m.def("subActionToX", &subActionToX);
-	m.def("subActionToY", &subActionToY);
-
 	py::class_<GameOptions>(m, "GameOptions")
 		.def(py::init<>())
 		.def_readwrite("mapWidth", &GameOptions::mapWidth)
@@ -66,18 +64,6 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 		.def_readwrite("actionType", &GameAction::actionType)
 		.def_readwrite("subActionType", &GameAction::subActionType);
 
-	py::class_<DestroyAction>(m, "DestroyAction")
-		.def(py::init<int32_t, int32_t, bool>(), "x"_a, "y"_a, "isT1"_a)
-		.def_readwrite("x", &DestroyAction::x)
-		.def_readwrite("y", &DestroyAction::y)
-		.def_readwrite("isT1", &DestroyAction::isT1);
-
-	py::class_<BuildAction>(m, "BuildAction")
-		.def(py::init<int32_t, int32_t, bool>(), "x"_a, "y"_a, "isT1"_a)
-		.def_readwrite("x", &BuildAction::x)
-		.def_readwrite("y", &BuildAction::y)
-		.def_readwrite("isT1", &BuildAction::isT1);
-
 	py::class_<Craftsman>(m, "Craftsman")
 		.def(py::init<int32_t, int32_t, int32_t, bool>(), "id"_a, "x"_a, "y"_a, "isT1"_a)
 		.def_readwrite("id", &Craftsman::id)
@@ -87,14 +73,14 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 
 	py::class_<MapState>(m, "MapState")
 		.def(py::init<int32_t, int32_t>(), "width"_a, "height"_a)
-		.def("tileExists", &MapState::validPosition, "x"_a, "y"_a)
-		.def("setTile", &MapState::setTile, "x"_a, "y"_a, "mask"_a)
-		.def("setBit", &MapState::setBit, "x"_a, "y"_a, "bit"_a)
-		.def("clearBit", &MapState::clearBit, "x"_a, "y"_a, "bit"_a)
-		.def("isBitToggled", &MapState::isBitToggled, "x"_a, "y"_a, "bit"_a)
-		.def("isAnyOfMaskToggled", &MapState::isAnyOfMaskToggled, "x"_a, "y"_a, "mask"_a)
+		// .def("tileExists", &MapState::validPosition, "x"_a, "y"_a)
+		// .def("setTile", &MapState::setTile, "x"_a, "y"_a, "mask"_a)
+		// .def("setBit", &MapState::setBit, "x"_a, "y"_a, "bit"_a)
+		// .def("clearBit", &MapState::clearBit, "x"_a, "y"_a, "bit"_a)
+		// .def("isBitToggled", &MapState::isBitToggled, "x"_a, "y"_a, "bit"_a)
+		// .def("isAnyOfMaskToggled", &MapState::isAnyOfMaskToggled, "x"_a, "y"_a, "mask"_a)
 		.def("clearMapBit", &MapState::clearMapBit, "bit"_a)
-		.def("getTile", &MapState::getTile, "x"_a, "y"_a)
+		// .def("getTile", &MapState::getTile, "x"_a, "y"_a)
 		.def("printMap", &MapState::printMap)
 		.def("calcPoints", &MapState::calcPoints)
 		.def("checkCloseTerritory", &MapState::checkCloseTerritory)
@@ -102,11 +88,28 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 
 	py::class_<GameState>(m, "GameState")
 		.def(py::init<MapState, std::unordered_map<CraftsmanID, Craftsman>>(), "mapState"_a, "craftsmen"_a)
-		.def("applyActions", &GameState::applyActions, "actions"_a);
+		.def("applyActions", &GameState::applyActions, "actions"_a)
+		.def_readwrite("map", &GameState::map);
 
 	py::class_<Game>(m, "Game")
 		.def(py::init<GameOptions, std::vector<std::vector<uint32_t>>, std::vector<Craftsman>>(), "gameOptions"_a, "map"_a, "craftsmen"_a)
 		.def("addAction", &Game::addAction, "action"_a)
-		.def("nextTurn", &Game::nextTurn)
-		.def("getCurrentState", &Game::getCurrentState);
+		.def("nextTurn", &Game::nextTurn, py::call_guard<py::gil_scoped_release>()) // multithreaded heavy function
+		.def("getCurrentState", &Game::getCurrentState)
+		.def_readwrite("gameOptions", &Game::gameOptions);
+
+	// m.def("subActionToX", &subActionToX);
+	// m.def("subActionToY", &subActionToY);
+
+	// py::class_<DestroyAction>(m, "DestroyAction")
+	// 	.def(py::init<int32_t, int32_t, bool>(), "x"_a, "y"_a, "isT1"_a)
+	// 	.def_readwrite("x", &DestroyAction::x)
+	// 	.def_readwrite("y", &DestroyAction::y)
+	// 	.def_readwrite("isT1", &DestroyAction::isT1);
+
+	// py::class_<BuildAction>(m, "BuildAction")
+	// 	.def(py::init<int32_t, int32_t, bool>(), "x"_a, "y"_a, "isT1"_a)
+	// 	.def_readwrite("x", &BuildAction::x)
+	// 	.def_readwrite("y", &BuildAction::y)
+	// 	.def_readwrite("isT1", &BuildAction::isT1);
 }
