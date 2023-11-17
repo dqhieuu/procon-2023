@@ -375,7 +375,6 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionByCraftsm
         nextMap.clearBit(craftsman.x, craftsman.y, craftsman.isT1 ? TileMask::T1_CRAFTSMAN : TileMask::T2_CRAFTSMAN);
         nextMap.setBit(nextX, nextY, craftsman.isT1 ? TileMask::T1_CRAFTSMAN : TileMask::T2_CRAFTSMAN);
 
-        moveForbiddenPositions.erase({craftsman.x, craftsman.y});
         moveForbiddenPositions.insert({nextX, nextY});
     }
 

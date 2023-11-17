@@ -89,6 +89,7 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 	py::class_<GameState>(m, "GameState")
 		.def(py::init<MapState, std::unordered_map<CraftsmanID, Craftsman>>(), "mapState"_a, "craftsmen"_a)
 		.def("applyActions", &GameState::applyActions, "actions"_a)
+		.def_readonly("lastTurnActions", &GameState::lastTurnActions)
 		.def_readwrite("map", &GameState::map);
 
 	py::class_<Game>(m, "Game")
