@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <bitset>
 #include <queue>
+#include <unordered_set>
 
 typedef int32_t CraftsmanID;
 
@@ -129,7 +130,7 @@ public:
     inline void clearBit(size_t x, size_t y, TileMask mask);
     inline bool isBitToggled(size_t x, size_t y, TileMask mask) const;
     inline bool isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const;
-    void clearMapBit(TileMask mask);
+    void clearMapBit(const TileMask mask);
     inline uint32_t getTile(uint64_t x, uint64_t y) const;
     std::string printMap();
     int calcPoints(const GameOptions &gameOptions, bool isT1) const;
@@ -146,11 +147,11 @@ private:
 struct GameState
 {
     MapState map;
-    std::unordered_map<CraftsmanID, GameAction> lastTurnActions;
+    std::vector<GameAction> lastTurnActions;
     std::unordered_map<CraftsmanID, Craftsman> craftsmen;
 
     GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> craftsmen);
-    GameState applyActions(const std::unordered_map<CraftsmanID, GameAction> &actionByCraftsman);
+    GameState applyActions(const std::vector<GameAction> &actions);
 };
 
 struct Game
@@ -162,8 +163,8 @@ public:
     GameOptions gameOptions;
     std::vector<GameState> allTurns;
 
-    Game(GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen);
-    void addAction(GameAction action);
+    Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen);
+    void addAction(const GameAction action);
     void nextTurn();
     GameState getCurrentState();
     inline bool isT1Turn() const;

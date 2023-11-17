@@ -323,7 +323,7 @@ GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _
 {
 }
 
-GameState GameState::applyActions(const std::unordered_map<CraftsmanID, GameAction> &actionByCraftsman)
+GameState GameState::applyActions(const std::vector<GameAction> &actionByCraftsman)
 {
     auto nextGameState = *this;
     nextGameState.lastTurnActions = actionByCraftsman;
@@ -333,10 +333,14 @@ GameState GameState::applyActions(const std::unordered_map<CraftsmanID, GameActi
     std::vector<GameAction> moveActions;
 
     std::set<std::pair<int32_t, int32_t>> moveForbiddenPositions;
-
-    for (const auto &[craftsmanId, action] : actionByCraftsman)
+    for (const auto &[craftsmanId, craftsman] : craftsmen)
     {
-        const auto &craftsman = craftsmen[craftsmanId];
+        moveForbiddenPositions.insert({craftsman.x, craftsman.y});
+    }
+
+    for (const auto &action : actionByCraftsman)
+    {
+        const auto &craftsman = craftsmen[action.craftsmanId];
         auto nextX = craftsman.x + subActionToX(action.subActionType);
         auto nextY = craftsman.y + subActionToY(action.subActionType);
 
@@ -354,21 +358,14 @@ GameState GameState::applyActions(const std::unordered_map<CraftsmanID, GameActi
     auto nextMap = map;
     nextMap.updateTerritory(std::move(destroyActions), std::move(buildActions));
 
-    for (const auto [_, craftsman] : craftsmen)
-    {
-        moveForbiddenPositions.insert({craftsman.x, craftsman.y});
-    }
-
     for (const auto &action : moveActions)
     {
         const auto &craftsman = craftsmen[action.craftsmanId];
         auto nextX = craftsman.x + subActionToX(action.subActionType);
         auto nextY = craftsman.y + subActionToY(action.subActionType);
 
-        if (moveForbiddenPositions.find({nextX, nextY}) != moveForbiddenPositions.end())
-            continue;
-
-        if (nextMap.isBitToggled(nextX, nextY, craftsman.isT1 ? TileMask::T2_WALL : TileMask::T1_WALL) ||
+        if (moveForbiddenPositions.find({nextX, nextY}) != moveForbiddenPositions.end() ||
+            nextMap.isBitToggled(nextX, nextY, craftsman.isT1 ? TileMask::T2_WALL : TileMask::T1_WALL) ||
             nextMap.isBitToggled(nextX, nextY, TileMask::POND))
             continue;
 
@@ -377,14 +374,16 @@ GameState GameState::applyActions(const std::unordered_map<CraftsmanID, GameActi
 
         nextMap.clearBit(craftsman.x, craftsman.y, craftsman.isT1 ? TileMask::T1_CRAFTSMAN : TileMask::T2_CRAFTSMAN);
         nextMap.setBit(nextX, nextY, craftsman.isT1 ? TileMask::T1_CRAFTSMAN : TileMask::T2_CRAFTSMAN);
+
+        moveForbiddenPositions.erase({craftsman.x, craftsman.y});
         moveForbiddenPositions.insert({nextX, nextY});
     }
 
-    nextGameState.map = nextMap;
+    nextGameState.map = std::move(nextMap);
     return nextGameState;
 }
 
-Game::Game(GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen)
+Game::Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen)
 {
     // load game options
     this->gameOptions = game_options;
@@ -413,7 +412,7 @@ Game::Game(GameOptions game_options, std::vector<std::vector<uint32_t>> map, std
     allTurns.push_back(turn0);
 }
 
-void Game::addAction(GameAction action)
+void Game::addAction(const GameAction action)
 {
     actionBuffer.emplace_back(action);
 }
@@ -426,13 +425,23 @@ void Game::nextTurn()
     // apply actions in buffer to current state
     GameState &currentState = allTurns.back();
 
-    std::unordered_map<CraftsmanID, GameAction> actionByCraftsman;
-    for (const GameAction &action : actionBuffer)
+    std::unordered_set<int32_t> craftsmanIdVisited;
+
+    std::vector<GameAction> actionsToApply;
+
+    for (auto it = actionBuffer.rbegin(); it != actionBuffer.rend(); ++it)
     {
-        actionByCraftsman[action.craftsmanId] = action;
+        if (craftsmanIdVisited.find(it->craftsmanId) != craftsmanIdVisited.end())
+            continue;
+
+        craftsmanIdVisited.insert(it->craftsmanId);
+
+        actionsToApply.push_back(*it);
     }
 
-    GameState nextState = currentState.applyActions(actionByCraftsman);
+    reverse(actionsToApply.begin(), actionsToApply.end());
+
+    GameState nextState = currentState.applyActions(actionsToApply);
 
     // push new state to allTurns
     allTurns.push_back(nextState);
