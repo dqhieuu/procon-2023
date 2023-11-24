@@ -1,0 +1,4 @@
+jumanji
+numpy
+jax
+chex
