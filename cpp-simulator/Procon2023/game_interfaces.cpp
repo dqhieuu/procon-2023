@@ -44,7 +44,7 @@ inline int32_t subActionToY(SubActionType subActionType)
 
 MapState::MapState(int32_t mapWidth, int32_t mapHeight)
 {
-    assert(mapHeight <= 25 && mapWidth <= 25 && mapHeight >= 0 && mapWidth >= 0);
+    assert(mapHeight <= 25 && mapWidth <= 25 && mapHeight >= 10 && mapWidth >= 10);
     this->mapWidth = mapWidth;
     this->mapHeight = mapHeight;
     // all tiles are ponds by default
@@ -59,7 +59,7 @@ MapState::MapState(int32_t mapWidth, int32_t mapHeight)
             clearBit(x, y, TileMask::POND);
 }
 
-GameAction::GameAction() : craftsmanId(-1), actionType(ActionType::MOVE), subActionType(SubActionType::MOVE_DOWN)
+GameAction::GameAction() : craftsmanId(-1), actionType(ActionType::MOVE), subActionType(SubActionType::MOVE_UP)
 {
 }
 
@@ -121,7 +121,7 @@ inline uint32_t MapState::getTile(uint64_t x, uint64_t y) const
     return tiles[y][x];
 }
 
-std::string MapState::printMap()
+std::string MapState::printMap() const
 {
     std::string res;
     for (int i = 0; i < tiles.size(); i++)
@@ -131,14 +131,11 @@ std::string MapState::printMap()
             // convert to bitmask of 10 bits
             uint32_t tile = tiles[i][j];
             std::string tileStr = std::bitset<10>(tile).to_string();
-            std::cout << tileStr << " ";
 
             res += tileStr + " ";
         }
-        std::cout << std::endl;
         res += "\n";
     }
-    std::cout << std::endl;
     return res;
 }
 
@@ -319,14 +316,44 @@ void MapState::clearTileStatuses()
 }
 
 GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _craftsmen)
-    : map(_map), craftsmen(_craftsmen)
+    : map(_map), craftsmen(_craftsmen), turn(1), isT1Turn(true)
 {
 }
 
-GameState GameState::applyActions(const std::vector<GameAction> &actionByCraftsman)
+GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _craftsmen, int _turn, bool _isT1Turn)
+    : map(_map), craftsmen(_craftsmen), turn(_turn), isT1Turn(_isT1Turn)
 {
+}
+
+GameState GameState::applyActions(const std::vector<GameAction> &actionBuffer)
+{
+    std::vector<GameAction> actionByCraftsman;
+
+    { // deduplicate actions by craftsman
+        std::unordered_set<int32_t> craftsmanIdVisited;
+
+        for (auto it = actionBuffer.rbegin(); it != actionBuffer.rend(); ++it)
+        {
+            if (craftsmen[it->craftsmanId].isT1 != isT1Turn)
+                continue;
+
+            if (craftsmanIdVisited.find(it->craftsmanId) != craftsmanIdVisited.end())
+                continue;
+
+            craftsmanIdVisited.insert(it->craftsmanId);
+
+            actionByCraftsman.push_back(*it);
+        }
+
+        reverse(actionByCraftsman.begin(), actionByCraftsman.end());
+    }
+
     auto nextGameState = *this;
     nextGameState.lastTurnActions = actionByCraftsman;
+    nextGameState.turn++;
+    nextGameState.isT1Turn = !nextGameState.isT1Turn;
+
+    auto nextMap = map;
 
     std::vector<DestroyAction> destroyActions;
     std::vector<BuildAction> buildActions;
@@ -338,6 +365,7 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionByCraftsm
         moveForbiddenPositions.insert({craftsman.x, craftsman.y});
     }
 
+    // Categorize actions by type
     for (const auto &action : actionByCraftsman)
     {
         const auto &craftsman = craftsmen[action.craftsmanId];
@@ -355,9 +383,10 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionByCraftsm
             destroyActions.push_back({nextX, nextY, craftsman.isT1});
     }
 
-    auto nextMap = map;
+    // Apply destroy and build actions
     nextMap.updateTerritory(std::move(destroyActions), std::move(buildActions));
 
+    // Apply move actions
     for (const auto &action : moveActions)
     {
         const auto &craftsman = craftsmen[action.craftsmanId];
@@ -406,9 +435,9 @@ Game::Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> ma
     }
 
     // load initial state
-    auto turn0 = GameState(initialMap, initialCraftsmen);
+    auto turn1 = GameState(initialMap, initialCraftsmen);
 
-    allTurns.push_back(turn0);
+    allTurns.push_back(turn1);
 }
 
 void Game::addAction(const GameAction action)
@@ -424,23 +453,7 @@ void Game::nextTurn()
     // apply actions in buffer to current state
     GameState &currentState = allTurns.back();
 
-    std::unordered_set<int32_t> craftsmanIdVisited;
-
-    std::vector<GameAction> actionsToApply;
-
-    for (auto it = actionBuffer.rbegin(); it != actionBuffer.rend(); ++it)
-    {
-        if (craftsmanIdVisited.find(it->craftsmanId) != craftsmanIdVisited.end())
-            continue;
-
-        craftsmanIdVisited.insert(it->craftsmanId);
-
-        actionsToApply.push_back(*it);
-    }
-
-    reverse(actionsToApply.begin(), actionsToApply.end());
-
-    GameState nextState = currentState.applyActions(actionsToApply);
+    GameState nextState = currentState.applyActions(actionBuffer);
 
     // push new state to allTurns
     allTurns.push_back(nextState);
@@ -451,15 +464,15 @@ void Game::nextTurn()
 
 inline bool Game::isFinished() const
 {
-    return allTurns.size() >= gameOptions.maxTurns;
+    return getCurrentState().turn >= gameOptions.maxTurns;
 }
 
 inline bool Game::isT1Turn() const
 {
-    return allTurns.size() % 2 == 0;
+    return getCurrentState().isT1Turn;
 }
 
-GameState Game::getCurrentState()
+GameState Game::getCurrentState() const
 {
     return allTurns.back();
 }

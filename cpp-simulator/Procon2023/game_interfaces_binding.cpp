@@ -73,44 +73,34 @@ PYBIND11_MODULE(game_interfaces_binding, m)
 
 	py::class_<MapState>(m, "MapState")
 		.def(py::init<int32_t, int32_t>(), "width"_a, "height"_a)
-		// .def("tileExists", &MapState::validPosition, "x"_a, "y"_a)
-		// .def("setTile", &MapState::setTile, "x"_a, "y"_a, "mask"_a)
-		// .def("setBit", &MapState::setBit, "x"_a, "y"_a, "bit"_a)
-		// .def("clearBit", &MapState::clearBit, "x"_a, "y"_a, "bit"_a)
-		// .def("isBitToggled", &MapState::isBitToggled, "x"_a, "y"_a, "bit"_a)
-		// .def("isAnyOfMaskToggled", &MapState::isAnyOfMaskToggled, "x"_a, "y"_a, "mask"_a)
-		.def("clearMapBit", &MapState::clearMapBit, "bit"_a)
-		// .def("getTile", &MapState::getTile, "x"_a, "y"_a)
 		.def("printMap", &MapState::printMap)
 		.def("calcPoints", &MapState::calcPoints)
-		.def("checkCloseTerritory", &MapState::checkCloseTerritory)
-		.def("updateTerritory", &MapState::updateTerritory);
+		.def_readwrite("tiles", &MapState::tiles);
 
 	py::class_<GameState>(m, "GameState")
 		.def(py::init<MapState, std::unordered_map<CraftsmanID, Craftsman>>(), "mapState"_a, "craftsmen"_a)
+		.def(py::init<MapState, std::unordered_map<CraftsmanID, Craftsman>, int, bool>(), "mapState"_a, "craftsmen"_a, "turn"_a, "isT1Turn"_a)
 		.def("applyActions", &GameState::applyActions, "actions"_a)
 		.def_readonly("lastTurnActions", &GameState::lastTurnActions)
-		.def_readwrite("map", &GameState::map);
+		.def_readwrite("craftsmen", &GameState::craftsmen)
+		.def_readwrite("map", &GameState::map)
+		.def_readwrite("turn", &GameState::turn)
+		.def_readwrite("isT1Turn", &GameState::isT1Turn);
 
 	py::class_<Game>(m, "Game")
 		.def(py::init<GameOptions, std::vector<std::vector<uint32_t>>, std::vector<Craftsman>>(), "gameOptions"_a, "map"_a, "craftsmen"_a)
 		.def("addAction", &Game::addAction, "action"_a)
 		.def("nextTurn", &Game::nextTurn, py::call_guard<py::gil_scoped_release>()) // multithreaded heavy function
 		.def("getCurrentState", &Game::getCurrentState)
-		.def_readwrite("gameOptions", &Game::gameOptions);
-
-	// m.def("subActionToX", &subActionToX);
-	// m.def("subActionToY", &subActionToY);
-
-	// py::class_<DestroyAction>(m, "DestroyAction")
-	// 	.def(py::init<int32_t, int32_t, bool>(), "x"_a, "y"_a, "isT1"_a)
-	// 	.def_readwrite("x", &DestroyAction::x)
-	// 	.def_readwrite("y", &DestroyAction::y)
-	// 	.def_readwrite("isT1", &DestroyAction::isT1);
-
-	// py::class_<BuildAction>(m, "BuildAction")
-	// 	.def(py::init<int32_t, int32_t, bool>(), "x"_a, "y"_a, "isT1"_a)
-	// 	.def_readwrite("x", &BuildAction::x)
-	// 	.def_readwrite("y", &BuildAction::y)
-	// 	.def_readwrite("isT1", &BuildAction::isT1);
+		.def_readwrite("gameOptions", &Game::gameOptions)
+		.def("__copy__", [](const Game &self)
+			 {
+				auto copy = self;
+				return copy; })
+		.def(
+			"__deepcopy__", [](const Game &self, py::dict)
+			{
+				auto copy = self;
+				return copy; },
+			"memo"_a);
 }

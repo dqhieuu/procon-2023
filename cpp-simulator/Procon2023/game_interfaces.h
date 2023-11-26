@@ -132,7 +132,7 @@ public:
     inline bool isAnyOfMaskToggled(size_t x, size_t y, uint32_t mask) const;
     void clearMapBit(const TileMask mask);
     inline uint32_t getTile(uint64_t x, uint64_t y) const;
-    std::string printMap();
+    std::string printMap() const;
     int calcPoints(const GameOptions &gameOptions, bool isT1) const;
     void checkCloseTerritory(const int32_t x, const int32_t y, const bool is_t1);
     void updateTerritory(const std::vector<DestroyAction> &&destroyActions,
@@ -150,7 +150,11 @@ struct GameState
     std::vector<GameAction> lastTurnActions;
     std::unordered_map<CraftsmanID, Craftsman> craftsmen;
 
+    int turn;
+    bool isT1Turn;
+
     GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> craftsmen);
+    GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> craftsmen, int turn, bool isT1Turn);
     GameState applyActions(const std::vector<GameAction> &actions);
 };
 
@@ -166,7 +170,7 @@ public:
     Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen);
     void addAction(const GameAction action);
     void nextTurn();
-    GameState getCurrentState();
+    GameState getCurrentState() const;
     inline bool isT1Turn() const;
     inline bool isFinished() const;
 };
