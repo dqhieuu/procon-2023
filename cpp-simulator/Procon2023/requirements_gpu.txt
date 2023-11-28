@@ -1,0 +1,9 @@
+--find-links https://storage.googleapis.com/jax-releases/jax_releases.html
+jax[cuda]
+chex
+
+jumanji
+numpy
+line_profiler
+matplotlib
+pillow

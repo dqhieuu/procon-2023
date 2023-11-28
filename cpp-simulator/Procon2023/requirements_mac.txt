@@ -4,3 +4,4 @@ jax
 jax-metal
 chex
 ml-dtypes==0.2.0
+line_profiler
