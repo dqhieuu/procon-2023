@@ -152,5 +152,8 @@
       },
       "color": "darkslateblue"
     }
+  ],
+  "python.analysis.extraPaths": [
+    "./mava"
   ]
 }

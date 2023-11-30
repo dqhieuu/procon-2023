@@ -1,7 +1,9 @@
-jumanji
-numpy
 jax
 jax-metal
 chex
 ml-dtypes==0.2.0
+
+jumanji
+numpy
 line_profiler
+seaborn

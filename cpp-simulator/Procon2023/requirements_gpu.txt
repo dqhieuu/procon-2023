@@ -1,5 +1,4 @@
---find-links https://storage.googleapis.com/jax-releases/jax_releases.html
-jax[cuda]
+jax
 chex
 
 jumanji
@@ -7,3 +6,4 @@ numpy
 line_profiler
 matplotlib
 pillow
+seaborn
