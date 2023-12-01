@@ -55,3 +55,23 @@ def load_map(file_path):
         "game_settings": game_settings,
         "craftsmen": craftsmen,
     }
+
+idxToActionEnum = [
+    [ActionType.MOVE, SubActionType.MOVE_UP],
+    [ActionType.MOVE, SubActionType.MOVE_DOWN],
+    [ActionType.MOVE, SubActionType.MOVE_LEFT],
+    [ActionType.MOVE, SubActionType.MOVE_RIGHT],
+    [ActionType.MOVE, SubActionType.MOVE_UP_LEFT],
+    [ActionType.MOVE, SubActionType.MOVE_UP_RIGHT],
+    [ActionType.MOVE, SubActionType.MOVE_DOWN_LEFT],
+    [ActionType.MOVE, SubActionType.MOVE_DOWN_RIGHT],
+    [ActionType.BUILD, SubActionType.BUILD_UP],
+    [ActionType.BUILD, SubActionType.BUILD_DOWN],
+    [ActionType.BUILD, SubActionType.BUILD_LEFT],
+    [ActionType.BUILD, SubActionType.BUILD_RIGHT],
+    [ActionType.DESTROY, SubActionType.DESTROY_UP],
+    [ActionType.DESTROY, SubActionType.DESTROY_DOWN],
+    [ActionType.DESTROY, SubActionType.DESTROY_LEFT],
+    [ActionType.DESTROY, SubActionType.DESTROY_RIGHT],
+    [ActionType.STAY, SubActionType.STAY],
+  ]
