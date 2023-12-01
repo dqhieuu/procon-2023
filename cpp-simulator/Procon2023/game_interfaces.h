@@ -150,6 +150,7 @@ struct GameState
     std::vector<GameAction> lastTurnActions;
     std::unordered_map<CraftsmanID, Craftsman> craftsmen;
     int minCostMap[25][25][25][25][2];
+    pair<int,int> prev_bfs[25][25][25][25][2];
 
     int turn;
     bool isT1Turn;

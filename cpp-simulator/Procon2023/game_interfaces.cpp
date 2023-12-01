@@ -442,15 +442,25 @@ void GameState::initMinCostMap(MapState _map){
 }
 void GameState::bfs(int x, int y, bool isT1){
     std::queue<std::pair<int, int>> q;
+    // direction 0: left, 1: up, 2: right, 3: down, 4: left-up, 5: right-up, 6: left-down, 7: right-down
+    std::vector<std::pair<int, int>> direction = {{-1, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}};
     q.push({x, y});
     minCostMap[x][y][x][y][isT1] = 0;
     while(!q.empty()){
         auto [x, y] = q.front();
         q.pop();
-        if(x+1 < 25 && !(map.getTile(x+1, y) & (1 << TileMask::POND)))
+        for(int i=0; i<8; i++)
         {
-            int new_x = x+1;
-            int new_y = y;
+            if(x+direction[i].first < 0 || x+direction[i].first >= 25 || y+direction[i].second < 0 || y+direction[i].second >= 25)
+                continue;
+            if(map.getTile(x+direction[i].first, y+direction[i].second) & (1 << TileMask::POND))
+                continue;
+            int new_x = x+direction[i].first;
+            int new_y = y+direction[i].second;
+            if(i>4 && map.getTile(new_x,new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                continue;
+            if(i>4 && map.getTile(new_x,new_y) & (1 << TileMask::T2_WALL) && isT1)
+                continue;
             int new_cost = minCostMap[x][y][x][y][isT1] + 1;
             if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
                 new_cost += 1;
@@ -459,111 +469,7 @@ void GameState::bfs(int x, int y, bool isT1){
             if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
             {
                 minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(x-1 >= 0 && !(map.getTile(x-1, y) & (1 << TileMask::POND)))
-        {
-            int new_x = x-1;
-            int new_y = y;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                new_cost += 1;
-            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                new_cost += 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(y+1 < 25 && !(map.getTile(x, y+1) & (1 << TileMask::POND)))
-        {
-            int new_x = x;
-            int new_y = y+1;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                new_cost += 1;
-            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                new_cost += 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(y-1 >= 0 && !(map.getTile(x, y-1) & (1 << TileMask::POND)))
-        {
-            int new_x = x;
-            int new_y = y-1;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                new_cost += 1;
-            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                new_cost += 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(x+1 < 25 && y+1 < 25 && !(map.getTile(x+1, y+1) & (1 << TileMask::POND)))
-        {
-            int new_x = x+1;
-            int new_y = y+1;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                continue;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                continue;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(x+1 < 25 && y-1 >= 0 && !(map.getTile(x+1, y-1) & (1 << TileMask::POND)))
-        {
-            int new_x = x+1;
-            int new_y = y-1;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                continue;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                continue;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(x-1 >= 0 && y+1 < 25 && !(map.getTile(x-1, y+1) & (1 << TileMask::POND)))
-        {
-            int new_x = x-1;
-            int new_y = y+1;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                continue;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                continue;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                q.push({new_x, new_y});
-            }
-        }
-        if(x-1 >= 0 && y-1 >= 0 && !(map.getTile(x-1, y-1) & (1 << TileMask::POND)))
-        {
-            int new_x = x-1;
-            int new_y = y-1;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
-                continue;
-            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
-                continue;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
-            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
-            {
-                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                prev_bfs[x][y][new_x][new_y][isT1] = {x, y};
                 q.push({new_x, new_y});
             }
         }
@@ -584,8 +490,23 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
             std::vector<std::pair<int, int>>((1<<12), {-1, -1})
         )
     );
+    // create array Direction 0: left, 1: up, 2: right, 3: down
+    std::vector<std::pair<int, int>> direction = {{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
     int size = buildAbleCells.size();
-    for(int i=0; i < (1<<size) ;i++)
+    for(int i=0;i< size;i++)
+    {
+        for(int k=0;k<4;k++)
+        {
+            if (x + direction[k].first < 0 || x + direction[k].first >= 25 || y + direction[k].second < 0 || y + direction[k].second >= 25)
+                continue;
+            if (map.getTile(x + direction[k].first, y + direction[k].second) & (1 << TileMask::POND))
+                continue;
+            int new_x = x + direction[k].first;
+            int new_y = y + direction[k].second;
+            cost[k][i][1<<i] = minCostMap[x][y][new_x][new_y][isT1];
+        }
+    }
+    for(int i=1; i < (1<<size) ;i++)
     {
         for(int j=0; j<size; j++)
         {
@@ -595,12 +516,91 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
                 int y = buildAbleCells[j].second;
                 for(int k=0; k<4; k++)
                 {
-                    if(k==0)
+                    if (x + direction[k].first < 0 || x + direction[k].first >= 25 || y + direction[k].second < 0 || y + direction[k].second >= 25)
+                        continue;
+                    if (map.getTile(x + direction[k].first, y + direction[k].second) & (1 << TileMask::POND))
+                        continue;
+                    int new_x = x + direction[k].first;
+                    int new_y = y + direction[k].second;
+                    for(int z=0; z<size; z++)
+                    {
+                        // if bit z is toggle continue
+                        if(i & (1<<z))
+                            continue;
+                        
+                        int new_x2 = buildAbleCells[z].first;
+                        int new_y2 = buildAbleCells[z].second;
+                        for(int l=0; l<4; l++)
+                        {
+                            if (new_x2 + direction[l].first < 0 || new_x2 + direction[l].first >= 25 || new_y2 + direction[l].second < 0 || new_y2 + direction[l].second >= 25)
+                                continue;
+                            if (map.getTile(new_x2 + direction[l].first, new_y2 + direction[l].second) & (1 << TileMask::POND))
+                                continue;
+                            int new_x3 = new_x2 + direction[l].first;
+                            int new_y3 = new_y2 + direction[l].second;
+                            if(cost[k][j][i] + minCostMap[new_x][new_y][new_x3][new_y3][isT1] < cost[l][z][i|(1<<z)])
+                            {
+                                cost[l][z][i|(1<<z)] = cost[k][j][i] + minCostMap[new_x][new_y][new_x3][new_y3][isT1];
+                                prev[l][z][i|(1<<z)] = {k, j};
+                            }
+                        }
+                    }
                 }
             }
             else continue;
         }
     }
+    int craftman_id = findCraftsmanIdByPos(x, y);
+    int min_cost = 200;
+    pair<int,int> direction_and_cell = {-1, -1};
+    for(int i=0;i<size;i++)
+    {
+        for(int j=0;j<4;j++)
+        {
+            if(cost[j][i][(1<<size)-1] < min_cost)
+            {
+                min_cost = cost[j][i][(1<<size)-1];
+                direction_and_cell = {j, i};
+            }
+        }
+    }
+    if(direction_and_cell.first == -1)
+        return {-1, GameAction()};
+    // check if x and y next to buildable cell return build
+    if(buildAbleCells[direction_and_cell.second].first + direction[direction_and_cell.first].first == x && buildAbleCells[direction_and_cell.second].second + direction[direction_and_cell.first].second == y)
+        {
+            if (direction_and_cell.first == 0)
+                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_LEFT)};
+            else if (direction_and_cell.first == 1)
+                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_UP)};
+            else if (direction_and_cell.first == 2)
+                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_RIGHT)};
+            else if (direction_and_cell.first == 3)
+                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_DOWN)};
+        }
+
+    int cur_mask = (1<<size)-1;
+    while(prev[direction_and_cell.first][direction_and_cell.second][cur_mask] != make_pair(0, 0))
+    {
+        auto [new_direction, new_cell] = prev[direction_and_cell.first][direction_and_cell.second][cur_mask];
+        cur_mask ^= (1<<direction_and_cell.second);
+        direction_and_cell = {new_direction, new_cell};    
+    }
+    pair<int,int> cell_need_to_build = buildAbleCells[direction_and_cell.second];
+    pair<int,int> cell_need_to_move_in = std::make_pair(cell_need_to_build.first + direction[direction_and_cell.first].first, cell_need_to_build.second + direction[direction_and_cell.first].second);
+    while(prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1] != make_pair(x, y))
+    {
+        auto [new_x, new_y] = prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1];
+        cell_need_to_move_in = {new_x, new_y};
+    }
+    if (cell_need_to_move_in.first == x - 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_LEFT)};
+    else if (cell_need_to_move_in.first == x + 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_RIGHT)};
+    else if (cell_need_to_move_in.second == y - 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP)};
+    else if (cell_need_to_move_in.second == y + 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN)};
 
 }
 
