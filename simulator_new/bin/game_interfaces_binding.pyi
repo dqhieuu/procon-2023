@@ -1,5 +1,6 @@
 from typing import ClassVar, overload
 
+
 class ActionType:
     __members__: ClassVar[dict] = ...  # read-only
     BUILD: ClassVar[ActionType] = ...
@@ -18,6 +19,7 @@ class ActionType:
     @property
     def value(self) -> int: ...
 
+
 class Craftsman:
     id: int
     isT1: bool
@@ -25,20 +27,26 @@ class Craftsman:
     y: int
     def __init__(self, id: int, x: int, y: int, isT1: bool) -> None: ...
 
+
 class Game:
     gameOptions: GameOptions
-    def __init__(self, gameOptions: GameOptions, map: list[list[int]], craftsmen: list[Craftsman]) -> None: ...
+    def __init__(self, gameOptions: GameOptions,
+                 map: list[list[int]], craftsmen: list[Craftsman]) -> None: ...
+
     def addAction(self, action: GameAction) -> None: ...
     def getCurrentState(self) -> GameState: ...
     def nextTurn(self) -> None: ...
     def __copy__(self) -> Game: ...
     def __deepcopy__(self, memo: dict) -> Game: ...
 
+
 class GameAction:
     actionType: ActionType
     craftsmanId: int
     subActionType: SubActionType
-    def __init__(self, craftsmanId: int, actionType: ActionType, subActionType: SubActionType) -> None: ...
+    def __init__(self, craftsmanId: int, actionType: ActionType,
+                 subActionType: SubActionType) -> None: ...
+
 
 class GameOptions:
     castleCoeff: int
@@ -49,24 +57,33 @@ class GameOptions:
     wallCoeff: int
     def __init__(self) -> None: ...
 
+
 class GameState:
     craftsmen: dict[int, Craftsman]
     isT1Turn: bool
     map: MapState
     turn: int
+
     @overload
-    def __init__(self, mapState: MapState, craftsmen: dict[int, Craftsman]) -> None: ...
+    def __init__(self, mapState: MapState,
+                 craftsmen: dict[int, Craftsman]) -> None: ...
+
     @overload
-    def __init__(self, mapState: MapState, craftsmen: dict[int, Craftsman], turn: int, isT1Turn: bool) -> None: ...
+    def __init__(self, mapState: MapState,
+                 craftsmen: dict[int, Craftsman], turn: int, isT1Turn: bool) -> None: ...
+
     def applyActions(self, actions: list[GameAction]) -> GameState: ...
+    def findCraftsmanIdByPos(self, x: int, y: int) -> int: ...
     @property
     def lastTurnActions(self) -> list[GameAction]: ...
+
 
 class MapState:
     tiles: list[list[int]]
     def __init__(self, width: int, height: int) -> None: ...
     def calcPoints(self, arg0: GameOptions, arg1: bool) -> int: ...
     def printMap(self) -> str: ...
+
 
 class SubActionType:
     __members__: ClassVar[dict] = ...  # read-only
@@ -99,6 +116,7 @@ class SubActionType:
     @property
     def value(self) -> int: ...
 
+
 class TileMask:
     __members__: ClassVar[dict] = ...  # read-only
     CASTLE: ClassVar[TileMask] = ...
@@ -122,6 +140,7 @@ class TileMask:
     def name(self) -> str: ...
     @property
     def value(self) -> int: ...
+
 
 class TileStatus:
     __members__: ClassVar[dict] = ...  # read-only

@@ -325,6 +325,16 @@ GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _
 {
 }
 
+int GameState::findCraftsmanIdByPos(int x, int y) const
+{
+    for (const auto &[craftsmanId, craftsman] : craftsmen)
+    {
+        if (craftsman.x == x && craftsman.y == y)
+            return craftsmanId;
+    }
+    return -1;
+}
+
 GameState GameState::applyActions(const std::vector<GameAction> &actionBuffer)
 {
     std::vector<GameAction> actionByCraftsman;
@@ -409,6 +419,189 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionBuffer)
 
     nextGameState.map = std::move(nextMap);
     return nextGameState;
+}
+void GameState::initMinCostMap(MapState _map){
+    for(int i=0; i<25; i++){
+        for(int j=0; j<25; j++){
+            for(int k=0; k<25; k++){
+                for(int l=0; l<25; l++){
+                    minCostMap[i][j][k][l][0] = 1000000000;
+                    minCostMap[i][j][k][l][1] = 1000000000;
+                }
+            }
+        }
+    }
+    for(int i=0; i<25; i++)
+        for(int j=0; j<25; j++)
+        {
+            if(_map.getTile(i, j) & (1 << TileMask::POND))
+                continue;
+            bfs(i, j, true);
+            bfs(i, j, false);
+        }
+}
+void GameState::bfs(int x, int y, bool isT1){
+    std::queue<std::pair<int, int>> q;
+    q.push({x, y});
+    minCostMap[x][y][x][y][isT1] = 0;
+    while(!q.empty()){
+        auto [x, y] = q.front();
+        q.pop();
+        if(x+1 < 25 && !(map.getTile(x+1, y) & (1 << TileMask::POND)))
+        {
+            int new_x = x+1;
+            int new_y = y;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                new_cost += 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                new_cost += 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(x-1 >= 0 && !(map.getTile(x-1, y) & (1 << TileMask::POND)))
+        {
+            int new_x = x-1;
+            int new_y = y;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                new_cost += 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                new_cost += 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(y+1 < 25 && !(map.getTile(x, y+1) & (1 << TileMask::POND)))
+        {
+            int new_x = x;
+            int new_y = y+1;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                new_cost += 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                new_cost += 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(y-1 >= 0 && !(map.getTile(x, y-1) & (1 << TileMask::POND)))
+        {
+            int new_x = x;
+            int new_y = y-1;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                new_cost += 1;
+            if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                new_cost += 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(x+1 < 25 && y+1 < 25 && !(map.getTile(x+1, y+1) & (1 << TileMask::POND)))
+        {
+            int new_x = x+1;
+            int new_y = y+1;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                continue;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                continue;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(x+1 < 25 && y-1 >= 0 && !(map.getTile(x+1, y-1) & (1 << TileMask::POND)))
+        {
+            int new_x = x+1;
+            int new_y = y-1;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                continue;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                continue;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(x-1 >= 0 && y+1 < 25 && !(map.getTile(x-1, y+1) & (1 << TileMask::POND)))
+        {
+            int new_x = x-1;
+            int new_y = y+1;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                continue;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                continue;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+        if(x-1 >= 0 && y-1 >= 0 && !(map.getTile(x-1, y-1) & (1 << TileMask::POND)))
+        {
+            int new_x = x-1;
+            int new_y = y-1;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
+                continue;
+            if (map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
+                continue;
+            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
+            {
+                minCostMap[x][y][new_x][new_y][isT1] = new_cost;
+                q.push({new_x, new_y});
+            }
+        }
+    }
+}
+pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vector<pair<int,int>> buildAbleCells){
+        std::vector<std::vector<std::vector<int>>> cost(
+        4,
+        std::vector<std::vector<int>>(
+            12,
+            std::vector<int>((1<<12), 10000)
+        )
+    );
+    std::vector<std::vector<std::vector<std::pair<int, int>>>> prev(
+        4,
+        std::vector<std::vector<std::pair<int, int>>>(
+            12,
+            std::vector<std::pair<int, int>>((1<<12), {-1, -1})
+        )
+    );
+    int size = buildAbleCells.size();
+    for(int i=0; i < (1<<size) ;i++)
+    {
+        for(int j=0; j<size; j++)
+        {
+            if(i & (1<<j))
+            {
+                int x = buildAbleCells[j].first;
+                int y = buildAbleCells[j].second;
+                for(int k=0; k<4; k++)
+                {
+                    if(k==0)
+                }
+            }
+            else continue;
+        }
+    }
+
 }
 
 Game::Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen)

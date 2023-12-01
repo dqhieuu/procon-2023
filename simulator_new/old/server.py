@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import json
 import re
 from copy import deepcopy
@@ -76,11 +77,12 @@ elif mode == 5:
     team_1_token = None
 
 
-def get_online_map_data(room_id):
+def get_online_map_data(room_id: int):
     rooms_json = requests.get('{}/player/games'.format(BASE_URL, online_room),
                               headers={"Authorization": global_token}).json()
 
-    rooms_json = json.loads(json.dumps(rooms_json), object_hook=online_field_decoder)
+    rooms_json = json.loads(json.dumps(rooms_json),
+                            object_hook=online_field_decoder)
 
     rooms = OnlineFieldRequestList.parse_obj(rooms_json).__root__
     selected_room = None
@@ -93,9 +95,9 @@ def get_online_map_data(room_id):
 is_negative_turn = re.compile(r'turn: -')
 
 
-def get_game_status(room_id):
+def get_game_status(room_id: int):
     game_status_json = requests.get('{}/player/games/{}/status'.format(BASE_URL, room_id),
-                     headers={"Authorization": global_token}).json()
+                                    headers={"Authorization": global_token}).json()
 
     if game_status_json.get('detail'):
         if is_negative_turn.search(game_status_json['detail']):
@@ -104,14 +106,14 @@ def get_game_status(room_id):
             return OnlineGameStatus(cur_turn=0, max_turn=999, remaining=999)
         else:
             return None
-    return OnlineGameStatus.parse_obj(game_status_json)
+    return OnlineGameStatus.model_validate(game_status_json)
 
 
-def get_online_actions(room_id):
+def get_online_actions(room_id: int):
     actions_json = requests.get('{}/player/games/{}/actions'.format(BASE_URL, online_room),
                                 headers={"Authorization": global_token}).json()
 
-    return OnlineActionResponseList.parse_obj(actions_json)
+    return OnlineActionResponseList.model_validate(actions_json)
 
 
 game_status: Optional[OnlineGameStatus] = None
@@ -121,22 +123,26 @@ if online_room > 0:
     game_status = get_game_status(online_room)
     game.load_online_action_list(get_online_actions(online_room), game_status)
 
-online_command_dict_per_craftsman_team1: dict[str, dict[str,str]] = {}
-online_command_dict_per_craftsman_team2: dict[str, dict[str,str]] = {}
+online_command_dict_per_craftsman_team1: dict[str, dict[str, str]] = {}
+online_command_dict_per_craftsman_team2: dict[str, dict[str, str]] = {}
 
 # load AI
 team1_critic = None
 if team_1_token is not None or mode == 1:
     team1_critic = CentralizedCritic(Team.TEAM1, game)
-    _team1_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM1]
-    _team1_craftsman_agents = [CraftsmanAgent(c.id, game, team1_critic) for c in _team1_craftsmen]
+    _team1_craftsmen = [
+        c for c in game.current_state.craftsmen if c.team == Team.TEAM1]
+    _team1_craftsman_agents = [CraftsmanAgent(
+        c.id, game, team1_critic) for c in _team1_craftsmen]
     team1_critic.team_agents = _team1_craftsman_agents
 
 team2_critic = None
 if team_2_token is not None or mode == 1:
     team2_critic = CentralizedCritic(Team.TEAM2, game)
-    _team2_craftsmen = [c for c in game.current_state.craftsmen if c.team == Team.TEAM2]
-    _team2_craftsman_agents = [CraftsmanAgent(c.id, game, team2_critic) for c in _team2_craftsmen]
+    _team2_craftsmen = [
+        c for c in game.current_state.craftsmen if c.team == Team.TEAM2]
+    _team2_craftsman_agents = [CraftsmanAgent(
+        c.id, game, team2_critic) for c in _team2_craftsmen]
     team2_critic.team_agents = _team2_craftsman_agents
 
 
@@ -148,7 +154,8 @@ session = aiohttp.ClientSession()
 async def do_command(command: CraftsmanCommand):
     if online_room > 0:
         # ONLINE MODE
-        craftsman = get_craftsman_at(game.current_state.craftsmen, command.craftsman_pos)
+        craftsman = get_craftsman_at(
+            game.current_state.craftsmen, command.craftsman_pos)
         craftsman_id = craftsman.id
         if craftsman_id is None:
             raise HTTPException(400, "Craftsman not found")
@@ -195,7 +202,6 @@ async def current_state():
 
     craftman_map = game_state.craftman
 
-
     res = {
         "score": game.score,
         "state": state_jsonable
@@ -218,8 +224,10 @@ async def current_state():
             continue
         craftsman = game.find_craftsman_by_id(craftsman_id)
 
-        dir_vec = get_direction_vector(Direction.from_online_type(action['action_param']))
-        action_type = ActionType.from_online_type(OnlineEnumAction(action['action']))
+        dir_vec = get_direction_vector(
+            Direction.from_online_type(action['action_param']))
+        action_type = ActionType.from_online_type(
+            OnlineEnumAction(action['action']))
         actions_to_be_applied_list.append({
             'pos': (craftsman.pos[0] + dir_vec[0], craftsman.pos[1] + dir_vec[1]),
             'action_type': action_type
@@ -263,62 +271,66 @@ async def current_state():
     return res
 
 
-@app.on_event("startup")
+@asynccontextmanager
 @repeat_every(seconds=0.5)
 async def auto_update_online_game_state():
     global game_status
     print(game_status, game.current_state.turn_number)
-    if online_room > 0:
-        game_status = get_game_status(online_room)
+    if online_room < 0:
+        return
 
-        if game.current_state.turn_number != game_status.cur_turn:
-            game.load_online_action_list(
-                action_list=get_online_actions(online_room),
-                current_game_status=game_status
-            )
-            if game.current_state.turn_state == TurnState.TEAM1_TURN:
-                online_command_dict_per_craftsman_team2.clear()
-            elif game.current_state.turn_state == TurnState.TEAM2_TURN:
-                online_command_dict_per_craftsman_team1.clear()
+    game_status = get_game_status(online_room)
 
-            if game.current_state.turn_state == TurnState.TEAM1_TURN and team1_critic is not None:
-                await team1_critic.act()
-            elif game.current_state.turn_state == TurnState.TEAM2_TURN and team2_critic is not None:
-                await team2_critic.act()
-        else:
+    if game.current_state.turn_number != game_status.cur_turn:
+        # game.load_online_action_list(
+        #     action_list=get_online_actions(online_room),
+        #     current_game_status=game_status
+        # )
+        # if game.current_state.turn_state == TurnState.TEAM1_TURN:
+        #     online_command_dict_per_craftsman_team2.clear()
+        # elif game.current_state.turn_state == TurnState.TEAM2_TURN:
+        #     online_command_dict_per_craftsman_team1.clear()
 
-            if len(online_command_dict_per_craftsman_team1) > 0 and team_1_token is not None:
-                if game_status.remaining >= 2:
-                    return  # wait for next second to send command
+        # if game.current_state.turn_state == TurnState.TEAM1_TURN and team1_critic is not None:
+        #     await team1_critic.act()
+        # elif game.current_state.turn_state == TurnState.TEAM2_TURN and team2_critic is not None:
+        #     await team2_critic.act()
+    else:
 
-                # async post request is faster
-                async with session.post(
-                        '{}/player/games/{}/actions'.format(BASE_URL, online_room),
-                        headers={"Authorization": team_1_token},
-                        json={
-                            "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM1_TURN else 2),
-                            "actions": list(online_command_dict_per_craftsman_team1.values()),
-                        }) as res:
-                    if not (200 <= res.status < 300):
-                        print(await res.text())
-                    else:
-                        print("Sent online commands successfully")
+        if len(online_command_dict_per_craftsman_team1) > 0 and team_1_token is not None:
+        #     if game_status.remaining >= 2:
+        #         return  # wait for next second to send command
 
-            if len(online_command_dict_per_craftsman_team2) > 0 and team_2_token is not None:
-                if game_status.remaining >= 2:
-                    return  # wait for next second to send command
+        #     # async post request is faster
+        #     async with session.post(
+        #             '{}/player/games/{}/actions'.format(
+        #                 BASE_URL, online_room),
+        #             headers={"Authorization": team_1_token},
+        #             json={
+        #                 "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM1_TURN else 2),
+        #                 "actions": list(online_command_dict_per_craftsman_team1.values()),
+        #             }) as res:
+        #         if not (200 <= res.status < 300):
+        #             print(await res.text())
+        #         else:
+        #             print("Sent online commands successfully")
 
-                async with session.post(
-                        '{}/player/games/{}/actions'.format(BASE_URL, online_room),
-                        headers={"Authorization": team_2_token},
-                        json={
-                            "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM2_TURN else 2),
-                            "actions": list(online_command_dict_per_craftsman_team2.values()),
-                        }) as res:
-                    if not (200 <= res.status < 300):
-                        print(await res.text())
-                    else:
-                        print("Sent online commands successfully")
+        # if len(online_command_dict_per_craftsman_team2) > 0 and team_2_token is not None:
+        #     if game_status.remaining >= 2:
+        #         return  # wait for next second to send command
+
+        #     async with session.post(
+        #             '{}/player/games/{}/actions'.format(
+        #                 BASE_URL, online_room),
+        #             headers={"Authorization": team_2_token},
+        #             json={
+        #                 "turn": game.current_state.turn_number + (1 if game.current_state.turn_state == TurnState.TEAM2_TURN else 2),
+        #                 "actions": list(online_command_dict_per_craftsman_team2.values()),
+        #             }) as res:
+        #         if not (200 <= res.status < 300):
+        #             print(await res.text())
+        #         else:
+        #             print("Sent online commands successfully")
 
 
 @app.get("/history")

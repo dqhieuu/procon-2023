@@ -248,7 +248,8 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
 
     return res
 
-def server_action_to_cpp_action(action_type: PyActionType, direction: Direction) -> tuple[ActionType, SubActionType]:
+
+def local_action_to_cpp_action(action_type: PyActionType, direction: Direction) -> tuple[ActionType, SubActionType]:
     if action_type == PyActionType.STAY:
         return ActionType.STAY, SubActionType.STAY
     elif action_type == PyActionType.MOVE:
@@ -285,4 +286,44 @@ def server_action_to_cpp_action(action_type: PyActionType, direction: Direction)
         elif direction is Direction.LEFT:
             return ActionType.DESTROY, SubActionType.DESTROY_LEFT
         elif direction is Direction.RIGHT:
+            return ActionType.DESTROY, SubActionType.DESTROY_RIGHT
+
+
+def online_action_to_cpp_action(action_type: str, action_param: str) -> tuple[ActionType, SubActionType]:
+    if action_type == "STAY":
+        return ActionType.STAY, SubActionType.STAY
+    elif action_type == "MOVE":
+        if action_param == "UP":
+            return ActionType.MOVE, SubActionType.MOVE_UP
+        elif action_param == "DOWN":
+            return ActionType.MOVE, SubActionType.MOVE_DOWN
+        elif action_param == "LEFT":
+            return ActionType.MOVE, SubActionType.MOVE_LEFT
+        elif action_param == "RIGHT":
+            return ActionType.MOVE, SubActionType.MOVE_RIGHT
+        elif action_param == "UPPER_LEFT":
+            return ActionType.MOVE, SubActionType.MOVE_UP_LEFT
+        elif action_param == "UPPER_RIGHT":
+            return ActionType.MOVE, SubActionType.MOVE_UP_RIGHT
+        elif action_param == "LOWER_LEFT":
+            return ActionType.MOVE, SubActionType.MOVE_DOWN_LEFT
+        elif action_param == "LOWER_RIGHT":
+            return ActionType.MOVE, SubActionType.MOVE_DOWN_RIGHT
+    elif action_type == "BUILD":
+        if action_param == "ABOVE":
+            return ActionType.BUILD, SubActionType.BUILD_UP
+        elif action_param == "BELOW":
+            return ActionType.BUILD, SubActionType.BUILD_DOWN
+        elif action_param == "LEFT":
+            return ActionType.BUILD, SubActionType.BUILD_LEFT
+        elif action_param == "RIGHT":
+            return ActionType.BUILD, SubActionType.BUILD_RIGHT
+    elif action_type == "DESTROY":
+        if action_param == "ABOVE":
+            return ActionType.DESTROY, SubActionType.DESTROY_UP
+        elif action_param == "BELOW":
+            return ActionType.DESTROY, SubActionType.DESTROY_DOWN
+        elif action_param == "LEFT":
+            return ActionType.DESTROY, SubActionType.DESTROY_LEFT
+        elif action_param == "RIGHT":
             return ActionType.DESTROY, SubActionType.DESTROY_RIGHT

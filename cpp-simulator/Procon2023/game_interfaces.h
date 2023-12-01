@@ -149,6 +149,7 @@ struct GameState
     MapState map;
     std::vector<GameAction> lastTurnActions;
     std::unordered_map<CraftsmanID, Craftsman> craftsmen;
+    int minCostMap[25][25][25][25][2];
 
     int turn;
     bool isT1Turn;
@@ -156,6 +157,11 @@ struct GameState
     GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> craftsmen);
     GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> craftsmen, int turn, bool isT1Turn);
     GameState applyActions(const std::vector<GameAction> &actions);
+
+    int findCraftsmanIdByPos(int x, int y) const;
+    void initMinCostMap(MapState _map);
+    void bfs(int x, int y, bool isT1);
+    pair<int, GameAction> findWayToBuild(int x,int y, bool isT1, std::vector<pair<int,int>> buildAbleCells);
 };
 
 struct Game
