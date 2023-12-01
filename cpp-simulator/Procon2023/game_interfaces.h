@@ -149,8 +149,12 @@ struct GameState
     MapState map;
     std::vector<GameAction> lastTurnActions;
     std::unordered_map<CraftsmanID, Craftsman> craftsmen;
-    int minCostMap[25][25][25][25][2];
-    pair<int,int> prev_bfs[25][25][25][25][2];
+    // int minCostMap[25][25][25][25][2];
+    //init mincostMap is vector 5d
+    std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> minCostMap;
+    // pair<int,int> prev_bfs[25][25][25][25][2];
+    //init prev_bfs is vector 5d
+    std::vector<std::vector<std::vector<std::vector<std::vector<pair<int,int>>>>>> prev_bfs;
 
     int turn;
     bool isT1Turn;

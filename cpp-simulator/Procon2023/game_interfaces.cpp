@@ -421,16 +421,42 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionBuffer)
     return nextGameState;
 }
 void GameState::initMinCostMap(MapState _map){
-    for(int i=0; i<25; i++){
-        for(int j=0; j<25; j++){
-            for(int k=0; k<25; k++){
-                for(int l=0; l<25; l++){
-                    minCostMap[i][j][k][l][0] = 1000000000;
-                    minCostMap[i][j][k][l][1] = 1000000000;
-                }
-            }
-        }
-    }
+    // for(int i=0; i<25; i++){
+    //     for(int j=0; j<25; j++){
+    //         for(int k=0; k<25; k++){
+    //             for(int l=0; l<25; l++){
+    //                 minCostMap[i][j][k][l][0] = 1000000000;
+    //                 minCostMap[i][j][k][l][1] = 1000000000;
+    //             }
+    //         }
+    //     }
+    // }
+    minCostMap = std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>(
+        25,
+        std::vector<std::vector<std::vector<std::vector<int>>>>(
+            25,
+            std::vector<std::vector<std::vector<int>>>(
+                25,
+                std::vector<std::vector<int>>(
+                    25,
+                    std::vector<int>(2, 100000)
+                )
+            )
+        )
+    );
+    prev_bfs = std::vector<std::vector<std::vector<std::vector<std::vector<std::pair<int,int>>>>>>(
+        25,
+        std::vector<std::vector<std::vector<std::vector<std::pair<int,int>>>>>(
+            25,
+            std::vector<std::vector<std::vector<std::pair<int,int>>>>(
+                25,
+                std::vector<std::vector<std::pair<int,int>>>(
+                    25,
+                    std::vector<std::pair<int,int>>(2, {-1, -1})
+                )
+            )
+        )
+    );
     for(int i=0; i<25; i++)
         for(int j=0; j<25; j++)
         {
@@ -580,7 +606,7 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
         }
 
     int cur_mask = (1<<size)-1;
-    while(prev[direction_and_cell.first][direction_and_cell.second][cur_mask] != make_pair(0, 0))
+    while(prev[direction_and_cell.first][direction_and_cell.second][cur_mask] != make_pair(-1, -1))
     {
         auto [new_direction, new_cell] = prev[direction_and_cell.first][direction_and_cell.second][cur_mask];
         cur_mask ^= (1<<direction_and_cell.second);
