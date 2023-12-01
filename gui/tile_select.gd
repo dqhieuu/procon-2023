@@ -18,7 +18,7 @@ func _process(_delta):
 
 func _on_aspect_ratio_container_mouse_entered():
 	is_hovered = true
-	print(get_parent().get_index())
+	#print(get_parent().get_index())
 	Globals.hovered_tile = get_parent().get_index()
 
 

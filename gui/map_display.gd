@@ -86,22 +86,22 @@ func update_time_left(time):
 		else:
 			e.text = "Time left: Infinite"
 
-func load_map(state):
-	if state.has('score'):
-		var score = state.score
+func load_map(json):
+	if json.has('score'):
+		var score = json.score
 		update_score(score)
 	
 	var time_left = null
-	if state.has("game_status"):
-		time_left = state.game_status.remaining
+	if json.has("game_status"):
+		time_left = json.game_status.remaining
 		
 	update_time_left(time_left)
 	
-	var game_state = state.state
+	var game_state = json.state
 	
 	var map = game_state.map
-	width = map[0].size()
-	height = map.size()
+	width = json.options.map_width
+	height = json.options.map_height
 	
 	turn_number = game_state.turn_number
 	
@@ -176,5 +176,5 @@ func load_map(state):
 	
 
 	var replay_node = get_tree().get_first_node_in_group('replay_feature')
-	if state.has("winner") && replay_node.replay_turns == null:
+	if json.has("winner") && replay_node.replay_turns == null:
 		replay_node.load_replay_data(await HTTP.get_match_history())

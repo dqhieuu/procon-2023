@@ -1,4 +1,7 @@
 from bin.game_interfaces_binding import Game, GameState, GameAction, GameOptions, ActionType, SubActionType, TileMask, Craftsman, MapState
+from model import Direction, PyActionType
+
+
 def load_map(file_path):
     score_coefficients = {
         "territory": 0,
@@ -57,6 +60,7 @@ def load_map(file_path):
         "craftsmen": craftsmen,
     }
 
+
 def map_tile_to_bitmask(tile):
     if tile == 1:
         return 1 << TileMask.POND.value
@@ -66,35 +70,38 @@ def map_tile_to_bitmask(tile):
 
 
 idx_to_action_enum_list = [
-    [ActionType.MOVE, SubActionType.MOVE_UP],
-    [ActionType.MOVE, SubActionType.MOVE_DOWN],
-    [ActionType.MOVE, SubActionType.MOVE_LEFT],
-    [ActionType.MOVE, SubActionType.MOVE_RIGHT],
-    [ActionType.MOVE, SubActionType.MOVE_UP_LEFT],
-    [ActionType.MOVE, SubActionType.MOVE_UP_RIGHT],
-    [ActionType.MOVE, SubActionType.MOVE_DOWN_LEFT],
-    [ActionType.MOVE, SubActionType.MOVE_DOWN_RIGHT],
-    [ActionType.BUILD, SubActionType.BUILD_UP],
-    [ActionType.BUILD, SubActionType.BUILD_DOWN],
-    [ActionType.BUILD, SubActionType.BUILD_LEFT],
-    [ActionType.BUILD, SubActionType.BUILD_RIGHT],
-    [ActionType.DESTROY, SubActionType.DESTROY_UP],
-    [ActionType.DESTROY, SubActionType.DESTROY_DOWN],
-    [ActionType.DESTROY, SubActionType.DESTROY_LEFT],
-    [ActionType.DESTROY, SubActionType.DESTROY_RIGHT],
-    [ActionType.STAY, SubActionType.STAY],
+    (ActionType.MOVE, SubActionType.MOVE_UP),
+    (ActionType.MOVE, SubActionType.MOVE_DOWN),
+    (ActionType.MOVE, SubActionType.MOVE_LEFT),
+    (ActionType.MOVE, SubActionType.MOVE_RIGHT),
+    (ActionType.MOVE, SubActionType.MOVE_UP_LEFT),
+    (ActionType.MOVE, SubActionType.MOVE_UP_RIGHT),
+    (ActionType.MOVE, SubActionType.MOVE_DOWN_LEFT),
+    (ActionType.MOVE, SubActionType.MOVE_DOWN_RIGHT),
+    (ActionType.BUILD, SubActionType.BUILD_UP),
+    (ActionType.BUILD, SubActionType.BUILD_DOWN),
+    (ActionType.BUILD, SubActionType.BUILD_LEFT),
+    (ActionType.BUILD, SubActionType.BUILD_RIGHT),
+    (ActionType.DESTROY, SubActionType.DESTROY_UP),
+    (ActionType.DESTROY, SubActionType.DESTROY_DOWN),
+    (ActionType.DESTROY, SubActionType.DESTROY_LEFT),
+    (ActionType.DESTROY, SubActionType.DESTROY_RIGHT),
+    (ActionType.STAY, SubActionType.STAY),
 ]
+
 
 def idx_to_action_enum(idx):
     return idx_to_action_enum_list[idx]
 
-def load_offline_game(path: str) -> (GameOptions, list[list[int]], list[Craftsman], dict[str, int]):
+
+def load_offline_game(path: str) -> tuple[GameOptions, list[list[int]], list[Craftsman], dict[str, int]]:
     map_data = load_map(path)
-    map_formatted = [[map_tile_to_bitmask(x) for x in row] for row in map_data['game_map']]
-    
+    map_formatted = [[map_tile_to_bitmask(x) for x in row]
+                     for row in map_data['game_map']]
+
     counter = 0
-    craftsman_strid_to_intid = {}
-    craftsmen_formatted = []
+    craftsman_strid_to_intid: dict[str, int] = {}
+    craftsmen_formatted: list[Craftsman] = []
     for c in map_data['craftsmen']['team1']:
         new_craftsman = Craftsman(counter, c['x'], c['y'], True)
         craftsmen_formatted.append(new_craftsman)
@@ -105,14 +112,14 @@ def load_offline_game(path: str) -> (GameOptions, list[list[int]], list[Craftsma
         craftsmen_formatted.append(new_craftsman)
         craftsman_strid_to_intid[c['id']] = counter
         counter += 1
-    
+
     go = GameOptions()
     go.mapWidth = map_data['game_settings']['map_width']
     go.mapHeight = map_data['game_settings']['map_height']
-    go.maxTurns =  map_data['game_settings']['max_turn']
-    go.wallCoeff =  map_data['score_coefficients']['wall']
-    go.castleCoeff =   map_data['score_coefficients']['castle']
-    go.territoryCoeff =   map_data['score_coefficients']['territory']
+    go.maxTurns = map_data['game_settings']['max_turn']
+    go.wallCoeff = map_data['score_coefficients']['wall']
+    go.castleCoeff = map_data['score_coefficients']['castle']
+    go.territoryCoeff = map_data['score_coefficients']['territory']
 
     return go, map_formatted, craftsmen_formatted, craftsman_strid_to_intid
 
@@ -123,14 +130,13 @@ def load_offline_actions(path: str, craftsman_strid_to_intid_map: dict) -> list[
     # Split the input string based on "- -"
     turns = actiontxt.strip().split("- -")
 
-
     # Remove empty strings from the list
     turns = [section.strip() for section in turns]
 
     # Convert each section to an array of arrays
     actions = []
     for turn in turns:
-        if not turn: 
+        if not turn:
             actions.append([])
             continue
 
@@ -145,53 +151,55 @@ def load_offline_actions(path: str, craftsman_strid_to_intid_map: dict) -> list[
     for turn in actions:
         turn_actions = []
         for craftsman_str_id, action_idx in turn:
-            game_action = GameAction(craftsman_strid_to_intid_map[craftsman_str_id], *idx_to_action_enum(int(action_idx)))
+            game_action = GameAction(
+                craftsman_strid_to_intid_map[craftsman_str_id], *idx_to_action_enum(int(action_idx)))
             turn_actions.append(game_action)
         actions_temp.append(turn_actions)
 
     actions = actions_temp
-    
+
     return actions
+
 
 def calculate_score(state: list[list[int]], game_options: GameOptions):
     width = game_options.mapWidth
     height = game_options.mapHeight
 
     res = {
-    "team1": {
-      "count": {
-        "territory": 0,
-        "close_territory": 0,
-        "open_territory": 0,
-        "wall": 0,
-        "castle": 0
-      },
-      "points": {
-        "territory": 0,
-        "close_territory": 0,
-        "open_territory": 0,
-        "wall": 0,
-        "castle": 0,
-        "total": 0
-      }
-    },
-    "team2": {
-      "count": {
-        "territory": 0,
-        "close_territory": 0,
-        "open_territory": 0,
-        "wall": 0,
-        "castle": 0
-      },
-      "points": {
-        "territory": 0,
-        "close_territory": 0,
-        "open_territory": 0,
-        "wall": 0,
-        "castle": 0,
-        "total": 0
-      }
-    }
+        "team1": {
+            "count": {
+                "territory": 0,
+                "close_territory": 0,
+                "open_territory": 0,
+                "wall": 0,
+                "castle": 0
+            },
+            "points": {
+                "territory": 0,
+                "close_territory": 0,
+                "open_territory": 0,
+                "wall": 0,
+                "castle": 0,
+                "total": 0
+            }
+        },
+        "team2": {
+            "count": {
+                "territory": 0,
+                "close_territory": 0,
+                "open_territory": 0,
+                "wall": 0,
+                "castle": 0
+            },
+            "points": {
+                "territory": 0,
+                "close_territory": 0,
+                "open_territory": 0,
+                "wall": 0,
+                "castle": 0,
+                "total": 0
+            }
+        }
     }
 
     for row in range(height):
@@ -200,7 +208,7 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
                 if state[row][col] & 1 << TileMask.T1_CLOSE_TERRITORY.value:
                     res["team1"]["count"]["close_territory"] += 1
                     res["team1"]["points"]["close_territory"] += game_options.territoryCoeff
-                else: 
+                else:
                     res["team1"]["count"]["open_territory"] += 1
                     res["team1"]["points"]["open_territory"] += game_options.territoryCoeff
                 if state[row][col] & 1 << TileMask.CASTLE.value:
@@ -210,7 +218,7 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
                 if state[row][col] & 1 << TileMask.T2_CLOSE_TERRITORY.value:
                     res["team2"]["count"]["close_territory"] += 1
                     res["team2"]["points"]["close_territory"] += game_options.territoryCoeff
-                else: 
+                else:
                     res["team2"]["count"]["open_territory"] += 1
                     res["team2"]["points"]["open_territory"] += game_options.territoryCoeff
                 if state[row][col] & 1 << TileMask.CASTLE.value:
@@ -223,13 +231,58 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
                 res["team2"]["count"]["wall"] += 1
                 res["team2"]["points"]["wall"] += game_options.wallCoeff
 
-    res["team1"]["count"]["territory"] = res["team1"]["count"]["close_territory"] + res["team1"]["count"]["open_territory"]
-    res["team2"]["count"]["territory"] = res["team2"]["count"]["close_territory"] + res["team2"]["count"]["open_territory"]
+    res["team1"]["count"]["territory"] = res["team1"]["count"]["close_territory"] + \
+        res["team1"]["count"]["open_territory"]
+    res["team2"]["count"]["territory"] = res["team2"]["count"]["close_territory"] + \
+        res["team2"]["count"]["open_territory"]
 
-    res["team1"]["points"]["territory"] = res["team1"]["points"]["close_territory"] + res["team1"]["points"]["open_territory"]
-    res["team2"]["points"]["territory"] = res["team2"]["points"]["close_territory"] + res["team2"]["points"]["open_territory"]
+    res["team1"]["points"]["territory"] = res["team1"]["points"]["close_territory"] + \
+        res["team1"]["points"]["open_territory"]
+    res["team2"]["points"]["territory"] = res["team2"]["points"]["close_territory"] + \
+        res["team2"]["points"]["open_territory"]
 
-    res["team1"]["points"]["total"] = res["team1"]["points"]["territory"] + res["team1"]["points"]["wall"] + res["team1"]["points"]["castle"]
-    res["team2"]["points"]["total"] = res["team2"]["points"]["territory"] + res["team2"]["points"]["wall"] + res["team2"]["points"]["castle"]
+    res["team1"]["points"]["total"] = res["team1"]["points"]["territory"] + \
+        res["team1"]["points"]["wall"] + res["team1"]["points"]["castle"]
+    res["team2"]["points"]["total"] = res["team2"]["points"]["territory"] + \
+        res["team2"]["points"]["wall"] + res["team2"]["points"]["castle"]
 
     return res
+
+def server_action_to_cpp_action(action_type: PyActionType, direction: Direction) -> tuple[ActionType, SubActionType]:
+    if action_type == PyActionType.STAY:
+        return ActionType.STAY, SubActionType.STAY
+    elif action_type == PyActionType.MOVE:
+        if direction is Direction.UP:
+            return ActionType.MOVE, SubActionType.MOVE_UP
+        elif direction is Direction.DOWN:
+            return ActionType.MOVE, SubActionType.MOVE_DOWN
+        elif direction is Direction.LEFT:
+            return ActionType.MOVE, SubActionType.MOVE_LEFT
+        elif direction is Direction.RIGHT:
+            return ActionType.MOVE, SubActionType.MOVE_RIGHT
+        elif direction is Direction.UP_LEFT:
+            return ActionType.MOVE, SubActionType.MOVE_UP_LEFT
+        elif direction is Direction.UP_RIGHT:
+            return ActionType.MOVE, SubActionType.MOVE_UP_RIGHT
+        elif direction is Direction.DOWN_LEFT:
+            return ActionType.MOVE, SubActionType.MOVE_DOWN_LEFT
+        elif direction is Direction.DOWN_RIGHT:
+            return ActionType.MOVE, SubActionType.MOVE_DOWN_RIGHT
+    elif action_type == PyActionType.BUILD:
+        if direction is Direction.UP:
+            return ActionType.BUILD, SubActionType.BUILD_UP
+        elif direction is Direction.DOWN:
+            return ActionType.BUILD, SubActionType.BUILD_DOWN
+        elif direction is Direction.LEFT:
+            return ActionType.BUILD, SubActionType.BUILD_LEFT
+        elif direction is Direction.RIGHT:
+            return ActionType.BUILD, SubActionType.BUILD_RIGHT
+    elif action_type == PyActionType.DESTROY:
+        if direction is Direction.UP:
+            return ActionType.DESTROY, SubActionType.DESTROY_UP
+        elif direction is Direction.DOWN:
+            return ActionType.DESTROY, SubActionType.DESTROY_DOWN
+        elif direction is Direction.LEFT:
+            return ActionType.DESTROY, SubActionType.DESTROY_LEFT
+        elif direction is Direction.RIGHT:
+            return ActionType.DESTROY, SubActionType.DESTROY_RIGHT

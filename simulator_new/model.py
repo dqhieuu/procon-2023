@@ -3,6 +3,7 @@ from typing import Union, List
 
 from pydantic import BaseModel
 
+
 class Direction(str, Enum):
     UP = 'up'
     DOWN = 'down'
@@ -34,13 +35,15 @@ class Direction(str, Enum):
         else:
             return None
 
+
 class OnlineEnumAction(str, Enum):
     MOVE = "MOVE"
     BUILD = "BUILD"
     DESTROY = "DESTROY"
     STAY = "STAY"
 
-class ActionTypeServer(Enum):
+
+class PyActionType(Enum):
     STAY = "stay"
     MOVE = "move"
     BUILD = "build"
@@ -50,21 +53,18 @@ class ActionTypeServer(Enum):
     def from_online_type(online_type: OnlineEnumAction):
         from online import OnlineEnumAction
         if online_type == OnlineEnumAction.STAY:
-            return ActionTypeServer.STAY
+            return PyActionType.STAY
         elif online_type == OnlineEnumAction.MOVE:
-            return ActionTypeServer.MOVE
+            return PyActionType.MOVE
         elif online_type == OnlineEnumAction.BUILD:
-            return ActionTypeServer.BUILD
+            return PyActionType.BUILD
         elif online_type == OnlineEnumAction.DESTROY:
-            return ActionTypeServer.DESTROY
+            return PyActionType.DESTROY
         else:
             raise ValueError("invalid online type")
 
+
 class CraftsmanCommand(BaseModel):
     craftsman_pos: tuple[int, int]
-    action_type: ActionTypeServer
-    direction: Union[Direction,None] = None
-
-
-
-
+    action_type: PyActionType
+    direction: Union[Direction, None] = None

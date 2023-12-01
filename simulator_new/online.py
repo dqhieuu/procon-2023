@@ -4,7 +4,7 @@ import json
 from enum import Enum
 from typing import List, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 
 from simulator_new.old import entities as ec, game
 import simulator_new.old.entities.utils.enums as eue
@@ -60,23 +60,7 @@ class OnlineFieldResponse(BaseModel):
     time_per_turn: int
 
 
-class OnlineFieldRequestList(BaseModel):
-    __root__: List[OnlineFieldResponse]
-
-
-def online_field_decoder(obj):
-    castles = obj.get("castles")
-    if castles:
-        obj["castles"] = json.loads(castles)
-
-    ponds = obj.get("ponds")
-    if ponds:
-        obj["ponds"] = json.loads(ponds)
-
-    craftsmen = obj.get("craftsmen")
-    if craftsmen:
-        obj["craftsmen"] = json.loads(craftsmen)
-    return obj
+OnlineActionResponseList = RootModel[List[OnlineFieldResponse]]
 
 
 class OnlineEnumAction(str, Enum):
@@ -103,8 +87,7 @@ class OnlineActionResponse(BaseModel):
     actions: List[OnlineAction]
 
 
-class OnlineActionResponseList(BaseModel):
-    __root__: List[OnlineActionResponse]
+OnlineActionResponseList = RootModel[List[OnlineActionResponse]]
 
 
 class OnlineGameStatus(BaseModel):
@@ -114,7 +97,8 @@ class OnlineGameStatus(BaseModel):
 
 
 def local_command_to_online_action(command: ec.CraftsmanCommand, game_local: game.Game) -> dict[str, str]:
-    craftsman = ec.get_craftsman_at(game_local.current_state.craftsmen, command.craftsman_pos)
+    craftsman = ec.get_craftsman_at(
+        game_local.current_state.craftsmen, command.craftsman_pos)
     craftsman_id = craftsman.id
 
     if craftsman_id is None:
@@ -126,9 +110,9 @@ def local_command_to_online_action(command: ec.CraftsmanCommand, game_local: gam
     }
 
     if command.action_type is eue.ActionType.MOVE and command.direction in [eue.Direction.UP, eue.Direction.DOWN,
-                                                                        eue.Direction.LEFT, eue.Direction.RIGHT,
-                                                                        eue.Direction.UP_LEFT, eue.Direction.UP_RIGHT,
-                                                                        eue.Direction.DOWN_LEFT, eue.Direction.DOWN_RIGHT]:
+                                                                            eue.Direction.LEFT, eue.Direction.RIGHT,
+                                                                            eue.Direction.UP_LEFT, eue.Direction.UP_RIGHT,
+                                                                            eue.Direction.DOWN_LEFT, eue.Direction.DOWN_RIGHT]:
         online_command['action'] = 'MOVE'
         if command.direction == eue.Direction.UP:
             online_command['action_param'] = 'UP'
@@ -147,9 +131,9 @@ def local_command_to_online_action(command: ec.CraftsmanCommand, game_local: gam
         elif command.direction == eue.Direction.DOWN_RIGHT:
             online_command['action_param'] = 'LOWER_RIGHT'
     elif command.action_type in [eue.ActionType.BUILD, eue.ActionType.DESTROY] and command.direction in [eue.Direction.UP,
-                                                                                                 eue.Direction.DOWN,
-                                                                                                 eue.Direction.LEFT,
-                                                                                                 eue.Direction.RIGHT]:
+                                                                                                         eue.Direction.DOWN,
+                                                                                                         eue.Direction.LEFT,
+                                                                                                         eue.Direction.RIGHT]:
         if command.action_type is eue.ActionType.BUILD:
             online_command['action'] = 'BUILD'
         elif command.action_type is eue.ActionType.DESTROY:
@@ -165,3 +149,18 @@ def local_command_to_online_action(command: ec.CraftsmanCommand, game_local: gam
             online_command['action_param'] = 'RIGHT'
 
     return online_command
+
+
+def online_field_decoder(obj):
+    castles = obj.get("castles")
+    if castles:
+        obj["castles"] = json.loads(castles)
+
+    ponds = obj.get("ponds")
+    if ponds:
+        obj["ponds"] = json.loads(ponds)
+
+    craftsmen = obj.get("craftsmen")
+    if craftsmen:
+        obj["craftsmen"] = json.loads(craftsmen)
+    return obj
