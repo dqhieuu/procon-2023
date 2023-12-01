@@ -99,7 +99,7 @@ func load_map(state):
 	
 	var game_state = state.state
 	
-	var map = game_state.map.map
+	var map = game_state.map
 	width = map[0].size()
 	height = map.size()
 	
@@ -116,13 +116,6 @@ func load_map(state):
 	$GridContainer.columns = width
 	var aspect_ratio = float(width)/height
 	self.ratio = aspect_ratio
-
-	
-	var string_to_team_type = {
-		'team1': Enums.TeamType.TEAM1,
-		'team2': Enums.TeamType.TEAM2,
-		'neutral': Enums.TeamType.NEUTRAL,
-	}
 	
 	if game_state.turn_state == "team1_turn":
 		Globals.team_turn = Enums.TeamType.TEAM1
@@ -133,25 +126,50 @@ func load_map(state):
 	
 	var craftsmen = game_state.craftsmen
 	
+	# enum TileMask
+	# 	{
+	# 		POND,
+	# 		CASTLE,
+	# 		T1_WALL,
+	# 		T2_WALL,
+	# 		T1_CRAFTSMAN,
+	# 		T2_CRAFTSMAN,
+	# 		T1_CLOSE_TERRITORY,
+	# 		T2_CLOSE_TERRITORY,
+	# 		T1_OPEN_TERRITORY,
+	# 		T2_OPEN_TERRITORY,
+	# 	};
+	
 	for i in range(height):
 		for j in range(width):
-			var json_tile = map[i][j]
+			# change bitmask_tile to int
+			var bitmask_tile = int(map[i][j])
+
 			var tile = MapTile.instantiate() if is_num_of_tiles_changed else $GridContainer.get_child(i*width+j)
-			tile.wall_team = string_to_team_type[json_tile.wall]
-			tile.has_pond = json_tile.has_pond
-			tile.has_castle = json_tile.has_castle
-			tile.is_team1_closed_territory = json_tile.t1c
-			tile.is_team2_closed_territory = json_tile.t2c
-			tile.is_team1_open_territory = json_tile.t1o
-			tile.is_team2_open_territory = json_tile.t2o
+
+			tile.has_pond = bitmask_tile & (1 << 0) != 0
+			tile.has_castle = bitmask_tile & (1 << 1) != 0
+			tile.is_team1_closed_territory = bitmask_tile & (1 << 6) != 0
+			tile.is_team2_closed_territory = bitmask_tile & (1 << 7) != 0
+			tile.is_team1_open_territory = bitmask_tile & (1 << 8) != 0
+			tile.is_team2_open_territory = bitmask_tile & (1 << 9) != 0
+
+			
+			tile.wall_team = Enums.TeamType.NEUTRAL
+			if bitmask_tile & (1 << 2) != 0:
+				tile.wall_team = Enums.TeamType.TEAM1
+			elif bitmask_tile & (1 << 3) != 0:
+				tile.wall_team = Enums.TeamType.TEAM2
+
 			tile.craftsman_occupied = Enums.TeamType.NEUTRAL
+			if bitmask_tile & (1 << 4) != 0:
+				tile.craftsman_occupied = Enums.TeamType.TEAM1
+			elif bitmask_tile & (1 << 5) != 0:
+				tile.craftsman_occupied = Enums.TeamType.TEAM2
+
 			
 			if is_num_of_tiles_changed:
 				$GridContainer.add_child(tile)
-
-	for man in craftsmen:
-		var tile = $GridContainer.get_child(man.pos[1]*width+man.pos[0])
-		tile.craftsman_occupied = string_to_team_type[man.team]
 	
 	for e in get_nodes_by_group("turn_info"):
 		e.text = "Turn %s: %s" % [game_state.turn_number, _turn_state_to_string(game_state.turn_state)]
