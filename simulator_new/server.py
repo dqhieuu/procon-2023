@@ -189,8 +189,12 @@ async def ai_strategy(strategy: AIStrategyRequest):
 
 @app.get("/current_state")
 async def current_state():
-    state_jsonable = deepcopy(game.current_state)
-    state_jsonable.map.map = state_jsonable.map.map.tolist()
+    game_state = game.getCurrentState()
+
+    game_map = game_state.map
+
+    craftman_map = game_state.craftman
+
 
     res = {
         "score": game.score,

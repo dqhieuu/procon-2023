@@ -1,7 +1,7 @@
-fastapi==0.98.0
-fastapi-restful==0.4.5
-pydantic==1.10.9
+fastapi
+fastapi-restful
+pydantic
 uvicorn[standard]
 requests
 numpy
-aiohttp==3.8.4
+aiohttp
