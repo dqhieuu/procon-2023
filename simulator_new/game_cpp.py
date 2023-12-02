@@ -370,3 +370,54 @@ async def current_state():
     res['actions_to_be_applied'] = actions_to_be_applied
 
     return res
+
+buildable_cells_t1 = []
+buildable_cells_t2 = []
+
+@app.post("/addCellNeedToBuild")
+async def add_cell_need_to_build(x: int, y: int, craftsman_x: int, craftsman_y: int):
+    global buildable_cells_t1, buildable_cells_t2
+    current_state = game.getCurrentState()
+    # check if x and y is pond continue
+    if current_state.map.tiles[x][y] == 1:
+        return "Is Pond"
+
+    craftsman_id = current_state.findCraftsmanIdByPos(
+        craftsman_x, craftsman_y)
+    if craftsman_id < 0:
+        raise HTTPException(400, detail="Craftsman not found")
+    if current_state.craftsmen[craftsman_id].isT1:
+        buildable_cells_t1.append((x, y, craftsman_id))
+    else:
+        buildable_cells_t2.append((x, y, craftsman_id))
+    
+    return "OK"
+
+def get_list_action_to_build_cell(isT1Turn: bool):
+    global buildable_cells_t1, buildable_cells_t2
+    current_game = game.getCurrentState()
+    # get buildable cells by craftsman_id 
+    buildable_cells = buildable_cells_t1 if isT1Turn else buildable_cells_t2
+    # sort by craftsman_id
+    buildable_cells.sort(key=lambda x: x[2])
+    # remove duplicate
+    buildable_cells = list(set(buildable_cells))
+    # map craftsman_id with buildable_cells to array
+    craftsman_cells = {}
+    for cell in buildable_cells:
+        x, y, craftsman_id = cell
+        if craftsman_id not in craftsman_cells:
+            craftsman_cells[craftsman_id] = []
+        craftsman_cells[craftsman_id].append((x, y))
+    # get craftsman_id we have in craftsman_cells
+    craftsman_ids = list(craftsman_cells.keys())
+    list_action_to_build_cell = []
+    for craftsman_id in craftsman_ids:
+        # find pos by craftsman_id
+        x,y = current_game.craftsmen[craftsman_id].x, current_game.craftsmen[craftsman_id].y
+        time_to_build, action = current_game.findWayToBuild(x,y, isT1Turn, craftsman_cells[craftsman_id])
+        list_action_to_build_cell.append((time_to_build, CraftsmanCommand((x,y), action.actionType, action.subActionType)))
+    
+    return list_action_to_build_cell
+    
+

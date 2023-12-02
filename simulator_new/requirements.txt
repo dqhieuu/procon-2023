@@ -6,3 +6,4 @@ requests
 numpy
 aiohttp
 mypy
+typing_inspect
