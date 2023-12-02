@@ -318,11 +318,13 @@ void MapState::clearTileStatuses()
 GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _craftsmen)
     : map(_map), craftsmen(_craftsmen), turn(1), isT1Turn(true)
 {
+    initMinCostMap(_map);
 }
 
 GameState::GameState(MapState _map, std::unordered_map<CraftsmanID, Craftsman> _craftsmen, int _turn, bool _isT1Turn)
     : map(_map), craftsmen(_craftsmen), turn(_turn), isT1Turn(_isT1Turn)
 {
+    initMinCostMap(_map);
 }
 
 int GameState::findCraftsmanIdByPos(int x, int y) const
@@ -421,16 +423,6 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionBuffer)
     return nextGameState;
 }
 void GameState::initMinCostMap(MapState _map){
-    // for(int i=0; i<25; i++){
-    //     for(int j=0; j<25; j++){
-    //         for(int k=0; k<25; k++){
-    //             for(int l=0; l<25; l++){
-    //                 minCostMap[i][j][k][l][0] = 1000000000;
-    //                 minCostMap[i][j][k][l][1] = 1000000000;
-    //             }
-    //         }
-    //     }
-    // }
     minCostMap = std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>(
         25,
         std::vector<std::vector<std::vector<std::vector<int>>>>(
@@ -473,21 +465,21 @@ void GameState::bfs(int x, int y, bool isT1){
     q.push({x, y});
     minCostMap[x][y][x][y][isT1] = 0;
     while(!q.empty()){
-        auto [x, y] = q.front();
+        auto [cur_x, cur_y] = q.front();
         q.pop();
         for(int i=0; i<8; i++)
         {
-            if(x+direction[i].first < 0 || x+direction[i].first >= 25 || y+direction[i].second < 0 || y+direction[i].second >= 25)
+            if(cur_x+direction[i].first < 0 || cur_x+direction[i].first >= 25 || cur_y+direction[i].second < 0 || cur_y+direction[i].second >= 25)
                 continue;
-            if(map.getTile(x+direction[i].first, y+direction[i].second) & (1 << TileMask::POND))
+            if(map.getTile(cur_x+direction[i].first, cur_y+direction[i].second) & (1 << TileMask::POND))
                 continue;
-            int new_x = x+direction[i].first;
-            int new_y = y+direction[i].second;
-            if(i>4 && map.getTile(new_x,new_y) & (1 << TileMask::T1_WALL) && !isT1)
+            int new_x = cur_x+direction[i].first;
+            int new_y = cur_y+direction[i].second;
+            if(i>3 && map.getTile(new_x,new_y) & (1 << TileMask::T1_WALL) && !isT1)
                 continue;
-            if(i>4 && map.getTile(new_x,new_y) & (1 << TileMask::T2_WALL) && isT1)
+            if(i>3 && map.getTile(new_x,new_y) & (1 << TileMask::T2_WALL) && isT1)
                 continue;
-            int new_cost = minCostMap[x][y][x][y][isT1] + 1;
+            int new_cost = minCostMap[x][y][cur_x][cur_y][isT1] + 1;
             if(map.getTile(new_x, new_y) & (1 << TileMask::T1_WALL) && !isT1)
                 new_cost += 1;
             if(map.getTile(new_x, new_y) & (1 << TileMask::T2_WALL) && isT1)
@@ -495,13 +487,13 @@ void GameState::bfs(int x, int y, bool isT1){
             if(new_cost < minCostMap[x][y][new_x][new_y][isT1])
             {
                 minCostMap[x][y][new_x][new_y][isT1] = new_cost;
-                prev_bfs[x][y][new_x][new_y][isT1] = {x, y};
+                prev_bfs[x][y][new_x][new_y][isT1] = {cur_x, cur_y};
                 q.push({new_x, new_y});
             }
         }
     }
 }
-pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vector<pair<int,int>> buildAbleCells){
+std::pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vector<std::pair<int,int>> buildAbleCells){
         std::vector<std::vector<std::vector<int>>> cost(
         4,
         std::vector<std::vector<int>>(
@@ -523,12 +515,12 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
     {
         for(int k=0;k<4;k++)
         {
-            if (x + direction[k].first < 0 || x + direction[k].first >= 25 || y + direction[k].second < 0 || y + direction[k].second >= 25)
+            if (buildAbleCells[i].first + direction[k].first < 0 || buildAbleCells[i].first + direction[k].first >= 25 || buildAbleCells[i].second + direction[k].second < 0 || buildAbleCells[i].second + direction[k].second >= 25)
                 continue;
-            if (map.getTile(x + direction[k].first, y + direction[k].second) & (1 << TileMask::POND))
+            if (map.getTile(buildAbleCells[i].first + direction[k].first, buildAbleCells[i].second + direction[k].second) & (1 << TileMask::POND))
                 continue;
-            int new_x = x + direction[k].first;
-            int new_y = y + direction[k].second;
+            int new_x = buildAbleCells[i].first + direction[k].first;
+            int new_y = buildAbleCells[i].second + direction[k].second;
             cost[k][i][1<<i] = minCostMap[x][y][new_x][new_y][isT1];
         }
     }
@@ -538,16 +530,16 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
         {
             if(i & (1<<j))
             {
-                int x = buildAbleCells[j].first;
-                int y = buildAbleCells[j].second;
+                int real_x = buildAbleCells[j].first;
+                int real_y = buildAbleCells[j].second;
                 for(int k=0; k<4; k++)
                 {
-                    if (x + direction[k].first < 0 || x + direction[k].first >= 25 || y + direction[k].second < 0 || y + direction[k].second >= 25)
+                    if (real_x + direction[k].first < 0 || real_x + direction[k].first >= 25 || real_y + direction[k].second < 0 || real_y + direction[k].second >= 25)
                         continue;
-                    if (map.getTile(x + direction[k].first, y + direction[k].second) & (1 << TileMask::POND))
+                    if (map.getTile(real_x + direction[k].first, real_y + direction[k].second) & (1 << TileMask::POND))
                         continue;
-                    int new_x = x + direction[k].first;
-                    int new_y = y + direction[k].second;
+                    int new_x = real_x + direction[k].first;
+                    int new_y = real_y + direction[k].second;
                     for(int z=0; z<size; z++)
                     {
                         // if bit z is toggle continue
@@ -578,7 +570,7 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
     }
     int craftman_id = findCraftsmanIdByPos(x, y);
     int min_cost = 200;
-    pair<int,int> direction_and_cell = {-1, -1};
+    std::pair<int,int> direction_and_cell = {-1, -1};
     for(int i=0;i<size;i++)
     {
         for(int j=0;j<4;j++)
@@ -596,25 +588,25 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
     if(buildAbleCells[direction_and_cell.second].first + direction[direction_and_cell.first].first == x && buildAbleCells[direction_and_cell.second].second + direction[direction_and_cell.first].second == y)
         {
             if (direction_and_cell.first == 0)
-                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_LEFT)};
-            else if (direction_and_cell.first == 1)
-                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_UP)};
-            else if (direction_and_cell.first == 2)
                 return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_RIGHT)};
-            else if (direction_and_cell.first == 3)
+            else if (direction_and_cell.first == 1)
                 return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_DOWN)};
+            else if (direction_and_cell.first == 2)
+                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_LEFT)};
+            else if (direction_and_cell.first == 3)
+                return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_UP)};
         }
 
     int cur_mask = (1<<size)-1;
-    while(prev[direction_and_cell.first][direction_and_cell.second][cur_mask] != make_pair(-1, -1))
+    while(prev[direction_and_cell.first][direction_and_cell.second][cur_mask] != std::pair{-1, -1})
     {
         auto [new_direction, new_cell] = prev[direction_and_cell.first][direction_and_cell.second][cur_mask];
         cur_mask ^= (1<<direction_and_cell.second);
         direction_and_cell = {new_direction, new_cell};    
     }
-    pair<int,int> cell_need_to_build = buildAbleCells[direction_and_cell.second];
-    pair<int,int> cell_need_to_move_in = std::make_pair(cell_need_to_build.first + direction[direction_and_cell.first].first, cell_need_to_build.second + direction[direction_and_cell.first].second);
-    while(prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1] != make_pair(x, y))
+    std::pair<int,int> cell_need_to_build = buildAbleCells[direction_and_cell.second];
+    std::pair<int,int> cell_need_to_move_in = {cell_need_to_build.first + direction[direction_and_cell.first].first, cell_need_to_build.second + direction[direction_and_cell.first].second };
+    while(prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1] != std::pair{x, y})
     {
         auto [new_x, new_y] = prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1];
         cell_need_to_move_in = {new_x, new_y};
@@ -627,7 +619,14 @@ pair<int, GameAction> GameState::findWayToBuild(int x,int y, bool isT1, std::vec
         return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP)};
     else if (cell_need_to_move_in.second == y + 1)
         return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN)};
-
+    else if (cell_need_to_move_in.first == x - 1 && cell_need_to_move_in.second == y - 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP_LEFT)};
+    else if (cell_need_to_move_in.first == x + 1 && cell_need_to_move_in.second == y - 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP_RIGHT)};
+    else if (cell_need_to_move_in.first == x - 1 && cell_need_to_move_in.second == y + 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN_LEFT)};
+    else 
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN_RIGHT)};
 }
 
 Game::Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen)
@@ -726,70 +725,75 @@ int main(void)
     }
 
     Game game = Game(gameOptions, map, craftsmen);
-    for (int i = 0; i < 10; i++)
-    {
-        for (int j = 0; j < 2; j++)
-        {
-            if (i % 2 == 0)
-                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_RIGHT));
-            else
-                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_RIGHT));
-        }
-        game.nextTurn();
-    }
+    GameState current_state = game.getCurrentState();
+    pair<int, GameAction> res = current_state.findWayToBuild(0, 0, true, {{1, 0}, {0, 1}});
+    cout<<res.first;
 
-    for (int i = 0; i < 10; i++)
-    {
-        for (int j = 0; j < 2; j++)
-        {
-            if (i % 2 == 0)
-                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_DOWN));
-            else
-                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_DOWN));
-        }
-        game.nextTurn();
-    }
+    // Game game = Game(gameOptions, map, craftsmen);
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     for (int j = 0; j < 2; j++)
+    //     {
+    //         if (i % 2 == 0)
+    //             game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_RIGHT));
+    //         else
+    //             game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_RIGHT));
+    //     }
+    //     game.nextTurn();
+    // }
 
-    for (int i = 0; i < 10; i++)
-    {
-        for (int j = 0; j < 2; j++)
-        {
-            if (i % 2 == 0)
-                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_LEFT));
-            else
-                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_LEFT));
-        }
-        game.nextTurn();
-    }
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     for (int j = 0; j < 2; j++)
+    //     {
+    //         if (i % 2 == 0)
+    //             game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_DOWN));
+    //         else
+    //             game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_DOWN));
+    //     }
+    //     game.nextTurn();
+    // }
 
-    for (int i = 0; i < 10; i++)
-    {
-        for (int j = 0; j < 2; j++)
-        {
-            if (i % 2 == 0)
-                game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_UP));
-            else
-                game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_UP));
-        }
-        game.nextTurn();
-    }
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     for (int j = 0; j < 2; j++)
+    //     {
+    //         if (i % 2 == 0)
+    //             game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_LEFT));
+    //         else
+    //             game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_LEFT));
+    //     }
+    //     game.nextTurn();
+    // }
 
-    game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
-    game.nextTurn();
-    game.addAction(GameAction(1, ActionType::MOVE, SubActionType::MOVE_RIGHT));
-    game.nextTurn();
-    game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
-    game.nextTurn();
-    game.addAction(GameAction(1, ActionType::MOVE, SubActionType::MOVE_DOWN));
-    game.nextTurn();
-    game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
-    game.nextTurn();
-    game.addAction(GameAction(1, ActionType::BUILD, SubActionType::BUILD_RIGHT));
-    game.nextTurn();
-    game.addAction(GameAction(1, ActionType::BUILD, SubActionType::BUILD_LEFT));
-    game.nextTurn();
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     for (int j = 0; j < 2; j++)
+    //     {
+    //         if (i % 2 == 0)
+    //             game.addAction(GameAction(j, ActionType::BUILD, SubActionType::BUILD_UP));
+    //         else
+    //             game.addAction(GameAction(j, ActionType::MOVE, SubActionType::MOVE_UP));
+    //     }
+    //     game.nextTurn();
+    // }
 
-    game.getCurrentState().map.printMap();
+    // game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
+    // game.nextTurn();
+    // game.addAction(GameAction(1, ActionType::MOVE, SubActionType::MOVE_RIGHT));
+    // game.nextTurn();
+    // game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
+    // game.nextTurn();
+    // game.addAction(GameAction(1, ActionType::MOVE, SubActionType::MOVE_DOWN));
+    // game.nextTurn();
+    // game.addAction(GameAction(1, ActionType::DESTROY, SubActionType::DESTROY_LEFT));
+    // game.nextTurn();
+    // game.addAction(GameAction(1, ActionType::BUILD, SubActionType::BUILD_RIGHT));
+    // game.nextTurn();
+    // game.addAction(GameAction(1, ActionType::BUILD, SubActionType::BUILD_LEFT));
+    // game.nextTurn();
+
+    // game.getCurrentState().map.printMap();
 
     return 0;
 }
