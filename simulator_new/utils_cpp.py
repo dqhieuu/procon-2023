@@ -169,15 +169,15 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
         "team1": {
             "count": {
                 "territory": 0,
-                "close_territory": 0,
-                "open_territory": 0,
+                "close": 0,
+                "open": 0,
                 "wall": 0,
                 "castle": 0
             },
             "points": {
                 "territory": 0,
-                "close_territory": 0,
-                "open_territory": 0,
+                "close": 0,
+                "open": 0,
                 "wall": 0,
                 "castle": 0,
                 "total": 0
@@ -186,15 +186,15 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
         "team2": {
             "count": {
                 "territory": 0,
-                "close_territory": 0,
-                "open_territory": 0,
+                "close": 0,
+                "open": 0,
                 "wall": 0,
                 "castle": 0
             },
             "points": {
                 "territory": 0,
-                "close_territory": 0,
-                "open_territory": 0,
+                "close": 0,
+                "open": 0,
                 "wall": 0,
                 "castle": 0,
                 "total": 0
@@ -206,21 +206,21 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
         for col in range(width):
             if state[row][col] & 1 << TileMask.T1_CLOSE_TERRITORY.value or state[row][col] & 1 << TileMask.T1_OPEN_TERRITORY.value:
                 if state[row][col] & 1 << TileMask.T1_CLOSE_TERRITORY.value:
-                    res["team1"]["count"]["close_territory"] += 1
-                    res["team1"]["points"]["close_territory"] += game_options.territoryCoeff
+                    res["team1"]["count"]["close"] += 1
+                    res["team1"]["points"]["close"] += game_options.territoryCoeff
                 else:
-                    res["team1"]["count"]["open_territory"] += 1
-                    res["team1"]["points"]["open_territory"] += game_options.territoryCoeff
+                    res["team1"]["count"]["open"] += 1
+                    res["team1"]["points"]["open"] += game_options.territoryCoeff
                 if state[row][col] & 1 << TileMask.CASTLE.value:
                     res["team1"]["count"]["castle"] += 1
                     res["team1"]["points"]["castle"] += game_options.castleCoeff
             elif state[row][col] & 1 << TileMask.T2_CLOSE_TERRITORY.value or state[row][col] & 1 << TileMask.T2_OPEN_TERRITORY.value:
                 if state[row][col] & 1 << TileMask.T2_CLOSE_TERRITORY.value:
-                    res["team2"]["count"]["close_territory"] += 1
-                    res["team2"]["points"]["close_territory"] += game_options.territoryCoeff
+                    res["team2"]["count"]["close"] += 1
+                    res["team2"]["points"]["close"] += game_options.territoryCoeff
                 else:
-                    res["team2"]["count"]["open_territory"] += 1
-                    res["team2"]["points"]["open_territory"] += game_options.territoryCoeff
+                    res["team2"]["count"]["open"] += 1
+                    res["team2"]["points"]["open"] += game_options.territoryCoeff
                 if state[row][col] & 1 << TileMask.CASTLE.value:
                     res["team2"]["count"]["castle"] += 1
                     res["team2"]["points"]["castle"] += game_options.castleCoeff
@@ -231,15 +231,15 @@ def calculate_score(state: list[list[int]], game_options: GameOptions):
                 res["team2"]["count"]["wall"] += 1
                 res["team2"]["points"]["wall"] += game_options.wallCoeff
 
-    res["team1"]["count"]["territory"] = res["team1"]["count"]["close_territory"] + \
-        res["team1"]["count"]["open_territory"]
-    res["team2"]["count"]["territory"] = res["team2"]["count"]["close_territory"] + \
-        res["team2"]["count"]["open_territory"]
+    res["team1"]["count"]["territory"] = res["team1"]["count"]["close"] + \
+        res["team1"]["count"]["open"]
+    res["team2"]["count"]["territory"] = res["team2"]["count"]["close"] + \
+        res["team2"]["count"]["open"]
 
-    res["team1"]["points"]["territory"] = res["team1"]["points"]["close_territory"] + \
-        res["team1"]["points"]["open_territory"]
-    res["team2"]["points"]["territory"] = res["team2"]["points"]["close_territory"] + \
-        res["team2"]["points"]["open_territory"]
+    res["team1"]["points"]["territory"] = res["team1"]["points"]["close"] + \
+        res["team1"]["points"]["open"]
+    res["team2"]["points"]["territory"] = res["team2"]["points"]["close"] + \
+        res["team2"]["points"]["open"]
 
     res["team1"]["points"]["total"] = res["team1"]["points"]["territory"] + \
         res["team1"]["points"]["wall"] + res["team1"]["points"]["castle"]

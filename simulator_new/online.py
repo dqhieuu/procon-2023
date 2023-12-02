@@ -7,7 +7,7 @@ from typing import Union, List
 from pydantic import BaseModel, RootModel
 from bin.game_interfaces_binding import Craftsman, Game, GameAction, GameOptions, TileMask
 
-from model import CraftsmanCommand, Direction, PyActionType
+from model import CraftsmanCommand, Direction, OnlineEnumAction, PyActionType
 from utils_cpp import online_action_to_cpp_action
 
 
@@ -62,13 +62,6 @@ class OnlineFieldResponse(BaseModel):
 
 
 OnlineFieldRequestList = RootModel[List[OnlineFieldResponse]]
-
-
-class OnlineEnumAction(str, Enum):
-    MOVE = "MOVE"
-    BUILD = "BUILD"
-    DESTROY = "DESTROY"
-    STAY = "STAY"
 
 
 class OnlineAction(BaseModel):

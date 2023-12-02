@@ -1,3 +1,5 @@
+from bin.game_interfaces_binding import ActionType, SubActionType
+
 def load_map(file_path):
     score_coefficients = {
         "territory": 0,

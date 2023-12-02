@@ -4,6 +4,13 @@ from typing import Union, List
 from pydantic import BaseModel
 
 
+class OnlineEnumAction(str, Enum):
+    MOVE = "MOVE"
+    BUILD = "BUILD"
+    DESTROY = "DESTROY"
+    STAY = "STAY"
+
+
 class Direction(str, Enum):
     UP = 'up'
     DOWN = 'down'
@@ -34,13 +41,6 @@ class Direction(str, Enum):
             return Direction.RIGHT
         else:
             return None
-
-
-class OnlineEnumAction(str, Enum):
-    MOVE = "MOVE"
-    BUILD = "BUILD"
-    DESTROY = "DESTROY"
-    STAY = "STAY"
 
 
 class PyActionType(Enum):
