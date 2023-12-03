@@ -16,6 +16,10 @@
 
 typedef int32_t CraftsmanID;
 
+
+extern std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> minCostMap;
+extern std::vector<std::vector<std::vector<std::vector<std::vector<std::pair<int,int>>>>>> prev_bfs;
+
 enum class ActionType
 {
     MOVE,
@@ -149,8 +153,6 @@ struct GameState
     MapState map;
     std::vector<GameAction> lastTurnActions;
     std::unordered_map<CraftsmanID, Craftsman> craftsmen;
-    std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> minCostMap;
-    std::vector<std::vector<std::vector<std::vector<std::vector<std::pair<int,int>>>>>> prev_bfs;
 
     int turn;
     bool isT1Turn;

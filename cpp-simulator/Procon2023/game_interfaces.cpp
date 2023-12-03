@@ -1,4 +1,8 @@
 #include "game_interfaces.h"
+#include <stdio.h>
+
+std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>> minCostMap;
+std::vector<std::vector<std::vector<std::vector<std::vector<std::pair<int,int>>>>>> prev_bfs;
 
 inline int32_t subActionToX(SubActionType subActionType)
 {
@@ -423,7 +427,7 @@ GameState GameState::applyActions(const std::vector<GameAction> &actionBuffer)
     return nextGameState;
 }
 void GameState::initMinCostMap(MapState _map)
-{
+{    
     minCostMap = std::vector<std::vector<std::vector<std::vector<std::vector<int>>>>>(
         25,
         std::vector<std::vector<std::vector<std::vector<int>>>>(
@@ -503,6 +507,8 @@ std::pair<int, GameAction> GameState::findWayToBuild(int x, int y, bool isT1, st
     // create array Direction 0: left, 1: up, 2: right, 3: down
     std::vector<std::pair<int, int>> direction = {{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
     int size = buildAbleCells.size();
+
+    std::cout<<"Test 1"<<'\n';
     for (int i = 0; i < size; i++)
     {
         for (int k = 0; k < 4; k++)
@@ -516,6 +522,8 @@ std::pair<int, GameAction> GameState::findWayToBuild(int x, int y, bool isT1, st
             cost[k][i][1 << i] = minCostMap[x][y][new_x][new_y][isT1];
         }
     }
+        std::cout<<"Test 2"<<'\n';
+
     for (int i = 1; i < (1 << size); i++)
     {
         for (int j = 0; j < size; j++)
@@ -561,6 +569,8 @@ std::pair<int, GameAction> GameState::findWayToBuild(int x, int y, bool isT1, st
                 continue;
         }
     }
+        std::cout<<"Test 2"<<'\n';
+
     int craftman_id = findCraftsmanIdByPos(x, y);
     int min_cost = 200;
     std::pair<int, int> direction_and_cell = {-1, -1};
@@ -577,6 +587,10 @@ std::pair<int, GameAction> GameState::findWayToBuild(int x, int y, bool isT1, st
     }
     if (direction_and_cell.first == -1)
         return {-1, GameAction()};
+        std::cout<<"Test 3"<<'\n';
+    std::cout << direction_and_cell.first << ' ' << direction_and_cell.second << '\n';
+    std::cout << buildAbleCells[direction_and_cell.second].first << ' ' << buildAbleCells[direction_and_cell.second].second << '\n';
+    std::cout << x << ' ' << y << '\n';
     // check if x and y next to buildable cell return build
     if (buildAbleCells[direction_and_cell.second].first + direction[direction_and_cell.first].first == x && buildAbleCells[direction_and_cell.second].second + direction[direction_and_cell.first].second == y)
     {
@@ -597,33 +611,73 @@ std::pair<int, GameAction> GameState::findWayToBuild(int x, int y, bool isT1, st
         cur_mask ^= (1 << direction_and_cell.second);
         direction_and_cell = {new_direction, new_cell};
     }
+        if (buildAbleCells[direction_and_cell.second].first + direction[direction_and_cell.first].first == x && buildAbleCells[direction_and_cell.second].second + direction[direction_and_cell.first].second == y)
+    {
+        if (direction_and_cell.first == 0)
+            return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_RIGHT)};
+        else if (direction_and_cell.first == 1)
+            return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_DOWN)};
+        else if (direction_and_cell.first == 2)
+            return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_LEFT)};
+        else if (direction_and_cell.first == 3)
+            return {min_cost, GameAction(craftman_id, ActionType::BUILD, SubActionType::BUILD_UP)};
+    }
+        std::cout<<"Test 4"<<'\n';
+
     std::pair<int, int> cell_need_to_build = buildAbleCells[direction_and_cell.second];
+    std::cout<<cell_need_to_build.first<<' '<<cell_need_to_build.second<<'\n';
     std::pair<int, int> cell_need_to_move_in = {cell_need_to_build.first + direction[direction_and_cell.first].first, cell_need_to_build.second + direction[direction_and_cell.first].second};
+    std::cout<<cell_need_to_move_in.first<<' '<<cell_need_to_move_in.second<<   '\n';
+    std::cout<<x<<" "<<y<<'\n';
+    std::cout<<prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1].first<<' '<<prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1].second<<'\n';
+    std::cout<<"====================\n";
+    for(int i=0;i<25;i++)
+    {
+        for(int j=0;j<25;j++)
+        {
+            std::cout<<minCostMap[x][y][i][j][isT1]<<' ';
+        }
+        std::cout<<'\n';
+    }
+    std::cout<<"====================\n";
+    std::cout<<"====================\n";
+    for(int i=0;i<25;i++)
+    {
+        for(int j=0;j<25;j++)
+        {
+            printf("(%2d,%2d) ",prev_bfs[x][y][i][j][isT1].first,prev_bfs[x][y][i][j][isT1].second);
+        }
+        std::cout<<'\n';
+    }
+    std::cout<<"====================\n";
     while (prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1] != std::pair{x, y})
     {
         auto [new_x, new_y] = prev_bfs[x][y][cell_need_to_move_in.first][cell_need_to_move_in.second][isT1];
         cell_need_to_move_in = {new_x, new_y};
     }
-    if (cell_need_to_move_in.first == x - 1)
-        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_LEFT)};
-    else if (cell_need_to_move_in.first == x + 1)
-        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_RIGHT)};
-    else if (cell_need_to_move_in.second == y - 1)
-        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP)};
-    else if (cell_need_to_move_in.second == y + 1)
-        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN)};
-    else if (cell_need_to_move_in.first == x - 1 && cell_need_to_move_in.second == y - 1)
+    std::cout<<"Test 5"<<'\n';
+
+    if (cell_need_to_move_in.first == x - 1 && cell_need_to_move_in.second == y - 1)
         return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP_LEFT)};
     else if (cell_need_to_move_in.first == x + 1 && cell_need_to_move_in.second == y - 1)
         return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP_RIGHT)};
     else if (cell_need_to_move_in.first == x - 1 && cell_need_to_move_in.second == y + 1)
         return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN_LEFT)};
-    else
+    else if (cell_need_to_move_in.first == x + 1 && cell_need_to_move_in.second == y + 1)
         return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN_RIGHT)};
+    else if (cell_need_to_move_in.first == x - 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_LEFT)};
+    else if (cell_need_to_move_in.first == x + 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_RIGHT)};
+    else if (cell_need_to_move_in.second == y - 1)
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_UP)};
+    else 
+        return {min_cost, GameAction(craftman_id, ActionType::MOVE, SubActionType::MOVE_DOWN)};
 }
 
 Game::Game(const GameOptions game_options, std::vector<std::vector<uint32_t>> map, std::vector<Craftsman> craftsmen)
 {
+
     // load game options
     this->gameOptions = game_options;
 

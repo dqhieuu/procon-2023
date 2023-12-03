@@ -4,7 +4,7 @@ import re
 from typing import Any, Union
 from pydantic import BaseModel
 import requests
-from bin.game_interfaces_binding import Game, GameAction
+from bin.game_interfaces_binding import Game, GameAction, TileMask
 from online import OnlineActionResponseList, OnlineGameStatus, OnlineFieldRequestList, load_online_actions, load_online_game, local_command_to_online_action, online_field_decoder
 from utils_cpp import cpp_action_to_local_action, load_offline_game, load_offline_actions, calculate_score, local_action_to_cpp_action, get_direction_vector
 from fastapi import FastAPI, HTTPException
@@ -335,15 +335,29 @@ async def end_turn():
 
     game_state = game.getCurrentState()
 
+
     for (id, list_of_pos) in builder_pos_by_craftsman.items():
         if not list_of_pos:
             continue
-
+        
         craftsman_local_id = craftsman_strid_to_intid_map[id]
         craftsman = game_state.craftsmen[craftsman_local_id]
 
+        list_of_valid_pos = []
+        for x,y in list_of_pos:
+            if game_state.map.tiles[y][x] & ((1 << TileMask.POND.value)):
+                continue
+            if craftsman.isT1:
+                if game_state.map.tiles[y][x] & ((1 << TileMask.T1_WALL.value)):
+                    continue
+            else:
+                if game_state.map.tiles[y][x] & ((1 << TileMask.T2_WALL.value)):
+                    continue
+            list_of_valid_pos.append((x,y))
+
+
         cost, action = game.getCurrentState().findWayToBuild(
-            craftsman.x, craftsman.y, craftsman.isT1, list_of_pos)
+            craftsman.x, craftsman.y, craftsman.isT1, list_of_valid_pos)
 
         action_type, direction = cpp_action_to_local_action(
             action.actionType, action.subActionType)
