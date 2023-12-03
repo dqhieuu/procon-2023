@@ -26,6 +26,9 @@ func _on_Timer_timeout():
 	# var agent_list_node = get_tree().get_first_node_in_group('agent_list')
 	# agent_list_node.update_agent_list(current_state.agent_strategy_list)
 	
+	var builder_list_node = get_tree().get_first_node_in_group('builder_agent_list')
+	builder_list_node.update_agent_list(current_state.state.craftsmen)
+	
 	if map_node.turn_number != current_state.state.turn_number:
 		map_node.load_map(current_state)
 	else:
@@ -36,4 +39,6 @@ func _on_Timer_timeout():
 		map_node.update_time_left(time_left)
 		
 		map_node.update_actions_to_be_applied(current_state.actions_to_be_applied)
+	
+	map_node.update_builder_walls_to_be_applied(current_state.builder_pos_by_craftsman)
 		

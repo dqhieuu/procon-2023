@@ -163,7 +163,7 @@ def online_field_decoder(obj):
     return obj
 
 
-def load_online_game(field: OnlineFieldResponse) -> tuple[GameOptions, list[list[int]], list[Craftsman], dict[str, int]]:
+def load_online_game(field: OnlineFieldResponse) -> tuple[GameOptions, list[list[int]], list[Craftsman], dict[str, int], dict[int, str]]:
     go = GameOptions()
     go.mapWidth = field.field.width
     go.mapHeight = field.field.height
@@ -187,8 +187,10 @@ def load_online_game(field: OnlineFieldResponse) -> tuple[GameOptions, list[list
         craftsmen.append(Craftsman(
             counter, craftsman.x, craftsman.y, craftsman.side == OnlineEnumSide.A))
         counter += 1
+    
+    crafstman_intid_to_strid = {v: k for k, v in craftsman_strid_to_intid.items()}
 
-    return go, game_map, craftsmen, craftsman_strid_to_intid
+    return go, game_map, craftsmen, craftsman_strid_to_intid, crafstman_intid_to_strid
 
 
 def load_online_actions(actions_list: List[OnlineActionResponse], craftsman_strid_to_intid_map: dict[str, int]) -> dict[int, list[GameAction]]:

@@ -1,0 +1,78 @@
+[gd_scene load_steps=5 format=3 uid="uid://b2u5hpplya47l"]
+
+[ext_resource type="Script" path="res://builder_agent_info.gd" id="1_i05xp"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l4rbf"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.25098, 0.25098, 0.25098, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grxcj"]
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+expand_margin_left = 20.0
+expand_margin_top = 20.0
+expand_margin_right = 20.0
+expand_margin_bottom = 20.0
+
+[sub_resource type="Theme" id="Theme_unavp"]
+VBoxContainer/styles/rounded = SubResource("StyleBoxFlat_grxcj")
+
+[node name="Panel" type="PanelContainer" groups=["builder_agent_info"]]
+offset_right = 418.0
+offset_bottom = 99.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_l4rbf")
+script = ExtResource("1_i05xp")
+
+[node name="AgentInfo" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme = SubResource("Theme_unavp")
+
+[node name="AgentId" type="Label" parent="AgentInfo"]
+layout_mode = 2
+mouse_filter = 1
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Agent: null"
+
+[node name="Strategy" type="Label" parent="AgentInfo"]
+visible = false
+layout_mode = 2
+mouse_filter = 1
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Stategy: null"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="AgentInfo"]
+layout_mode = 2
+
+[node name="ActivateBuilderMode" type="Button" parent="AgentInfo/HBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+text = "Activate build mode"
+
+[node name="ClearBuildMoves" type="Button" parent="AgentInfo/HBoxContainer"]
+layout_mode = 2
+mouse_filter = 1
+text = "Clear moves"
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="AgentInfo/HBoxContainer/ActivateBuilderMode" to="." method="_on_activate_builder_mode_pressed"]
+[connection signal="pressed" from="AgentInfo/HBoxContainer/ClearBuildMoves" to="." method="_on_clear_build_moves_pressed"]

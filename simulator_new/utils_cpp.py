@@ -94,7 +94,7 @@ def idx_to_action_enum(idx):
     return idx_to_action_enum_list[idx]
 
 
-def load_offline_game(path: str) -> tuple[GameOptions, list[list[int]], list[Craftsman], dict[str, int]]:
+def load_offline_game(path: str) -> tuple[GameOptions, list[list[int]], list[Craftsman], dict[str, int], dict[int, str]]:
     map_data = load_map(path)
     map_formatted = [[map_tile_to_bitmask(x) for x in row]
                      for row in map_data['game_map']]
@@ -113,6 +113,8 @@ def load_offline_game(path: str) -> tuple[GameOptions, list[list[int]], list[Cra
         craftsman_strid_to_intid[c['id']] = counter
         counter += 1
 
+    craftsman_intid_to_strid = {v: k for k, v in craftsman_strid_to_intid.items()}
+
     go = GameOptions()
     go.mapWidth = map_data['game_settings']['map_width']
     go.mapHeight = map_data['game_settings']['map_height']
@@ -121,7 +123,7 @@ def load_offline_game(path: str) -> tuple[GameOptions, list[list[int]], list[Cra
     go.castleCoeff = map_data['score_coefficients']['castle']
     go.territoryCoeff = map_data['score_coefficients']['territory']
 
-    return go, map_formatted, craftsmen_formatted, craftsman_strid_to_intid
+    return go, map_formatted, craftsmen_formatted, craftsman_strid_to_intid, craftsman_intid_to_strid
 
 
 def load_offline_actions(path: str, craftsman_strid_to_intid_map: dict) -> list[list[GameAction]]:

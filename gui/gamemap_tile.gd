@@ -12,6 +12,9 @@ extends AspectRatioContainer
 @export var has_to_be_applied_destroy = false
 @export var has_to_be_applied_move = false
 
+var in_builder_strategy_by_craftsman_ids = {}
+var occupied_craftsman_id = null
+
 func _ready():
 	update_visible_sprite()
 
@@ -65,6 +68,14 @@ func update_visible_sprite():
 		
 	$Pivot.visible = has_pivot
 	$Target.visible = has_target
+	
+	$BuilderWall.visible = len(in_builder_strategy_by_craftsman_ids) > 0
+	
+	var should_builder_wall_be_opaque =  \
+		in_builder_strategy_by_craftsman_ids.has(Globals.selected_buider_craftsman_id) or \
+			(Globals.selected_buider_craftsman_id == null and in_builder_strategy_by_craftsman_ids.has(Globals.hovered_craftsman_id))
+	
+	$BuilderWall.self_modulate = Color(1,1,1, 1) if should_builder_wall_be_opaque else Color(1,1,1, 0.3)
 	
 	
 
@@ -120,8 +131,12 @@ func _drop_data(pos, data):
 	
 
 func _on_gui_input(event):
+	var tile_idx = get_index()
+	var tile_pos = Globals.get_position_from_index(tile_idx)
 	if event.is_action_pressed("click"):
-		var tile_idx = get_index()
+		if Globals.is_builder_picking():
+			HTTP.update_builder_pos({"action": "build", "id": Globals.selected_buider_craftsman_id, "pos": tile_pos})
+			return
 		
 		if Globals.is_picking():
 			Globals.update_pos_inputs_by_picking(Globals.get_position_from_index(tile_idx))
@@ -135,4 +150,10 @@ func _on_gui_input(event):
 			Globals.selected_tile = null
 		else:
 			Globals.selected_tile = tile_idx
+	
+	if event.is_action_pressed("right_click"):
+		if Globals.is_builder_picking():
+			HTTP.update_builder_pos({"action": "unbuild", "id": Globals.selected_buider_craftsman_id, "pos": tile_pos})
+		elif Globals.hovered_craftsman_id != null:
+			HTTP.update_builder_pos({"action": "unbuild", "id": Globals.hovered_craftsman_id})
 			

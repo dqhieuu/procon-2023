@@ -1,6 +1,7 @@
 extends Node
 
 var selected_tile = null
+
 var hovered_tile = null
 var hovered_strategy_craftsman_tile_index = null
 
@@ -8,8 +9,15 @@ var pos_inputs_to_be_updated = null
 
 var team_turn: Enums.TeamType
 
+var selected_buider_craftsman_id = null
+
+var hovered_craftsman_id = null
+
 func is_picking():
 	return pos_inputs_to_be_updated != null && len(pos_inputs_to_be_updated) == 2
+
+func is_builder_picking():
+	return selected_buider_craftsman_id != null
 
 func update_pos_inputs_by_picking(pos):
 	pos_inputs_to_be_updated[0].value = pos[0]
@@ -29,7 +37,7 @@ func get_position_from_index(idx: int):
 
 func get_index_from_position(position):
 	var map = get_tree().get_first_node_in_group("map")
-	return position[0]+position[1]*map.width
+	return int(position[0])+int(position[1])*map.width
 
 func flash_green():
 	var animation = get_tree().get_first_node_in_group("animation")

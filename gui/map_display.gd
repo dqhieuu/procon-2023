@@ -79,6 +79,20 @@ func update_actions_to_be_applied(action_list):
 		tile.has_to_be_applied_wall = has_wall_dict.has(i)
 		tile.has_to_be_applied_destroy = has_destroy_dict.has(i)
 
+func update_builder_walls_to_be_applied(walls_by_builder_list):
+	for i in range(height):
+		for j in range(width):
+			var tile = $GridContainer.get_child(i*width+j)
+			tile.in_builder_strategy_by_craftsman_ids.clear()
+	
+	for builder_id in walls_by_builder_list:
+		var builder_pos_list = walls_by_builder_list[builder_id]
+		for pos in builder_pos_list:
+			var pos_idx = Globals.get_index_from_position(pos)
+			var tile = $GridContainer.get_child(pos_idx)
+			tile.in_builder_strategy_by_craftsman_ids[builder_id] = true
+
+		
 func update_time_left(time):
 	for e in get_nodes_by_group("time_left"):
 		if time != null:
@@ -124,22 +138,6 @@ func load_map(json):
 	
 	var MapTile = preload("res://gamemap_tile.tscn")
 	
-	var craftsmen = game_state.craftsmen
-	
-	# enum TileMask
-	# 	{
-	# 		POND,
-	# 		CASTLE,
-	# 		T1_WALL,
-	# 		T2_WALL,
-	# 		T1_CRAFTSMAN,
-	# 		T2_CRAFTSMAN,
-	# 		T1_CLOSE_TERRITORY,
-	# 		T2_CLOSE_TERRITORY,
-	# 		T1_OPEN_TERRITORY,
-	# 		T2_OPEN_TERRITORY,
-	# 	};
-	
 	for i in range(height):
 		for j in range(width):
 			# change bitmask_tile to int
@@ -166,10 +164,18 @@ func load_map(json):
 				tile.craftsman_occupied = Enums.TeamType.TEAM1
 			elif bitmask_tile & (1 << 5) != 0:
 				tile.craftsman_occupied = Enums.TeamType.TEAM2
-
+				
+			tile.occupied_craftsman_id = null
 			
 			if is_num_of_tiles_changed:
 				$GridContainer.add_child(tile)
+	
+	
+	for craftsman in game_state.craftsmen:
+		var tile = $GridContainer.get_child(Globals.get_index_from_position(craftsman.pos))
+		tile.occupied_craftsman_id = craftsman.id
+	
+	
 	
 	for e in get_nodes_by_group("turn_info"):
 		e.text = "Turn %s: %s" % [game_state.turn_number, _turn_state_to_string(game_state.turn_state)]

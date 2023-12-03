@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 import json
 import re
 from typing import Any, Union
+from pydantic import BaseModel
 import requests
 from bin.game_interfaces_binding import Game, GameAction
 from online import OnlineActionResponseList, OnlineGameStatus, OnlineFieldRequestList, load_online_actions, load_online_game, local_command_to_online_action, online_field_decoder
@@ -128,7 +129,7 @@ action_path = "test-cases/match-249.txt"
 map_path = "test-cases/map-249-game-2.txt"
 
 if mode == 1:
-    game_options, game_map, craftsmen, craftsman_strid_to_intid_map = load_offline_game(
+    game_options, game_map, craftsmen, craftsman_strid_to_intid_map, craftsman_intid_to_strid_map = load_offline_game(
         map_path)
     actions_by_turn = load_offline_actions(
         action_path, craftsman_strid_to_intid_map)
@@ -144,7 +145,7 @@ else:
     if (field_data is None):
         print("Room cannot be fetched")
         exit(1)
-    game_options, game_map, craftsmen, craftsman_strid_to_intid_map = load_online_game(
+    game_options, game_map, craftsmen, craftsman_strid_to_intid_map, craftsman_intid_to_strid_map = load_online_game(
         field_data)
 
     action_list_json = get_online_actions(online_room).root
@@ -166,18 +167,19 @@ else:
                 game.addAction(action)
             game.nextTurn()
 
-command_buffer_t1: dict[int, CraftsmanCommand] = {}
-command_buffer_t2: dict[int, CraftsmanCommand] = {}
 
 command_counter = 0
-command_order_t1: dict[int, int] = {}
-command_order_t2: dict[int, int] = {}
 
+command_buffer_t1: dict[int, CraftsmanCommand] = {}
+command_buffer_t2: dict[int, CraftsmanCommand] = {}
 online_command_buffer_t1: dict[str, dict[str, Any]] = {}
 online_command_buffer_t2: dict[str, dict[str, Any]] = {}
 
-game_status: Union[OnlineGameStatus, None] = None
+command_order_t1: dict[int, int] = {}
+command_order_t2: dict[int, int] = {}
 
+
+game_status: Union[OnlineGameStatus, None] = None
 
 app = FastAPI()
 session = aiohttp.ClientSession()
@@ -264,6 +266,7 @@ async def auto_update_online_game_state():
 #     yield
 #     await session.close()
 
+
 @app.post("/command")
 async def do_command(command: CraftsmanCommand):
     global command_counter
@@ -341,7 +344,8 @@ async def current_state():
     for craftsman in game_state.craftsmen.values():
         craftsmen.append({
             "team": "team1" if craftsman.isT1 else "team2",
-            "pos": (craftsman.x, craftsman.y)
+            "pos": (craftsman.x, craftsman.y),
+            "id": craftsman_intid_to_strid_map[craftsman.id],
         })
 
     res = {
@@ -355,7 +359,8 @@ async def current_state():
         "options": {
             "map_width": game.gameOptions.mapWidth,
             "map_height": game.gameOptions.mapHeight,
-        }
+        },
+        "builder_pos_by_craftsman": builder_pos_by_craftsman,
     }
 
     command_list_with_craftsman_id = [
@@ -378,3 +383,29 @@ async def current_state():
     res['actions_to_be_applied'] = actions_to_be_applied
 
     return res
+
+builder_pos_by_craftsman: dict[int, list[tuple[int, int]]] = {}
+
+
+class BuilderCommand(BaseModel):
+    action: str
+    id: Union[str, None] = None
+    pos: Union[tuple[int, int], None] = None
+
+
+@app.post("/builder")
+async def builder(command: BuilderCommand):
+    if (command.action == "build"):
+        if command.id not in builder_pos_by_craftsman:
+            builder_pos_by_craftsman[command.id] = []
+        if command.pos not in builder_pos_by_craftsman[command.id]:
+            builder_pos_by_craftsman[command.id].append(command.pos)
+    elif (command.action == "unbuild"):
+        if command.pos is None:
+            builder_pos_by_craftsman[command.id] = []
+        elif command.id in builder_pos_by_craftsman and command.pos in builder_pos_by_craftsman[command.id]:
+            builder_pos_by_craftsman[command.id].remove(command.pos)
+    elif (command.action == "unbuild_all"):
+        builder_pos_by_craftsman.clear()
+
+    return "OK"

@@ -31,7 +31,3 @@ func update_agent_list(new_agent_list):
 		node_list[i].strategy = agent_list[i].strategy
 		node_list[i].strategy_detail = agent_list[i].detail
 	
-
-
-func _process(delta):
-	pass

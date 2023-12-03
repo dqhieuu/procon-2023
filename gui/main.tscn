@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dinq831rjae20"]
+[gd_scene load_steps=13 format=3 uid="uid://dinq831rjae20"]
 
 [ext_resource type="PackedScene" uid="uid://cosqo65u6o226" path="res://map_display.tscn" id="1_iqkw6"]
 [ext_resource type="Script" path="res://scheduler.gd" id="1_mpu3w"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://buttons/reset_actions_button.gd" id="4_so8eh"]
 [ext_resource type="Script" path="res://replay_tab.gd" id="5_rtpfi"]
 [ext_resource type="Script" path="res://ai_agent_list.gd" id="8_3hu1n"]
+[ext_resource type="Script" path="res://builder_agent_list.gd" id="9_dikko"]
 
 [sub_resource type="Animation" id="Animation_vodis"]
 length = 0.4
@@ -101,8 +102,10 @@ size_flags_vertical = 3
 [node name="TabContainer" type="TabContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+current_tab = 2
 
 [node name="Interact" type="MarginContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
@@ -702,7 +705,6 @@ text = "Total pts: 0"
 horizontal_alignment = 2
 
 [node name="AI" type="MarginContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 8
@@ -746,6 +748,52 @@ horizontal_alignment = 2
 [node name="AgentList" type="VBoxContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/AI/VBoxContainer" groups=["agent_list"]]
 layout_mode = 2
 script = ExtResource("8_3hu1n")
+
+[node name="Builder" type="MarginContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder" groups=["replay_feature"]]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Team1Info" type="HBoxContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer"]
+layout_mode = 2
+
+[node name="Team1Label" type="Label" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer/Team1Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Team 1"
+
+[node name="Total" type="Label" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer/Team1Info" groups=["t1_total_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Total pts: 0"
+horizontal_alignment = 2
+
+[node name="Team2Info" type="HBoxContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer"]
+layout_mode = 2
+
+[node name="Team2Label" type="Label" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer/Team2Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Team 2
+"
+
+[node name="Total" type="Label" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer/Team2Info" groups=["t2_total_pts"]]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Total pts: 0"
+horizontal_alignment = 2
+
+[node name="BuilderAgentList" type="VBoxContainer" parent="HBoxContainer/Background/VBoxContainer/ScrollContainer/TabContainer/Builder/VBoxContainer" groups=["builder_agent_list"]]
+layout_mode = 2
+script = ExtResource("9_dikko")
 
 [node name="Flash" type="ColorRect" parent="." groups=["flash"]]
 visible = false
