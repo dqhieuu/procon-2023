@@ -375,15 +375,11 @@ buildable_cells_t1 = []
 buildable_cells_t2 = []
 
 @app.post("/addCellNeedToBuild")
-async def add_cell_need_to_build(x: int, y: int, craftsman_x: int, craftsman_y: int):
+async def add_cell_need_to_build(x: int, y: int, craftsman_id: int):
     global buildable_cells_t1, buildable_cells_t2
-    current_state = game.getCurrentState()
     # check if x and y is pond continue
     if current_state.map.tiles[x][y] == 1:
         return "Is Pond"
-
-    craftsman_id = current_state.findCraftsmanIdByPos(
-        craftsman_x, craftsman_y)
     if craftsman_id < 0:
         raise HTTPException(400, detail="Craftsman not found")
     if current_state.craftsmen[craftsman_id].isT1:
@@ -406,6 +402,16 @@ def get_list_action_to_build_cell(isT1Turn: bool):
     craftsman_cells = {}
     for cell in buildable_cells:
         x, y, craftsman_id = cell
+        # check if tiles[x][y] is t1 or t2 wall continue
+        if isT1Turn:
+            #check map has t1 wall
+            if current_game.map.tiles[x][y] & 2 == 2:
+                continue
+        else:
+            #check map has t2 wall
+            if current_game.map.tiles[x][y] & 3 == 3:
+                continue
+
         if craftsman_id not in craftsman_cells:
             craftsman_cells[craftsman_id] = []
         craftsman_cells[craftsman_id].append((x, y))
