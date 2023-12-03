@@ -419,5 +419,9 @@ def get_list_action_to_build_cell(isT1Turn: bool):
         list_action_to_build_cell.append((time_to_build, CraftsmanCommand((x,y), action.actionType, action.subActionType)))
     
     return list_action_to_build_cell
-    
 
+def add_action_build_cell():
+    cur_state = game.getCurrentState()
+    list_action = get_list_action_to_build_cell(cur_state.isT1Turn)
+    for time, action in list_action:
+        do_command(action)
