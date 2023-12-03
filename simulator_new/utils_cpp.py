@@ -1,5 +1,9 @@
 from bin.game_interfaces_binding import Game, GameState, GameAction, GameOptions, ActionType, SubActionType, TileMask, Craftsman, MapState
 from model import Direction, PyActionType
+from copy import deepcopy
+from functools import wraps
+import time
+from typing import List
 
 
 def load_map(file_path):
@@ -290,6 +294,44 @@ def local_action_to_cpp_action(action_type: PyActionType, direction: Direction) 
         elif direction is Direction.RIGHT:
             return ActionType.DESTROY, SubActionType.DESTROY_RIGHT
 
+def cpp_action_to_local_action(action_type: ActionType, sub_action_type: SubActionType) -> tuple[PyActionType, Direction]:
+    if action_type == ActionType.STAY:
+        return PyActionType.STAY, Direction.STAY
+    elif action_type == ActionType.MOVE:
+        if sub_action_type == SubActionType.MOVE_UP:
+            return PyActionType.MOVE, Direction.UP
+        elif sub_action_type == SubActionType.MOVE_DOWN:
+            return PyActionType.MOVE, Direction.DOWN
+        elif sub_action_type == SubActionType.MOVE_LEFT:
+            return PyActionType.MOVE, Direction.LEFT
+        elif sub_action_type == SubActionType.MOVE_RIGHT:
+            return PyActionType.MOVE, Direction.RIGHT
+        elif sub_action_type == SubActionType.MOVE_UP_LEFT:
+            return PyActionType.MOVE, Direction.UP_LEFT
+        elif sub_action_type == SubActionType.MOVE_UP_RIGHT:
+            return PyActionType.MOVE, Direction.UP_RIGHT
+        elif sub_action_type == SubActionType.MOVE_DOWN_LEFT:
+            return PyActionType.MOVE, Direction.DOWN_LEFT
+        elif sub_action_type == SubActionType.MOVE_DOWN_RIGHT:
+            return PyActionType.MOVE, Direction.DOWN_RIGHT
+    elif action_type == ActionType.BUILD:
+        if sub_action_type == SubActionType.BUILD_UP:
+            return PyActionType.BUILD, Direction.UP
+        elif sub_action_type == SubActionType.BUILD_DOWN:
+            return PyActionType.BUILD, Direction.DOWN
+        elif sub_action_type == SubActionType.BUILD_LEFT:
+            return PyActionType.BUILD, Direction.LEFT
+        elif sub_action_type == SubActionType.BUILD_RIGHT:
+            return PyActionType.BUILD, Direction.RIGHT
+    elif action_type == ActionType.DESTROY:
+        if sub_action_type == SubActionType.DESTROY_UP:
+            return PyActionType.DESTROY, Direction.UP
+        elif sub_action_type == SubActionType.DESTROY_DOWN:
+            return PyActionType.DESTROY, Direction.DOWN
+        elif sub_action_type == SubActionType.DESTROY_LEFT:
+            return PyActionType.DESTROY, Direction.LEFT
+        elif sub_action_type == SubActionType.DESTROY_RIGHT:
+            return PyActionType.DESTROY, Direction.RIGHT
 
 def online_action_to_cpp_action(action_type: str, action_param: str) -> tuple[ActionType, SubActionType]:
     if action_type == "STAY":
@@ -329,3 +371,36 @@ def online_action_to_cpp_action(action_type: str, action_param: str) -> tuple[Ac
             return ActionType.DESTROY, SubActionType.DESTROY_LEFT
         elif action_param == "RIGHT":
             return ActionType.DESTROY, SubActionType.DESTROY_RIGHT
+
+
+def get_direction_vector(direction: Direction) -> tuple[int, int]:
+    if direction == Direction.UP:
+        return 0, -1
+    elif direction == Direction.DOWN:
+        return 0, 1
+    elif direction == Direction.LEFT:
+        return -1, 0
+    elif direction == Direction.RIGHT:
+        return 1, 0
+    elif direction == Direction.UP_LEFT:
+        return -1, -1
+    elif direction == Direction.UP_RIGHT:
+        return 1, -1
+    elif direction == Direction.DOWN_LEFT:
+        return -1, 1
+    elif direction == Direction.DOWN_RIGHT:
+        return 1, 1
+
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        total_time = end_time - start_time
+        print(
+            f'Function {func.__name__}{args} {kwargs} Took {total_time:.4f} seconds')
+        return result
+
+    return timeit_wrapper

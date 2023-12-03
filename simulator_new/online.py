@@ -90,10 +90,7 @@ class OnlineGameStatus(BaseModel):
     remaining: int
 
 
-def local_command_to_online_action(command: CraftsmanCommand, game: Game, craftsman_strid_to_intid: dict[str, int]) -> dict[str, str]:
-    craftsman_intid_to_strid = {v: k for k,
-                                v in craftsman_strid_to_intid.items()}
-
+def local_command_to_online_action(command: CraftsmanCommand, game: Game, craftsman_intid_to_strid: dict[int, str]) -> dict[str, str]:
     current_state = game.getCurrentState()
     craftsman_id = current_state.findCraftsmanIdByPos(*command.craftsman_pos)
     craftsman_str_id = craftsman_intid_to_strid[craftsman_id]

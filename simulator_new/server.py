@@ -6,9 +6,7 @@ from pydantic import BaseModel
 import requests
 from bin.game_interfaces_binding import Game, GameAction
 from online import OnlineActionResponseList, OnlineGameStatus, OnlineFieldRequestList, load_online_actions, load_online_game, local_command_to_online_action, online_field_decoder
-from utils import get_direction_vector
-
-from utils_cpp import load_offline_game, load_offline_actions, calculate_score, local_action_to_cpp_action
+from utils_cpp import cpp_action_to_local_action, load_offline_game, load_offline_actions, calculate_score, local_action_to_cpp_action, get_direction_vector
 from fastapi import FastAPI, HTTPException
 from fastapi_restful.tasks import repeat_every
 from model import CraftsmanCommand, PyActionType
@@ -175,14 +173,16 @@ command_buffer_t2: dict[int, CraftsmanCommand] = {}
 online_command_buffer_t1: dict[str, dict[str, Any]] = {}
 online_command_buffer_t2: dict[str, dict[str, Any]] = {}
 
-command_order_t1: dict[int, int] = {}
-command_order_t2: dict[int, int] = {}
+command_order_t1: dict[Union[int, str], int] = {}
+command_order_t2: dict[Union[int, str], int] = {}
 
 
 game_status: Union[OnlineGameStatus, None] = None
 
 app = FastAPI()
 session = aiohttp.ClientSession()
+
+builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
 
 
 @app.on_event("startup")
@@ -287,7 +287,9 @@ async def do_command(command: CraftsmanCommand):
 
     if online_room >= 0:
         selected_online_buffer[craftsman_id] = local_command_to_online_action(
-            command, game, craftsman_strid_to_intid_map)
+            command, game, craftsman_intid_to_strid_map)
+        selected_order[craftsman_intid_to_strid_map[craftsman_id]
+                       ] = command_counter
 
     selected_order[craftsman_id] = command_counter
 
@@ -298,6 +300,7 @@ async def do_command(command: CraftsmanCommand):
 
 @app.post("/end_turn")
 async def end_turn():
+    global command_counter
     if online_room > 0:
         # ONLINE MODE, noop
         return "OK"
@@ -329,6 +332,38 @@ async def end_turn():
     game.nextTurn()
 
     selected_buffer.clear()
+
+    game_state = game.getCurrentState()
+
+    for (id, list_of_pos) in builder_pos_by_craftsman.items():
+        if not list_of_pos:
+            continue
+
+        craftsman_local_id = craftsman_strid_to_intid_map[id]
+        craftsman = game_state.craftsmen[craftsman_local_id]
+
+        cost, action = game.getCurrentState().findWayToBuild(
+            craftsman.x, craftsman.y, craftsman.isT1, list_of_pos)
+
+        action_type, direction = cpp_action_to_local_action(
+            action.actionType, action.subActionType)
+
+        print(cost, action)
+
+        selected_buffer = command_buffer_t1 if craftsman.isT1 else command_buffer_t2
+        selected_order = command_order_t1 if craftsman.isT1 else command_order_t2
+
+        selected_buffer[craftsman_local_id] = CraftsmanCommand(
+            craftsman_pos=(craftsman.x, craftsman.y),
+            action_type=action_type,
+            direction=direction
+        )
+
+        selected_order[craftsman_local_id] = command_counter
+        selected_order[
+            craftsman_intid_to_strid_map[craftsman_local_id]
+        ] = command_counter
+        command_counter += 1
 
     return "OK"
 
@@ -383,8 +418,6 @@ async def current_state():
     res['actions_to_be_applied'] = actions_to_be_applied
 
     return res
-
-builder_pos_by_craftsman: dict[int, list[tuple[int, int]]] = {}
 
 
 class BuilderCommand(BaseModel):
