@@ -472,6 +472,10 @@ void GameState::bfs(int x, int y, bool isT1)
                 continue;
             if (map.getTile(cur_x + direction[i].first, cur_y + direction[i].second) & (1 << TileMask::POND))
                 continue;
+            if (map.getTile(cur_x + direction[i].first, cur_y + direction[i].second) & (1 << TileMask::T1_CRAFTSMAN) && !isT1)
+                continue;
+            if (map.getTile(cur_x + direction[i].first, cur_y + direction[i].second) & (1 << TileMask::T2_CRAFTSMAN) && isT1)
+                continue;
             int new_x = cur_x + direction[i].first;
             int new_y = cur_y + direction[i].second;
 
