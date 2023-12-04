@@ -19,8 +19,8 @@ import aiohttp
 BASE_URL = "https://procon2023.duckdns.org/api"
 
 competition_token = None
-team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAxNjYzMTg3LCJleHAiOjE3MDE4MzU5ODd9.YVwgGLdzvx4WKzjGHqPDMs3f6e5RfepvTfvE3RJOCfo"
-team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAxNjYzMTg3LCJleHAiOjE3MDE4MzU5ODd9.YVwgGLdzvx4WKzjGHqPDMs3f6e5RfepvTfvE3RJOCfo"
+team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTUsIm5hbWUiOiJ1ZXQxIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU0NzksImV4cCI6MTcwMTg1ODI3OX0.BkhNAy55QI2-MV4ku-7m09TaK1ASBxJnaz3M1KBTqOU"
+team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTYsIm5hbWUiOiJ1ZXQyIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU1MDUsImV4cCI6MTcwMTg1ODMwNX0.KJSgUIaWtuvz-vyrQkFh-xH10qI8q4TAvHoUuQDvoJQ"
 ### END SET THESE VARIABLES ###
 
 global_token = None
@@ -120,19 +120,22 @@ client_delay = 0
 
 def current_turn():
     if start_time is None:
-        return 0
+        return 1
     compensation = 0.1  # it's better to be late than early
     return max(
         min(
             math.floor(((datetime.now() - start_time).total_seconds() +
                        client_delay - compensation) / time_per_turn) + 1,
             max_turn),
-        0)
+        1)
 
 
 def remaining_turn_time():
     if start_time is None:
         return 999999
+    if start_time > datetime.now():
+        return (start_time - datetime.now()).total_seconds()
+
     if max_turn and start_time + timedelta(seconds=time_per_turn) * max_turn < datetime.now():
         return 0
     compensation = 0.1  # it's better to be late than early
@@ -190,7 +193,7 @@ else:
     if actions_by_turn:
         max_turn_to_apply = max(actions_by_turn.keys())
 
-        for turn in range(1, max_turn_to_apply+1):
+        for turn in range(2, max_turn_to_apply+1):
             if turn in actions_by_turn:
                 for action in actions_by_turn[turn]:
                     game.addAction(action)
@@ -211,15 +214,24 @@ builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
 app = FastAPI()
 session = aiohttp.ClientSession()
 
+check_start_time_counter = 0
 
 @app.on_event("startup")
 @repeat_every(seconds=0.3)
 async def auto_update_online_game_state():
+    global start_time, field_data,check_start_time_counter
     if online_room < 0:
         return
 
-    # global game_status
-    # game_status = get_game_status(online_room)
+    if start_time is None:
+        check_start_time_counter += 1
+        if check_start_time_counter % 10 == 0:
+            print("Waiting for game to set a start time")
+            field_data = get_online_map_data(online_room)
+            if field_data.start_time is None:
+                return
+            start_time = field_data.start_time
+            print("Game start time is set")
 
     local_game_state = game.getCurrentState()
 
@@ -228,9 +240,9 @@ async def auto_update_online_game_state():
 
     if local_game_state.turn != current_calculated_turn:
         if local_game_state.isT1Turn:
-            command_buffer_t2.clear()
-        else:
             command_buffer_t1.clear()
+        else:
+            command_buffer_t2.clear()
 
         action_list_json = get_online_actions(online_room)
         game_actions_by_turn = load_online_actions(
@@ -243,10 +255,10 @@ async def auto_update_online_game_state():
             game.nextTurn()
 
     else:
-        # don't send commands unless if there is less than 2 seconds left
-        if current_turn_time_left >= 2:  # seconds
+        # don't send commands unless if there is less than 1.0 seconds left
+        if current_turn_time_left >= 1.0:  # seconds
             return
-        if command_buffer_t1 and team_1_token is not None:
+        if command_buffer_t1 and team_1_token is not None and local_game_state.isT1Turn:
             send_actions = list(map(lambda x: x[1], sorted(
                 online_command_buffer_t1.items(),
                 key=lambda id_and_command: command_order_t1[id_and_command[0]]
@@ -257,7 +269,7 @@ async def auto_update_online_game_state():
                     f'{BASE_URL}/player/games/{online_room}/actions',
                     headers={"Authorization": team_1_token},
                     json={
-                        "turn": local_game_state.turn + (1 if local_game_state.isT1Turn else 2),
+                        "turn": local_game_state.turn + 1,
                         "actions": send_actions
                     }
             ) as res:
@@ -266,7 +278,7 @@ async def auto_update_online_game_state():
                 else:
                     print("Sent online commands successfully")
 
-        if command_buffer_t2 and team_2_token is not None:
+        if command_buffer_t2 and team_2_token is not None and not local_game_state.isT1Turn:
             send_actions = list(map(lambda x: x[1], sorted(
                 online_command_buffer_t2.items(),
                 key=lambda id_and_command: command_order_t2[id_and_command[0]]
@@ -276,7 +288,7 @@ async def auto_update_online_game_state():
                     f'{BASE_URL}/player/games/{online_room}/actions',
                     headers={"Authorization": team_2_token},
                     json={
-                        "turn": local_game_state.turn + (1 if local_game_state.isT1Turn else 2),
+                        "turn": local_game_state.turn + 1,
                         "actions": send_actions
                     }
             ) as res:

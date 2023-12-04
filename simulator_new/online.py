@@ -194,7 +194,7 @@ def load_online_game(field: OnlineFieldResponse) -> tuple[GameOptions, list[list
 def load_online_actions(actions_list: List[OnlineActionResponse], craftsman_strid_to_intid_map: dict[str, int]) -> dict[int, list[GameAction]]:
     actions_list_per_turn: dict[int, list[OnlineAction]] = {}
     for action_group in actions_list:
-        actions_list_per_turn[action_group.turn-1] = action_group.actions
+        actions_list_per_turn[action_group.turn] = action_group.actions
 
     actions: dict[int, list[GameAction]] = {}
     for turn in actions_list_per_turn:
