@@ -448,7 +448,7 @@ void GameState::initMinCostMap(MapState _map)
                     std::vector<std::pair<int, int>>(2, {-1, -1})))));
     for (int i = 0; i < 25; i++)
         for (int j = 0; j < 25; j++)
-        {11
+        {
             if (_map.getTile(i, j) & (1 << TileMask::POND))
                 continue;
             bfs(i, j, true);
