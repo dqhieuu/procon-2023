@@ -385,12 +385,11 @@ def generate_builder_pos():
         for x, y in list_of_pos:
             if game_state.map.tiles[y][x] & ((1 << TileMask.POND.value) | (1 << TileMask.T1_CRAFTSMAN.value) | (1 << TileMask.T2_CRAFTSMAN.value)):
                 continue
-            if craftsman.isT1:
-                if game_state.map.tiles[y][x] & (1 << TileMask.T1_WALL.value):
-                    continue
-            else:
-                if game_state.map.tiles[y][x] & (1 << TileMask.T2_WALL.value):
-                    continue
+
+            if (craftsman.isT1 and game_state.map.tiles[y][x] & (1 << TileMask.T1_WALL.value)) or (not craftsman.isT1 and game_state.map.tiles[y][x] & (1 << TileMask.T2_WALL.value)):
+                builder_pos_by_craftsman[str_id].remove((x, y))
+                continue
+
             list_of_valid_pos.append((x, y))
 
         if not list_of_valid_pos:

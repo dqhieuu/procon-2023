@@ -2,6 +2,9 @@ extends Node
 
 var _timer = null
 
+var is_using = false
+
+var last_since_used = Time.get_ticks_msec()
 
 func _ready():
 	_timer = Timer.new()
@@ -13,7 +16,17 @@ func _ready():
 	_timer.start()
 
 
+
 func _on_Timer_timeout():
+	if is_using:
+		var now = Time.get_ticks_msec()
+		if now - last_since_used > 2000:
+			is_using = false
+
+	if is_using: return
+	
+	is_using = true;
+	
 	var current_state = await HTTP.get_current_state()
 	
 	var map_node = get_tree().get_first_node_in_group('map')
@@ -41,4 +54,5 @@ func _on_Timer_timeout():
 		map_node.update_actions_to_be_applied(current_state.actions_to_be_applied)
 	
 	map_node.update_builder_walls_to_be_applied(current_state.builder_pos_by_craftsman)
-		
+	
+	is_using = false

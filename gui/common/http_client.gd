@@ -30,7 +30,6 @@ func generate_builder_pos():
 
 func _get_request(url: String):
 	var HTTP = HTTPRequest.new()
-	HTTP.timeout = 5.0 # seconds
 	add_child(HTTP)
 	var error = HTTP.request(url)
 	if error != OK:
@@ -42,7 +41,6 @@ func _get_request(url: String):
 	
 func _post_request_no_body(url: String):
 	var HTTP = HTTPRequest.new()
-	HTTP.timeout = 5.0 # seconds
 	add_child(HTTP)
 	var error = HTTP.request(url, [], HTTPClient.METHOD_POST)
 	if error != OK:
@@ -54,7 +52,6 @@ func _post_request_no_body(url: String):
 
 func _post_request(url: String, payload: Dictionary):
 	var HTTP = HTTPRequest.new()
-	HTTP.timeout = 5.0 # seconds
 	add_child(HTTP)
 	var body = JSON.stringify(payload)
 	var error = HTTP.request(url, [], HTTPClient.METHOD_POST, body)
