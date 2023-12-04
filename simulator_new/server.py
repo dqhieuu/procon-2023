@@ -392,9 +392,9 @@ def generate_builder_pos():
 
             list_of_valid_pos.append((x, y))
 
-        if not list_of_valid_pos:
-            builder_pos_by_craftsman[str_id] = []
-            continue
+        # if not list_of_valid_pos:
+        #     builder_pos_by_craftsman[str_id] = []
+        #     continue
 
         cost, action = game.getCurrentState().findWayToBuild(
             craftsman.x, craftsman.y, craftsman.isT1, list_of_valid_pos)
