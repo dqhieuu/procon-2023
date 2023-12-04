@@ -26,6 +26,7 @@ func _on_Timer_timeout():
 	if is_using: return
 	
 	is_using = true;
+	last_since_used = Time.get_ticks_msec()
 	
 	var current_state = await HTTP.get_current_state()
 	
