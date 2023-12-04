@@ -23,6 +23,9 @@ func get_match_history():
 	
 func update_builder_pos(command):
 	return await _post_request("%s/builder" % SERVER_PATH, command)
+
+func generate_builder_pos():
+	return await _post_request_no_body("%s/generate_builder_pos" % SERVER_PATH)
 	
 
 func _get_request(url: String):

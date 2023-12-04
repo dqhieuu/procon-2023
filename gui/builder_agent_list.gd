@@ -14,6 +14,9 @@ func _input(event):
 		else:
 			Globals.selected_buider_craftsman_id = Globals.hovered_craftsman_id
 
+	if event.is_action_pressed("generate_builder_pos"):
+		send_generate_builder_pos_request()
+
 func update_agent_list(new_agent_list):
 	var is_dirty_agent_list = false
 	
@@ -38,9 +41,6 @@ func update_agent_list(new_agent_list):
 	var node_list = get_children()
 	for i in len(node_list):
 		node_list[i].craftsman_pos = agent_list[i].pos
-		#node_list[i].strategy = agent_list[i].strategy
-		#node_list[i].strategy_detail = agent_list[i].detail
-	#
 
-#func _process(delta):
-	#print(Globals.hovered_craftsman_id)
+func send_generate_builder_pos_request():
+	HTTP.generate_builder_pos()

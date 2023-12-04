@@ -21,63 +21,85 @@ BASE_URL = "https://procon2023.duckdns.org/api"
 competition_token = None
 team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTUsIm5hbWUiOiJ1ZXQxIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU0NzksImV4cCI6MTcwMTg1ODI3OX0.BkhNAy55QI2-MV4ku-7m09TaK1ASBxJnaz3M1KBTqOU"
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTYsIm5hbWUiOiJ1ZXQyIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU1MDUsImV4cCI6MTcwMTg1ODMwNX0.KJSgUIaWtuvz-vyrQkFh-xH10qI8q4TAvHoUuQDvoJQ"
+
+action_path = "test-cases/match-249.txt"
+map_path = "test-cases/map-249-game-2.txt"
 ### END SET THESE VARIABLES ###
 
-global_token = None
+global_token: Union[str, None] = None
 online_room = -1
 
-print("""
-SELECT A MODE:
+time_per_turn = None
+start_time = None
+max_turn = None
+client_delay = 0
+
+command_counter = 0
+
+command_buffer_t1: dict[int, CraftsmanCommand] = {}
+command_buffer_t2: dict[int, CraftsmanCommand] = {}
+online_command_buffer_t1: dict[int, dict[str, Any]] = {}
+online_command_buffer_t2: dict[int, dict[str, Any]] = {}
+
+command_order_t1: dict[int, int] = {}
+command_order_t2: dict[int, int] = {}
+builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
+
+mode = 0
+
+
+def load_cli():
+    global global_token, online_room, team_1_token, team_2_token, competition_token, mode
+
+    print("""SELECT A MODE:
 1. Local
 2. Online, practice: team A - team B
 3. Online, practice: swap team A - team B token
 4. Online, competition: you = team A
-5. Online, competition: you = team B
-""")
+5. Online, competition: you = team B""")
 
-while True:
-    mode = input()
-    if not (mode.isdigit() and 1 <= int(mode) <= 5):
-        print(f"Invalid mode")
-    else:
-        mode = int(mode)
-        break
-
-
-if 2 <= mode <= 5:
     while True:
-        print("Enter room id: ")
-        online_room = input()
-        if not (online_room.isdigit() and int(online_room) >= 0):
-            print("Invalid room id")
+        mode = input()
+        if not (mode.isdigit() and 1 <= int(mode) <= 5):
+            print(f"Invalid mode")
         else:
-            online_room = int(online_room)
+            mode = int(mode)
             break
 
-if mode == 1:
-    print("Selected local mode")
-    team_1_token = team_2_token = global_token = None
-elif mode == 2:
-    print("Selected online mode, practice team 1 - team 2")
-    global_token = team_1_token
-elif mode == 3:
-    print("Selected online mode, practice swap team 1 - team 2 token")
-    team_1_token, team_2_token = team_2_token, team_1_token
-    global_token = team_1_token
-elif mode == 4:
-    if competition_token is None:
-        print("Competition token is not set")
-        exit(1)
-    print("Selected online mode, competition you = team 1")
-    global_token = team_1_token = competition_token
-    team_2_token = None
-elif mode == 5:
-    if competition_token is None:
-        print("Competition token is not set")
-        exit(1)
-    print("Selected online mode, competition you = team 2")
-    global_token = team_2_token = competition_token
-    team_1_token = None
+    if 2 <= mode <= 5:
+        while True:
+            print("Enter room id: ")
+            online_room = input()
+            if not (online_room.isdigit() and int(online_room) >= 0):
+                print("Invalid room id")
+            else:
+                online_room = int(online_room)
+                break
+
+    if mode == 1:
+        print("Selected local mode")
+        team_1_token = team_2_token = global_token = None
+    elif mode == 2:
+        print("Selected online mode, practice team 1 - team 2")
+        global_token = team_1_token
+    elif mode == 3:
+        print("Selected online mode, practice swap team 1 - team 2 token")
+        team_1_token, team_2_token = team_2_token, team_1_token
+        global_token = team_1_token
+    elif mode == 4:
+        if competition_token is None:
+            print("Competition token is not set")
+            exit(1)
+        print("Selected online mode, competition you = team 1")
+        global_token = team_1_token = competition_token
+        team_2_token = None
+    elif mode == 5:
+        if competition_token is None:
+            print("Competition token is not set")
+            exit(1)
+        print("Selected online mode, competition you = team 2")
+        global_token = team_2_token = competition_token
+        team_1_token = None
 
 
 def get_online_map_data(room_id: int):
@@ -112,12 +134,6 @@ def get_client_delay():
     return res
 
 
-time_per_turn = None
-start_time = None
-max_turn = None
-client_delay = 0
-
-
 def current_turn():
     if start_time is None:
         return 1
@@ -150,10 +166,8 @@ def get_online_actions(room_id: int):
     return OnlineActionResponseList.model_validate(actions_json)
 
 
+load_cli()
 ### LOAD OFFLINE GAME ###
-action_path = "test-cases/match-249.txt"
-map_path = "test-cases/map-249-game-2.txt"
-
 if mode == 1:
     game_options, game_map, craftsmen, craftsman_strid_to_intid_map, craftsman_intid_to_strid_map = load_offline_game(
         map_path)
@@ -198,18 +212,6 @@ else:
                 for action in actions_by_turn[turn]:
                     game.addAction(action)
             game.nextTurn()
-
-
-command_counter = 0
-
-command_buffer_t1: dict[int, CraftsmanCommand] = {}
-command_buffer_t2: dict[int, CraftsmanCommand] = {}
-online_command_buffer_t1: dict[int, dict[str, Any]] = {}
-online_command_buffer_t2: dict[int, dict[str, Any]] = {}
-
-command_order_t1: dict[int, int] = {}
-command_order_t2: dict[int, int] = {}
-builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
 
 app = FastAPI()
 session = aiohttp.ClientSession()
@@ -297,12 +299,6 @@ async def auto_update_online_game_state():
                 else:
                     print("Sent online commands successfully")
 
-# @asynccontextmanager
-# async def setup():
-#     auto_update_online_game_state()
-#     yield
-#     await session.close()
-
 
 @app.post("/command")
 async def do_command(command: CraftsmanCommand):
@@ -365,16 +361,22 @@ async def end_turn():
         ))
 
     game.nextTurn()
-
     selected_buffer.clear()
 
+    generate_builder_pos()
+
+    return "OK"
+
+
+def generate_builder_pos():
+    global command_counter
     game_state = game.getCurrentState()
 
-    for (id, list_of_pos) in builder_pos_by_craftsman.items():
+    for (str_id, list_of_pos) in builder_pos_by_craftsman.items():
         if not list_of_pos:
             continue
 
-        craftsman_local_id = craftsman_strid_to_intid_map[id]
+        craftsman_local_id = craftsman_strid_to_intid_map[str_id]
         craftsman = game_state.craftsmen[craftsman_local_id]
 
         list_of_valid_pos = []
@@ -389,11 +391,31 @@ async def end_turn():
                     continue
             list_of_valid_pos.append((x, y))
 
+        if not list_of_valid_pos:
+            builder_pos_by_craftsman[str_id] = []
+            continue
+
         cost, action = game.getCurrentState().findWayToBuild(
             craftsman.x, craftsman.y, craftsman.isT1, list_of_valid_pos)
 
         action_type, direction = cpp_action_to_local_action(
             action.actionType, action.subActionType)
+
+        # turn build and move into destroy if there is a wall
+        if action_type == PyActionType.BUILD or action_type == PyActionType.MOVE:
+            (action_offset_x, action_offset_y) = get_direction_vector(direction)
+            (target_x, target_y) = (craftsman.x + action_offset_x, craftsman.y + action_offset_y)
+
+            if not (0 <= target_x < len(game_state.map.tiles[0]) and 0 <= target_y < len(game_state.map.tiles)):
+                continue
+
+            if (craftsman.isT1 and game_state.map.tiles[target_y][target_x] & (1 << TileMask.T2_WALL.value)) \
+                    or (not craftsman.isT1 and game_state.map.tiles[target_y][target_x] & (1 << TileMask.T1_WALL.value)):
+                # prevent diagonal destroy
+                if action_type == PyActionType.MOVE and abs(action_offset_x) + abs(action_offset_y) > 1:
+                    continue
+                action_type = PyActionType.DESTROY
+
 
         print(cost, action)
 
@@ -408,8 +430,6 @@ async def end_turn():
 
         selected_order[craftsman_local_id] = command_counter
         command_counter += 1
-
-    return "OK"
 
 
 @app.get("/current_state")
@@ -490,26 +510,8 @@ async def builder(command: BuilderCommand):
 
     return "OK"
 
-# is_negative_turn = re.compile(r'turn: -')
-# is_not_started = re.compile(r'start_time is not set')
-# is_game_finished = re.compile(r'out of turn')
 
-
-# def get_game_status(room_id: int):
-#     game_status_json = requests.get(f'{BASE_URL}/player/games/{room_id}/status',
-#                                     headers={"Authorization": global_token}).json()
-
-#     if game_status_json.get('detail'):
-#         fail_reason = game_status_json['detail']
-#         if is_negative_turn.search(fail_reason) or is_not_started.search(fail_reason):
-#             # game has not started yet
-#             print("Game has not started yet")
-#             return OnlineGameStatus(cur_turn=0, max_turn=999, remaining=999)
-#         elif is_game_finished.search(fail_reason):
-#             print("Game has finished")
-#             return OnlineGameStatus(cur_turn=999, max_turn=999, remaining=999)
-#         else:
-#             print("Some other error")
-#             return None
-#     return OnlineGameStatus.model_validate(game_status_json)
-# game_status: Union[OnlineGameStatus, None] = None
+@app.post("/generate_builder_pos")
+async def generate_builder_pos_endpoint():
+    generate_builder_pos()
+    return "OK"
