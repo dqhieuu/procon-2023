@@ -204,11 +204,11 @@ command_counter = 0
 
 command_buffer_t1: dict[int, CraftsmanCommand] = {}
 command_buffer_t2: dict[int, CraftsmanCommand] = {}
-online_command_buffer_t1: dict[str, dict[str, Any]] = {}
-online_command_buffer_t2: dict[str, dict[str, Any]] = {}
+online_command_buffer_t1: dict[int, dict[str, Any]] = {}
+online_command_buffer_t2: dict[int, dict[str, Any]] = {}
 
-command_order_t1: dict[Union[int, str], int] = {}
-command_order_t2: dict[Union[int, str], int] = {}
+command_order_t1: dict[int, int] = {}
+command_order_t2: dict[int, int] = {}
 builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
 
 app = FastAPI()
@@ -325,8 +325,6 @@ async def do_command(command: CraftsmanCommand):
     if online_room >= 0:
         selected_online_buffer[craftsman_id] = local_command_to_online_action(
             command, game, craftsman_intid_to_strid_map)
-        selected_order[craftsman_intid_to_strid_map[craftsman_id]
-                       ] = command_counter
 
     selected_order[craftsman_id] = command_counter
 
@@ -381,13 +379,13 @@ async def end_turn():
 
         list_of_valid_pos = []
         for x, y in list_of_pos:
-            if game_state.map.tiles[y][x] & ((1 << TileMask.POND.value)):
+            if game_state.map.tiles[y][x] & (1 << TileMask.POND.value):
                 continue
             if craftsman.isT1:
-                if game_state.map.tiles[y][x] & ((1 << TileMask.T1_WALL.value)):
+                if game_state.map.tiles[y][x] & (1 << TileMask.T1_WALL.value):
                     continue
             else:
-                if game_state.map.tiles[y][x] & ((1 << TileMask.T2_WALL.value)):
+                if game_state.map.tiles[y][x] & (1 << TileMask.T2_WALL.value):
                     continue
             list_of_valid_pos.append((x, y))
 
@@ -409,9 +407,6 @@ async def end_turn():
         )
 
         selected_order[craftsman_local_id] = command_counter
-        selected_order[
-            craftsman_intid_to_strid_map[craftsman_local_id]
-        ] = command_counter
         command_counter += 1
 
     return "OK"
@@ -480,17 +475,17 @@ class BuilderCommand(BaseModel):
 
 @app.post("/builder")
 async def builder(command: BuilderCommand):
-    if (command.action == "build"):
+    if command.action == "build":
         if command.id not in builder_pos_by_craftsman:
             builder_pos_by_craftsman[command.id] = []
         if command.pos not in builder_pos_by_craftsman[command.id]:
             builder_pos_by_craftsman[command.id].append(command.pos)
-    elif (command.action == "unbuild"):
+    elif command.action == "unbuild":
         if command.pos is None:
             builder_pos_by_craftsman[command.id] = []
         elif command.id in builder_pos_by_craftsman and command.pos in builder_pos_by_craftsman[command.id]:
             builder_pos_by_craftsman[command.id].remove(command.pos)
-    elif (command.action == "unbuild_all"):
+    elif command.action == "unbuild_all":
         builder_pos_by_craftsman.clear()
 
     return "OK"
