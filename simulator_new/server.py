@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 import json
+import math
 import re
 from typing import Any, Union
 from pydantic import BaseModel
@@ -17,8 +19,8 @@ import aiohttp
 BASE_URL = "https://procon2023.duckdns.org/api"
 
 competition_token = None
-team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAxNDQ1MzI4LCJleHAiOjE3MDE2MTgxMjh9.pY0oLug_H_IxqWvHTKYFc_7zt2FIaIxXHamHpH51vAo"
-team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAxNDQ1MzI4LCJleHAiOjE3MDE2MTgxMjh9.pY0oLug_H_IxqWvHTKYFc_7zt2FIaIxXHamHpH51vAo"
+team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAxNjYzMTg3LCJleHAiOjE3MDE4MzU5ODd9.YVwgGLdzvx4WKzjGHqPDMs3f6e5RfepvTfvE3RJOCfo"
+team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzcsIm5hbWUiOiJVRVQgQWRtaW4iLCJpc19hZG1pbiI6dHJ1ZSwiaWF0IjoxNzAxNjYzMTg3LCJleHAiOjE3MDE4MzU5ODd9.YVwgGLdzvx4WKzjGHqPDMs3f6e5RfepvTfvE3RJOCfo"
 ### END SET THESE VARIABLES ###
 
 global_token = None
@@ -92,27 +94,50 @@ def get_online_map_data(room_id: int):
             return room
 
 
-is_negative_turn = re.compile(r'turn: -')
-is_game_finished = re.compile(r'out of turn')
+def get_client_delay():
+    samples = []
+
+    for _ in range(3):
+        call_time = datetime.now()
+        server_time_json = requests.get(f'{BASE_URL}/player/time').json()
+        server_time = datetime.fromisoformat(server_time_json['time'])
+        offset = (server_time - call_time).total_seconds()
+        print(offset)
+        samples.append(offset)
+
+    round_trips = 4
+    res = sum(samples) / len(samples) / round_trips
+    print(f"Avg delay: {res}")
+
+    return res
 
 
-def get_game_status(room_id: int):
-    game_status_json = requests.get(f'{BASE_URL}/player/games/{room_id}/status',
-                                    headers={"Authorization": global_token}).json()
+time_per_turn = None
+start_time = None
+max_turn = None
+client_delay = 0
 
-    if game_status_json.get('detail'):
-        fail_reason = game_status_json['detail']
-        if is_negative_turn.search(fail_reason):
-            # game has not started yet
-            print("Game has not started yet")
-            return OnlineGameStatus(cur_turn=0, max_turn=999, remaining=999)
-        elif is_game_finished.search(fail_reason):
-            print("Game has finished")
-            return OnlineGameStatus(cur_turn=999, max_turn=999, remaining=999)
-        else:
-            print("Some other error")
-            return OnlineGameStatus(cur_turn=0, max_turn=999, remaining=999)
-    return OnlineGameStatus.model_validate(game_status_json)
+
+def current_turn():
+    if start_time is None:
+        return 0
+    compensation = 0.1  # it's better to be late than early
+    return max(
+        min(
+            math.floor(((datetime.now() - start_time).total_seconds() +
+                       client_delay - compensation) / time_per_turn) + 1,
+            max_turn),
+        0)
+
+
+def remaining_turn_time():
+    if start_time is None:
+        return 999999
+    if max_turn and start_time + timedelta(seconds=time_per_turn) * max_turn < datetime.now():
+        return 0
+    compensation = 0.1  # it's better to be late than early
+    return time_per_turn - (((datetime.now() - start_time).total_seconds() +
+                            client_delay - compensation) % time_per_turn)
 
 
 def get_online_actions(room_id: int):
@@ -143,6 +168,15 @@ else:
     if (field_data is None):
         print("Room cannot be fetched")
         exit(1)
+
+    client_delay = get_client_delay()
+
+    time_per_turn = field_data.time_per_turn
+    max_turn = field_data.num_of_turns
+
+    if field_data.start_time is not None:
+        start_time = field_data.start_time
+
     game_options, game_map, craftsmen, craftsman_strid_to_intid_map, craftsman_intid_to_strid_map = load_online_game(
         field_data)
 
@@ -154,15 +188,12 @@ else:
     game = Game(game_options, game_map, craftsmen)
 
     if actions_by_turn:
-        max_turn = max(actions_by_turn.keys())
+        max_turn_to_apply = max(actions_by_turn.keys())
 
-        for turn in range(1, max_turn):
-            if turn not in actions_by_turn:
-                game.nextTurn()
-                continue
-
-            for action in actions_by_turn[turn]:
-                game.addAction(action)
+        for turn in range(1, max_turn_to_apply+1):
+            if turn in actions_by_turn:
+                for action in actions_by_turn[turn]:
+                    game.addAction(action)
             game.nextTurn()
 
 
@@ -175,29 +206,27 @@ online_command_buffer_t2: dict[str, dict[str, Any]] = {}
 
 command_order_t1: dict[Union[int, str], int] = {}
 command_order_t2: dict[Union[int, str], int] = {}
-
-
-game_status: Union[OnlineGameStatus, None] = None
+builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
 
 app = FastAPI()
 session = aiohttp.ClientSession()
 
-builder_pos_by_craftsman: dict[str, list[tuple[int, int]]] = {}
-
 
 @app.on_event("startup")
-@repeat_every(seconds=0.5)
+@repeat_every(seconds=0.3)
 async def auto_update_online_game_state():
     if online_room < 0:
         return
 
-    global game_status
-    game_status = get_game_status(online_room)
+    # global game_status
+    # game_status = get_game_status(online_room)
 
     local_game_state = game.getCurrentState()
-    print(game_status, local_game_state.turn)
 
-    if local_game_state.turn != game_status.cur_turn:
+    current_calculated_turn = current_turn()
+    current_turn_time_left = remaining_turn_time()
+
+    if local_game_state.turn != current_calculated_turn:
         if local_game_state.isT1Turn:
             command_buffer_t2.clear()
         else:
@@ -207,20 +236,17 @@ async def auto_update_online_game_state():
         game_actions_by_turn = load_online_actions(
             action_list_json.root, craftsman_strid_to_intid_map)
 
-        for turn_number in range(local_game_state.turn + 1, game_status.cur_turn + 1):
-            if turn_number not in game_actions_by_turn:
-                game.nextTurn()
-                continue
-
-            for action in game_actions_by_turn[turn_number]:
-                game.addAction(action)
+        for turn_number in range(local_game_state.turn + 1, current_calculated_turn + 1):
+            if turn_number in game_actions_by_turn:
+                for action in game_actions_by_turn[turn_number]:
+                    game.addAction(action)
             game.nextTurn()
 
     else:
+        # don't send commands unless if there is less than 2 seconds left
+        if current_turn_time_left >= 2:  # seconds
+            return
         if command_buffer_t1 and team_1_token is not None:
-            if game_status.remaining >= 2:  # seconds
-                return  # wait for next second to send command
-
             send_actions = list(map(lambda x: x[1], sorted(
                 online_command_buffer_t1.items(),
                 key=lambda id_and_command: command_order_t1[id_and_command[0]]
@@ -233,16 +259,14 @@ async def auto_update_online_game_state():
                     json={
                         "turn": local_game_state.turn + (1 if local_game_state.isT1Turn else 2),
                         "actions": send_actions
-                    }) as res:
+                    }
+            ) as res:
                 if not (200 <= res.status < 300):
                     print(await res.text())
                 else:
                     print("Sent online commands successfully")
 
         if command_buffer_t2 and team_2_token is not None:
-            if game_status.remaining >= 2:
-                return
-
             send_actions = list(map(lambda x: x[1], sorted(
                 online_command_buffer_t2.items(),
                 key=lambda id_and_command: command_order_t2[id_and_command[0]]
@@ -252,9 +276,10 @@ async def auto_update_online_game_state():
                     f'{BASE_URL}/player/games/{online_room}/actions',
                     headers={"Authorization": team_2_token},
                     json={
-                        "turn": local_game_state.turn + (1 if not local_game_state.isT1Turn else 2),
+                        "turn": local_game_state.turn + (1 if local_game_state.isT1Turn else 2),
                         "actions": send_actions
-                    }) as res:
+                    }
+            ) as res:
                 if not (200 <= res.status < 300):
                     print(await res.text())
                 else:
@@ -335,16 +360,15 @@ async def end_turn():
 
     game_state = game.getCurrentState()
 
-
     for (id, list_of_pos) in builder_pos_by_craftsman.items():
         if not list_of_pos:
             continue
-        
+
         craftsman_local_id = craftsman_strid_to_intid_map[id]
         craftsman = game_state.craftsmen[craftsman_local_id]
 
         list_of_valid_pos = []
-        for x,y in list_of_pos:
+        for x, y in list_of_pos:
             if game_state.map.tiles[y][x] & ((1 << TileMask.POND.value)):
                 continue
             if craftsman.isT1:
@@ -353,8 +377,7 @@ async def end_turn():
             else:
                 if game_state.map.tiles[y][x] & ((1 << TileMask.T2_WALL.value)):
                     continue
-            list_of_valid_pos.append((x,y))
-
+            list_of_valid_pos.append((x, y))
 
         cost, action = game.getCurrentState().findWayToBuild(
             craftsman.x, craftsman.y, craftsman.isT1, list_of_valid_pos)
@@ -397,27 +420,13 @@ async def current_state():
             "id": craftsman_intid_to_strid_map[craftsman.id],
         })
 
-    res = {
-        "score": calculate_score(map_state, game_options),
-        "state": {
-            "turn_number": game_state.turn,
-            "turn_state": "team1_turn" if game_state.isT1Turn else "team2_turn",
-            "map": map_state[:game.gameOptions.mapHeight][:game.gameOptions.mapWidth],
-            "craftsmen": craftsmen,
-        },
-        "options": {
-            "map_width": game.gameOptions.mapWidth,
-            "map_height": game.gameOptions.mapHeight,
-        },
-        "builder_pos_by_craftsman": builder_pos_by_craftsman,
-    }
+    actions_to_be_applied = []
 
     command_list_with_craftsman_id = [
         *command_buffer_t1.items(),
         *command_buffer_t2.items()
     ]
 
-    actions_to_be_applied = []
     for craftsman_id, command in command_list_with_craftsman_id:
         if command.direction is None:
             continue
@@ -429,7 +438,24 @@ async def current_state():
             'action_type': command.action_type,
         })
 
-    res['actions_to_be_applied'] = actions_to_be_applied
+    res = {
+        "score": calculate_score(map_state, game_options),
+        "state": {
+            "turn_number": game_state.turn,
+            "turn_state": "team1_turn" if game_state.isT1Turn else "team2_turn",
+            "map": map_state[:game.gameOptions.mapHeight][:game.gameOptions.mapWidth],
+            "craftsmen": craftsmen,
+        },
+        "game_status": {
+            "remaining": remaining_turn_time(),
+        },
+        "options": {
+            "map_width": game.gameOptions.mapWidth,
+            "map_height": game.gameOptions.mapHeight,
+        },
+        "builder_pos_by_craftsman": builder_pos_by_craftsman,
+        "actions_to_be_applied": actions_to_be_applied,
+    }
 
     return res
 
@@ -456,3 +482,27 @@ async def builder(command: BuilderCommand):
         builder_pos_by_craftsman.clear()
 
     return "OK"
+
+# is_negative_turn = re.compile(r'turn: -')
+# is_not_started = re.compile(r'start_time is not set')
+# is_game_finished = re.compile(r'out of turn')
+
+
+# def get_game_status(room_id: int):
+#     game_status_json = requests.get(f'{BASE_URL}/player/games/{room_id}/status',
+#                                     headers={"Authorization": global_token}).json()
+
+#     if game_status_json.get('detail'):
+#         fail_reason = game_status_json['detail']
+#         if is_negative_turn.search(fail_reason) or is_not_started.search(fail_reason):
+#             # game has not started yet
+#             print("Game has not started yet")
+#             return OnlineGameStatus(cur_turn=0, max_turn=999, remaining=999)
+#         elif is_game_finished.search(fail_reason):
+#             print("Game has finished")
+#             return OnlineGameStatus(cur_turn=999, max_turn=999, remaining=999)
+#         else:
+#             print("Some other error")
+#             return None
+#     return OnlineGameStatus.model_validate(game_status_json)
+# game_status: Union[OnlineGameStatus, None] = None

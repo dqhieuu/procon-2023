@@ -184,21 +184,25 @@ def load_online_game(field: OnlineFieldResponse) -> tuple[GameOptions, list[list
         craftsmen.append(Craftsman(
             counter, craftsman.x, craftsman.y, craftsman.side == OnlineEnumSide.A))
         counter += 1
-    
-    crafstman_intid_to_strid = {v: k for k, v in craftsman_strid_to_intid.items()}
+
+    crafstman_intid_to_strid = {v: k for k,
+                                v in craftsman_strid_to_intid.items()}
 
     return go, game_map, craftsmen, craftsman_strid_to_intid, crafstman_intid_to_strid
 
 
 def load_online_actions(actions_list: List[OnlineActionResponse], craftsman_strid_to_intid_map: dict[str, int]) -> dict[int, list[GameAction]]:
-    actions: dict[int, list[GameAction]] = {}
+    actions_list_per_turn: dict[int, list[OnlineAction]] = {}
     for action_group in actions_list:
-        for action in action_group.actions:
-            craftsman_id = craftsman_strid_to_intid_map[action.craftsman_id]
-            cpp_action, cpp_subaction = online_action_to_cpp_action(
-                action.action.value, action.action_param)
-            game_action = GameAction(craftsman_id, cpp_action, cpp_subaction)
+        actions_list_per_turn[action_group.turn-1] = action_group.actions
 
-            actions[action_group.turn] = game_action
+    actions: dict[int, list[GameAction]] = {}
+    for turn in actions_list_per_turn:
+        actions[turn] = []
+        for action in actions_list_per_turn[turn]:
+            craftsman_id = craftsman_strid_to_intid_map[action.craftsman_id]
+            cpp_action_tuple = online_action_to_cpp_action(
+                action.action.value, action.action_param)
+            actions[turn].append(GameAction(craftsman_id, *cpp_action_tuple))
 
     return actions

@@ -96,7 +96,7 @@ func update_builder_walls_to_be_applied(walls_by_builder_list):
 func update_time_left(time):
 	for e in get_nodes_by_group("time_left"):
 		if time != null:
-			e.text = "Time left: %d" % time
+			e.text = "Time left: %.1f" % time
 		else:
 			e.text = "Time left: Infinite"
 
