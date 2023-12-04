@@ -256,6 +256,8 @@ async def auto_update_online_game_state():
                     game.addAction(action)
             game.nextTurn()
 
+        generate_builder_pos()
+
     else:
         # don't send commands unless if there is less than 1.0 seconds left
         if current_turn_time_left >= 1.0:  # seconds
@@ -313,12 +315,12 @@ async def do_command(command: CraftsmanCommand):
     craftsman_is_t1 = current_state.craftsmen[craftsman_id].isT1
 
     selected_buffer = command_buffer_t1 if craftsman_is_t1 else command_buffer_t2
-    selected_online_buffer = online_command_buffer_t1 if craftsman_is_t1 else online_command_buffer_t2
     selected_order = command_order_t1 if craftsman_is_t1 else command_order_t2
 
     selected_buffer[craftsman_id] = command
 
     if online_room >= 0:
+        selected_online_buffer = online_command_buffer_t1 if craftsman_is_t1 else online_command_buffer_t2
         selected_online_buffer[craftsman_id] = local_command_to_online_action(
             command, game, craftsman_intid_to_strid_map)
 
@@ -332,7 +334,7 @@ async def do_command(command: CraftsmanCommand):
 @app.post("/end_turn")
 async def end_turn():
     global command_counter
-    if online_room > 0:
+    if online_room >= 0:
         # ONLINE MODE, noop
         return "OK"
 
@@ -381,7 +383,7 @@ def generate_builder_pos():
 
         list_of_valid_pos = []
         for x, y in list_of_pos:
-            if game_state.map.tiles[y][x] & (1 << TileMask.POND.value):
+            if game_state.map.tiles[y][x] & ((1 << TileMask.POND.value) | (1 << TileMask.T1_CRAFTSMAN.value) | (1 << TileMask.T2_CRAFTSMAN.value)):
                 continue
             if craftsman.isT1:
                 if game_state.map.tiles[y][x] & (1 << TileMask.T1_WALL.value):
@@ -427,6 +429,10 @@ def generate_builder_pos():
             action_type=action_type,
             direction=direction
         )
+        if online_room >= 0:
+            selected_online_buffer = online_command_buffer_t1 if craftsman.isT1 else online_command_buffer_t2
+            selected_online_buffer[craftsman_local_id] = local_command_to_online_action(
+                selected_buffer[craftsman_local_id], game, craftsman_intid_to_strid_map)
 
         selected_order[craftsman_local_id] = command_counter
         command_counter += 1
@@ -499,6 +505,8 @@ async def builder(command: BuilderCommand):
         if command.id not in builder_pos_by_craftsman:
             builder_pos_by_craftsman[command.id] = []
         if command.pos not in builder_pos_by_craftsman[command.id]:
+            if len(builder_pos_by_craftsman[command.id]) >= 12:
+                return "Too many builder pos"
             builder_pos_by_craftsman[command.id].append(command.pos)
     elif command.action == "unbuild":
         if command.pos is None:
