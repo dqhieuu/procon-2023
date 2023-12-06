@@ -468,11 +468,12 @@ async def current_state():
     craftsmen = []
 
     for craftsman in game_state.craftsmen.values():
-        craftsmen.append({
-            "team": "team1" if craftsman.isT1 else "team2",
-            "pos": (craftsman.x, craftsman.y),
-            "id": craftsman_intid_to_strid_map[craftsman.id],
-        })
+        if mode <= 3 or (craftsman.isT1 and mode == 4) or (not craftsman.isT1 and mode == 5):
+            craftsmen.append({
+                "team": "team1" if craftsman.isT1 else "team2",
+                "pos": (craftsman.x, craftsman.y),
+                "id": craftsman_intid_to_strid_map[craftsman.id],
+            })
 
     actions_to_be_applied = []
 
