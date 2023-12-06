@@ -40,12 +40,13 @@ func update_agent_list(new_agent_list, builder_cost_by_craftsman):
 			add_child(builder_info_node)
 		
 	var node_list = get_children()
+	var map_node = get_tree().get_first_node_in_group('map')
 	for i in len(node_list):
 		node_list[i].craftsman_pos = agent_list[i].pos
 		
 		var agent_id = agent_list[i].id
 		
-		node_list[i].builder_cost = 0
+		node_list[i].builder_cost = map_node.turn_number
 		if builder_cost_by_craftsman.has(agent_id):
 			node_list[i].builder_cost = builder_cost_by_craftsman[agent_id]
 

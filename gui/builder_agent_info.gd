@@ -22,7 +22,7 @@ func _process(delta):
 	$AgentInfo/CostRow/Cost.text = str(builder_cost)
 	
 	var map_node = get_tree().get_first_node_in_group('map')
-	var should_builder_cost_be_warned = builder_cost == 0 or builder_cost + map_node.turn_number > map_node.max_turns
+	var should_builder_cost_be_warned = builder_cost == map_node.turn_number or builder_cost > map_node.max_turns
 	$AgentInfo/CostRow/Cost.add_theme_color_override("font_color", Color("#d10000") if  should_builder_cost_be_warned else Color.BLACK)
 	
 	

@@ -19,7 +19,7 @@ import aiohttp
 # BASE_URL = "http://10.10.84.106/api"
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IlBBTSIsImlzX2FkbWluIjpmYWxzZSwiaWF0IjoxNzAxODY0MTMzfQ.1CxFyf5vpniBypQnK-1TqY8SsAF4juFwOFFcvYA61oo"
+competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTUsIm5hbWUiOiJ1ZXQxIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE4ODM0OTYsImV4cCI6MTcwMjA1NjI5Nn0.V6LcMSeFXibEVkLGRN0zpK6i1jVXIlAmz4w4ToX-uRU"
 team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTUsIm5hbWUiOiJ1ZXQxIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU0NzksImV4cCI6MTcwMTg1ODI3OX0.BkhNAy55QI2-MV4ku-7m09TaK1ASBxJnaz3M1KBTqOU"
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTYsIm5hbWUiOiJ1ZXQyIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU1MDUsImV4cCI6MTcwMTg1ODMwNX0.KJSgUIaWtuvz-vyrQkFh-xH10qI8q4TAvHoUuQDvoJQ"
 
@@ -406,7 +406,7 @@ def generate_builder_pos():
                 destroy_cost += 1
 
 
-        builder_cost_by_craftsman[str_id] = max((cost + len(list_of_pos) + destroy_cost) * 2 - (1 if is_this_craftsman_turn else 0), 0)
+        builder_cost_by_craftsman[str_id] = max((cost + len(list_of_pos) + destroy_cost) * 2 - (1 if is_this_craftsman_turn else 0), 0) + game_state.turn
 
         action_type, direction = cpp_action_to_local_action(
             action.actionType, action.subActionType)

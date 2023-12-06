@@ -119,7 +119,7 @@ func load_map(json):
 	height = json.options.map_height
 	
 	turn_number = game_state.turn_number
-	max_turns = json.options.map_height
+	max_turns = json.options.max_turns
 	
 	var num_of_tiles = width*height;
 	var is_num_of_tiles_changed = num_of_tiles != $GridContainer.get_child_count()
