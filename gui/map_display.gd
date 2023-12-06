@@ -4,6 +4,7 @@ extends AspectRatioContainer
 @export var height: int
 
 var turn_number = 1
+var max_turns = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -118,6 +119,7 @@ func load_map(json):
 	height = json.options.map_height
 	
 	turn_number = game_state.turn_number
+	max_turns = json.options.map_height
 	
 	var num_of_tiles = width*height;
 	var is_num_of_tiles_changed = num_of_tiles != $GridContainer.get_child_count()
@@ -178,7 +180,7 @@ func load_map(json):
 	
 	
 	for e in get_nodes_by_group("turn_info"):
-		e.text = "Turn %d/%d: %s" % [game_state.turn_number, json.options.max_turns, _turn_state_to_string(game_state.turn_state)]
+		e.text = "Turn %d/%d: %s" % [turn_number, max_turns, _turn_state_to_string(game_state.turn_state)]
 	
 
 	var replay_node = get_tree().get_first_node_in_group('replay_feature')

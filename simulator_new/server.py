@@ -399,7 +399,14 @@ def generate_builder_pos():
 
         is_this_craftsman_turn = game_state.isT1Turn == craftsman.isT1
 
-        builder_cost_by_craftsman[str_id] = (cost + len(list_of_pos)) - (1 if is_this_craftsman_turn else 0)
+        destroy_cost = 0
+        for x, y in list_of_pos:
+            if (craftsman.isT1 and game_state.map.tiles[y][x] & (1 << TileMask.T2_WALL.value)) \
+                    or (not craftsman.isT1 and game_state.map.tiles[y][x] & (1 << TileMask.T1_WALL.value)):
+                destroy_cost += 1
+
+
+        builder_cost_by_craftsman[str_id] = max((cost + len(list_of_pos) + destroy_cost) * 2 - (1 if is_this_craftsman_turn else 0), 0)
 
         action_type, direction = cpp_action_to_local_action(
             action.actionType, action.subActionType)

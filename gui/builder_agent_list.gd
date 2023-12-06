@@ -17,7 +17,7 @@ func _input(event):
 	if event.is_action_pressed("generate_builder_pos"):
 		send_generate_builder_pos_request()
 
-func update_agent_list(new_agent_list):
+func update_agent_list(new_agent_list, builder_cost_by_craftsman):
 	var is_dirty_agent_list = false
 	
 	if len(agent_list) != len(new_agent_list):
@@ -29,18 +29,25 @@ func update_agent_list(new_agent_list):
 				break
 	
 	agent_list = new_agent_list
-		
+
 	if is_dirty_agent_list:
 		for child in get_children():
 			child.free()
 		for agent in agent_list:
 			var builder_info_node = BuilderInfo.instantiate()
 			builder_info_node.craftsman_id = agent.id
+			
 			add_child(builder_info_node)
 		
 	var node_list = get_children()
 	for i in len(node_list):
 		node_list[i].craftsman_pos = agent_list[i].pos
+		
+		var agent_id = agent_list[i].id
+		
+		node_list[i].builder_cost = 0
+		if builder_cost_by_craftsman.has(agent_id):
+			node_list[i].builder_cost = builder_cost_by_craftsman[agent_id]
 
 func send_generate_builder_pos_request():
 	HTTP.generate_builder_pos()
