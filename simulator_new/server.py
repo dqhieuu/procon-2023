@@ -11,7 +11,7 @@ from online import OnlineActionResponseList, OnlineGameStatus, OnlineFieldReques
 from utils_cpp import cpp_action_to_local_action, load_offline_game, load_offline_actions, calculate_score, local_action_to_cpp_action, get_direction_vector
 from fastapi import FastAPI, HTTPException
 from fastapi_restful.tasks import repeat_every
-from model import CraftsmanCommand, PyActionType
+from model import CraftsmanCommand, PyActionType, Direction
 import aiohttp
 
 
@@ -23,7 +23,7 @@ team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTUsIm5hbWUiOiJ1ZXQ
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTYsIm5hbWUiOiJ1ZXQyIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU1MDUsImV4cCI6MTcwMTg1ODMwNX0.KJSgUIaWtuvz-vyrQkFh-xH10qI8q4TAvHoUuQDvoJQ"
 
 action_path = "test-cases/match-249.txt"
-map_path = "test-cases/map-249-game-2.txt"
+map_path = "test-cases/map-new2.txt"
 ### END SET THESE VARIABLES ###
 
 global_token: Union[str, None] = None
@@ -171,8 +171,8 @@ load_cli()
 if mode == 1:
     game_options, game_map, craftsmen, craftsman_strid_to_intid_map, craftsman_intid_to_strid_map = load_offline_game(
         map_path)
-    actions_by_turn = load_offline_actions(
-        action_path, craftsman_strid_to_intid_map)
+    # actions_by_turn = load_offline_actions(
+    #     action_path, craftsman_strid_to_intid_map)
 
     game = Game(game_options, game_map, craftsmen)
     # for actions in actions_by_turn:
@@ -402,6 +402,21 @@ def generate_builder_pos():
         action_type, direction = cpp_action_to_local_action(
             action.actionType, action.subActionType)
 
+        # check surrounding tiles if buildable first
+        dir_list_to_check = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
+        for wall_dir in dir_list_to_check:
+            (action_offset_x, action_offset_y) = get_direction_vector(wall_dir)
+            target_pos = (craftsman.x + action_offset_x, craftsman.y + action_offset_y)
+            (target_x, target_y) = target_pos
+
+            if not (0 <= target_x < len(game_state.map.tiles[0]) and 0 <= target_y < len(game_state.map.tiles)):
+                continue
+
+            if target_pos in list_of_valid_pos:
+                action_type = PyActionType.BUILD
+                direction = wall_dir
+                break
+
         # turn build and move into destroy if there is a wall
         if action_type == PyActionType.BUILD or action_type == PyActionType.MOVE:
             (action_offset_x, action_offset_y) = get_direction_vector(direction)
@@ -417,8 +432,6 @@ def generate_builder_pos():
                     continue
                 action_type = PyActionType.DESTROY
 
-
-        print(cost, action)
 
         selected_buffer = command_buffer_t1 if craftsman.isT1 else command_buffer_t2
         selected_order = command_order_t1 if craftsman.isT1 else command_order_t2
@@ -515,6 +528,8 @@ async def builder(command: BuilderCommand):
     elif command.action == "unbuild_all":
         builder_pos_by_craftsman.clear()
 
+    generate_builder_pos()
+
     return "OK"
 
 
@@ -522,3 +537,8 @@ async def builder(command: BuilderCommand):
 async def generate_builder_pos_endpoint():
     generate_builder_pos()
     return "OK"
+
+import time
+# def debounce(func, sec: int):
+#     now = time.time()
+#     return
