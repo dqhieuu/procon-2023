@@ -16,9 +16,10 @@ import aiohttp
 
 
 ### SET THESE VARIABLES ###
+# BASE_URL = "http://10.10.84.106/api"
 BASE_URL = "https://procon2023.duckdns.org/api"
 
-competition_token = None
+competition_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IlBBTSIsImlzX2FkbWluIjpmYWxzZSwiaWF0IjoxNzAxODY0MTMzfQ.1CxFyf5vpniBypQnK-1TqY8SsAF4juFwOFFcvYA61oo"
 team_1_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTUsIm5hbWUiOiJ1ZXQxIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU0NzksImV4cCI6MTcwMTg1ODI3OX0.BkhNAy55QI2-MV4ku-7m09TaK1ASBxJnaz3M1KBTqOU"
 team_2_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTYsIm5hbWUiOiJ1ZXQyIiwiaXNfYWRtaW4iOmZhbHNlLCJpYXQiOjE3MDE2ODU1MDUsImV4cCI6MTcwMTg1ODMwNX0.KJSgUIaWtuvz-vyrQkFh-xH10qI8q4TAvHoUuQDvoJQ"
 
@@ -369,7 +370,7 @@ async def end_turn():
 
     return "OK"
 
-
+builder_cost_by_craftsman: dict[str, int] = {}
 def generate_builder_pos():
     global command_counter
     game_state = game.getCurrentState()
@@ -392,12 +393,13 @@ def generate_builder_pos():
 
             list_of_valid_pos.append((x, y))
 
-        # if not list_of_valid_pos:
-        #     builder_pos_by_craftsman[str_id] = []
-        #     continue
 
         cost, action = game.getCurrentState().findWayToBuild(
             craftsman.x, craftsman.y, craftsman.isT1, list_of_valid_pos)
+
+        is_this_craftsman_turn = game_state.isT1Turn == craftsman.isT1
+
+        builder_cost_by_craftsman[str_id] = (cost + len(list_of_pos)) - (1 if is_this_craftsman_turn else 0)
 
         action_type, direction = cpp_action_to_local_action(
             action.actionType, action.subActionType)
@@ -497,8 +499,10 @@ async def current_state():
         "options": {
             "map_width": game.gameOptions.mapWidth,
             "map_height": game.gameOptions.mapHeight,
+            "max_turns": game.gameOptions.maxTurns,
         },
         "builder_pos_by_craftsman": builder_pos_by_craftsman,
+        "builder_cost_by_craftsman": builder_cost_by_craftsman,
         "actions_to_be_applied": actions_to_be_applied,
     }
 
